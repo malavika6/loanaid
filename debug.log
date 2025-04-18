@@ -907,3 +907,7 @@
 2025-04-18 17:16:57,389 - DEBUG - Sidebar menu for user_type franchise: [{'name': 'Dashboard', 'url': '/franchise/franchise_dashboard/'}, {'name': 'Apply Loan', 'url': '/loan/apply-loan/'}, {'name': 'List Loan', 'url': '/loan/list-loan/'}, {'name': 'Profile', 'url': '/profile/'}]
 2025-04-18 17:16:57,397 - DEBUG - Session user_id: 8708cb54-4b6a-4b7f-bf0a-afaba5e43578, user_type: franchise
 2025-04-18 17:16:57,397 - DEBUG - Sidebar menu for user_type franchise: [{'name': 'Dashboard', 'url': '/franchise/franchise_dashboard/'}, {'name': 'Apply Loan', 'url': '/loan/apply-loan/'}, {'name': 'List Loan', 'url': '/loan/list-loan/'}, {'name': 'Profile', 'url': '/profile/'}]
+2025-04-18 17:17:47,425 - DEBUG - Session user_id: 8708cb54-4b6a-4b7f-bf0a-afaba5e43578, user_type: franchise
+2025-04-18 17:17:47,435 - DEBUG - Sidebar menu for user_type franchise: [{'name': 'Dashboard', 'url': '/franchise/franchise_dashboard/'}, {'name': 'Apply Loan', 'url': '/loan/apply-loan/'}, {'name': 'List Loan', 'url': '/loan/list-loan/'}]
+2025-04-18 17:17:47,450 - DEBUG - Session user_id: 8708cb54-4b6a-4b7f-bf0a-afaba5e43578, user_type: franchise
+2025-04-18 17:17:47,452 - DEBUG - Sidebar menu for user_type franchise: [{'name': 'Dashboard', 'url': '/franchise/franchise_dashboard/'}, {'name': 'Apply Loan', 'url': '/loan/apply-loan/'}, {'name': 'List Loan', 'url': '/loan/list-loan/'}]
