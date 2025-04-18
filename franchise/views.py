@@ -45,7 +45,7 @@ def add_franchise(request):
             send_mail(
                 "Franchise Account Created",
                 f"Hello {franchise.franchise_owner},\n\nYour franchise account has been created successfully!\n\nUsername: {franchise.email}\nPassword: {plain_password}\nReferral Code: {franchise.referral_code}\n\nPlease log in and update your password immediately.",
-                "admin@yourdomain.com",
+                "info@loanaidindia.com",
                 [franchise.email],
                 fail_silently=False,
             )

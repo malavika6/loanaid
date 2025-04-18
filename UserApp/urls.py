@@ -17,5 +17,5 @@ urlpatterns = [
     path('list_staff/',views.list_staff,name='list_staff'),
     path('delete_staff/<int:staff_id>/', views.delete_staff, name='delete_staff'),
     path('delete-file/<int:id>/', views.delete_files, name='delete_file'),
+    path('profile/', views.update_profile, name='profile'),
 ]
-   

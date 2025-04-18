@@ -485,3 +485,20 @@ def delete_files(request, id):
         file.delete()
         return redirect('loan-page', loan_id)  # Adjust the redirect based on your URL name for the user list page
     return redirect('loan-page', loan_id)
+
+from django.shortcuts import render
+from django.http import HttpResponse
+
+def apply_loan(request):
+    """
+    Placeholder view for applying for a loan.
+    """
+    return HttpResponse("Apply Loan Page")
+
+from django.http import HttpResponse
+
+def list_loan(request):
+    """
+    Placeholder view for listing loans.
+    """
+    return HttpResponse("List Loan Page")

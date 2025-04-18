@@ -51,6 +51,18 @@
                                 {% endif %}
                             </div>
                         </div>
+                        <!-- Referal Code -->
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Referal  Code</label>
+                            <div class="col-sm-10">
+                                {{ form.referral_code }}
+                                {% if form.referral_code.errors %}
+                                    <div class="invalid-feedback">
+                                        <p>{{ form.referral_code.errors.as_text }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
                         
                         <!-- Franchise Owner -->
                         <div class="form-group row">

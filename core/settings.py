@@ -74,6 +74,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'UserApp.context_processors.sidebar_context',
             ],
         },
     },
@@ -150,12 +151,22 @@ SESSION_SAVE_EVERY_REQUEST = True  # Ensures session is refreshed on every reque
   # Ensure the session does not expire when the browser is closed
   
   
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"  # Use your email provider's SMTP server
-EMAIL_PORT = 587  # Use 465 for SSL, 587 for TLS
-EMAIL_USE_TLS = True  # Use TLS for security
-EMAIL_HOST_USER =   ""# Your email address
-EMAIL_HOST_PASSWORD = ""# Use an app password for Gmail
-DEFAULT_FROM_EMAIL = ""
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.gmail.com"  # Use your email provider's SMTP server
+# EMAIL_PORT = 587  # Use 465 for SSL, 587 for TLS
+# EMAIL_USE_TLS = True  # Use TLS for security
+# EMAIL_HOST_USER =   ""# Your email address
+# EMAIL_HOST_PASSWORD = ""# Use an app password for Gmail
+# DEFAULT_FROM_EMAIL = ""
 
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = "smtp.hostinger.com"   # Hostinger's SMTP server
+EMAIL_PORT = 465                    # Use 465 for SSL
+EMAIL_USE_SSL = True               # Use SSL instead of TLS
+
+EMAIL_HOST_USER = "info@loanaidindia.com"  # Your full Hostinger email
+EMAIL_HOST_PASSWORD = "Seltos@20"  # Set this securely (or use env var)
+
+DEFAULT_FROM_EMAIL = "info@loanaidindia.com"
 

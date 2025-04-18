@@ -1,3 +1,8 @@
+from UserApp.utils import get_sidebar_menu, get_user_context
+from UserApp.forms import UserForm
+from UserApp.models import AdminModel, Franchise, StaffModel, UserModel, LoanApplicationModel, Payment
+import uuid
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -16,9 +21,15 @@ from django.shortcuts import render, redirect
 from .models import StaffModel, LoanApplicationModel
 from django.contrib import messages
 from django.urls import reverse
+from .utils import get_sidebar_menu, get_user_context
 
 
 import logging
+
+logger = logging.getLogger(__name__)
+
+
+# Import your models and forms
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +42,15 @@ def register(request):
             return redirect('login')
     else:
         form = UserForm()
-
     return render(request, 'register.html', {'form': form})
 
 
 def login(request):
+    """
+    Handle user login for all user types (admin, franchise, staff, executive).
+    Make sure that the identifier you use (usually an email) is consistently used
+    to fetch the correct record and that the session is set using the correct PK.
+    """
     error = None
 
     if request.method == 'POST':
@@ -57,27 +72,23 @@ def login(request):
         if not user:
             try:
                 franchise = Franchise.objects.get(email=identifier)
-
                 if check_password(password, franchise.password):
-                    if franchise.payment_status:  # ✅ Corrected Boolean check
+                    if franchise.payment_status:  # Payment verified
                         request.session.flush()
+                        # Store using PK so that get_user_context can look it up with pk.
                         request.session['user_id'] = str(franchise.pk)
                         request.session['user_type'] = 'franchise'
-
-                        # Remove old session flags
+                        # Clear old payment flags
                         request.session.pop('requires_payment', None)
-
                         request.session.set_expiry(
                             3600)  # 1-hour session expiry
                         logger.info(
                             f"Franchise login successful (ID: {franchise.pk})")
                         return redirect('/franchise_dashboard')
-
-                    # If payment is not active, redirect to payment confirmation page
+                    # If payment is not active, set flags for payment redirect
                     request.session['franchise_id'] = str(franchise.pk)
                     request.session['requires_payment'] = True
                     return redirect('payment_redirect')
-
             except Franchise.DoesNotExist:
                 pass
 
@@ -85,7 +96,7 @@ def login(request):
         if not user:
             try:
                 staff = StaffModel.objects.get(email=identifier)
-                # ⚠️ Only if passwords are not hashed (Fix ASAP)
+                # NOTE: For security, you should use hashed passwords.
                 if password == staff.password:
                     user, user_type = staff, 'staff'
             except StaffModel.DoesNotExist:
@@ -100,16 +111,17 @@ def login(request):
             except UserModel.DoesNotExist:
                 pass
 
-        # **Login Handling**
+        # Login handling
         if user:
-            request.session.flush()  # Clear old session
+            request.session.flush()  # Clear any existing session data
+            # Use the object's primary key so that our get_user_context (which should look up via PK) succeeds.
             request.session['user_id'] = str(user.pk)
             request.session['user_type'] = user_type
             request.session.set_expiry(3600)  # 1-hour session expiry
 
             logger.info(f"Login successful: {user_type} (ID: {user.pk})")
 
-            # **Redirect based on user type**
+            # Redirect based on user type
             if user_type == 'admin':
                 return redirect('/')
             elif user_type == 'franchise':
@@ -126,51 +138,135 @@ def login(request):
     return render(request, 'login.html', {'error': error})
 
 
+def staff_dashboard(request):
+    """
+    Dashboard view for staff users.
+    It uses get_user_context to fetch sidebar_menu and username.
+    Make sure that get_user_context looks up the staff using pk rather than a custom field if needed.
+    """
+    sidebar_menu, username = get_user_context(request)
+    if not sidebar_menu or not username:
+        return redirect('/login')
+
+    # For example: fetch all loan applications assigned to this staff (assuming 'assigned_to' stores the staff PK).
+    user_id = request.session.get('user_id')
+    staff_loans = LoanApplicationModel.objects.filter(assigned_to=user_id)
+
+    context = {
+        'sidebar_menu': sidebar_menu,
+        'username': username,
+        'staff_loans': staff_loans,
+    }
+    return render(request, 'dashboard.html', context)
+
+
+def home(request):
+    """
+    Dashboard view for admin users.
+    """
+    sidebar_menu, username = get_user_context(request)
+    if not sidebar_menu or not username:
+        return redirect('/login')
+
+    user_type = request.session.get('user_type')
+    print(
+        "user_type", user_type)  # Debugging line to check user_type)
+    if user_type == 'admin':
+        today = datetime.now().date()
+        all_loans = LoanApplicationModel.objects.filter(followup_date=today)
+        loan_followup = all_loans.filter(
+            assigned_to=request.session.get('user_id'))
+
+        all_franchises = Franchise.objects.all()
+        franchise_count = all_franchises.count()
+
+        all_staff = StaffModel.objects.all()
+        staff_count = all_staff.count()
+
+        loan_app = LoanApplicationModel.objects.all()
+        loan_app_count = loan_app.count()
+        last_loan_app = loan_app.order_by('-form_id')[:10]
+
+        context = {
+            'username': username,
+            'forms': last_loan_app,
+            'loans': all_loans,
+            'total_franchise_count': franchise_count,
+            'total_staff_count': staff_count,
+            'loan_app_count': loan_app_count,
+            'all_franchises': all_franchises,
+            'all_staff': all_staff,
+            'sidebar_menu': sidebar_menu,
+            'can_add_loan': True
+        }
+        return render(request, 'index.html', context)
+
+    elif user_type == 'staff':
+        staff_loans = LoanApplicationModel.objects.filter(
+            assigned_to=request.session.get('user_id'))
+
+        context = {
+            'username': username,
+            'sidebar_menu': sidebar_menu,
+            'staff_loans': staff_loans,
+        }
+        return render(request, 'dashboard.html', context)
+    elif user_type == 'franchise':
+        staff_loans = LoanApplicationModel.objects.filter(
+            assigned_to=request.session.get('staff_id'))
+
+        context = {
+            'username': username,
+            'sidebar_menu': sidebar_menu,
+        }
+        return render(request, 'franchise_dashboard.html', context)
+    else:
+        # If the user is neither admin nor staff, redirect them to login or another page.
+        return redirect('/login')
+
+
 def payment_redirect(request):
     """
     Render a page with UPI payment instructions and auto-redirect using JavaScript.
     """
-    # Verify session data
     franchise_id = request.session.get('franchise_id')
     requires_payment = request.session.get('requires_payment', False)
 
     if not franchise_id or not requires_payment:
         return redirect('login')
 
-    # UPI Payment Deep Link
+    # UPI Payment Deep Link details
     upi_id = '8138911511@ybl'
     payment_amount = 500  # Example amount
     payment_note = 'Franchise Membership Payment'
-
     upi_link = f"upi://pay?pa={upi_id}&pn=Franchise&mc=&tid=&tr=&tn={payment_note}&am={payment_amount}&cu=INR"
 
     context = {
         'upi_link': upi_link
     }
-
     return render(request, 'payment_redirect.html', context)
 
 
 def payment_confirmation(request):
+    """
+    Process payment confirmation uploads.
+    """
     franchise_id = request.session.get('franchise_id')
-
     if not franchise_id:
         return redirect('login')
 
     if request.method == 'POST':
         screenshot = request.FILES.get('payment_screenshot')
-        transaction_id = request.POST.get('transaction_id', str(
-            uuid.uuid4()))  # Generate random ID if not provided
-
+        transaction_id = request.POST.get('transaction_id', str(uuid.uuid4()))
         try:
             franchise = Franchise.objects.get(pk=franchise_id)
 
-            # Create a payment entry
+            # Create a payment record (assumes you have a Payment model)
             payment = Payment.objects.create(
                 franchise=franchise,
                 transaction_id=transaction_id,
                 payment_screenshot=screenshot,
-                status='pending'  # Admin verifies manually
+                status='pending'  # Waiting for admin verification
             )
 
             # Mark franchise as pending verification
@@ -179,7 +275,6 @@ def payment_confirmation(request):
 
             messages.success(
                 request, "Payment receipt uploaded! We will verify it soon.")
-            # Redirect to user dashboard
             return redirect('/franchise_dashboard')
 
         except Franchise.DoesNotExist:
@@ -188,121 +283,15 @@ def payment_confirmation(request):
     return redirect('/franchise_dashboard')
 
 
-def home(request):
-    user_id = request.session.get('user_id', None)
-    if user_id is None:
-        return redirect('/login')
-
-    user_type = request.session.get('user_type', None)
-
-    # If user is admin
-    if user_type == 'admin':
-        try:
-            admin = AdminModel.objects.get(admin_id=user_id)
-            admin_name = f"{admin.admin_first_name} {admin.admin_last_name if admin.admin_last_name else ''}"
-        except AdminModel.DoesNotExist:
-            return redirect('/login')
-
-        today = datetime.now().date()
-        all_loans = LoanApplicationModel.objects.filter(followup_date=today)
-        loan_followup = all_loans.filter(assigned_to=user_id)
-
-        # Count the number of franchises
-        all_franchises = Franchise.objects.all()
-        franchise_count = all_franchises.count()
-
-        # Count the number of staff
-        all_staff = StaffModel.objects.all()
-        staff_count = all_staff.count()
-
-        loan_app = LoanApplicationModel.objects.all()
-        loan_app_count = loan_app.count()
-        last_loan_app = loan_app.order_by('-form_id')[:10]
-
-        login_success = request.GET.get('login_success') == 'true'
-
-        context = {
-            'username': admin_name,
-            'forms': last_loan_app,
-            'loans': all_loans,
-            'total_franchise_count': franchise_count,
-            'total_staff_count': staff_count,
-            'loan_app_count': loan_app_count,
-            'all_franchises': all_franchises,
-            'all_staff': all_staff,
-            'admin': admin,
-            'login_success': login_success,
-            'can_add_loan': True  # Admin can add loans
-        }
-        return render(request, 'index.html', context)
-
-    # If user is franchise
-    elif user_type == 'franchise':
-        try:
-            franchise = Franchise.objects.get(franchise_id=user_id)
-        except Franchise.DoesNotExist:
-            return redirect('/login')
-        franchise_wallets = Franchise.objects.values(
-            'franchise_name', 'wallet_balance')
-
-        franchise_name = f"{franchise.franchise_name if franchise.franchise_name else ''}"
-
-        # Fetch all loans related to this franchise
-        related_loans = LoanApplicationModel.objects.filter(
-            franchise=franchise)
-        loan_count = related_loans.count()
-
-        # Count the number of other franchises
-        all_franchises = Franchise.objects.all()
-        franchise_count = all_franchises.count()
-
-        context = {
-            'username': franchise_name,
-            'franchise': franchise,
-            'related_loans': related_loans,
-            'loan_count': loan_count,
-            'franchise_wallets': franchise_wallets,
-            'can_add_loan': True  # Franchise can add loans
-        }
-        return render(request, 'franchise_dashboard.html', context)
-
-    # If user is staff
-    elif user_type == 'staff':
-        try:
-            staff = StaffModel.objects.get(staff_id=user_id)
-        except StaffModel.DoesNotExist:
-            return redirect('/login')
-
-        staff_name = f"{staff.first_name} {staff.last_name if staff.last_name else ''}"
-
-        # Redirect to profile update if profile is not completed
-        if not staff.profile_completed:
-            return redirect('update_profile')
-
-        # Count the number of franchises
-        all_franchises = Franchise.objects.all()
-        franchise_count = all_franchises.count()
-
-        # Fetch all loans
-        all_loans = LoanApplicationModel.objects.all()
-        loan_app_count = all_loans.count()
-
-        context = {
-            'username': staff_name,
-            'admin': staff,
-            'all_loans': all_loans,
-            'loan_app_count': loan_app_count,
-            'all_franchises': all_franchises,
-            'franchise_count': franchise_count,
-            'can_add_loan': True  # Staff can add loans
-        }
-
-        return render(request, 'dashboard.html', context)
-
-    # If user is the 4th type (other user type, who is not admin, franchise, or sta
-
-    # If no valid user type
-    return redirect('/login')
+def logout_view(request):
+    """
+    Log out the user by clearing the session.
+    """
+    request.session.pop('user_id', None)
+    request.session.pop('user_type', None)
+    django_logout(request)
+    request.session.flush()
+    return redirect('/')
 
 
 def other_user_dashboard(request, user_id):
@@ -339,19 +328,6 @@ def other_user_dashboard(request, user_id):
     }
 
     return render(request, 'home.html', context)
-
-
-def logout_view(request):  # Change function name
-
-    if 'user_id' in request.session:
-        del request.session['user_id']
-    if 'user_type' in request.session:
-        del request.session['user_type']
-
-    django_logout(request)  # Call Django’s actual logout function
-    request.session.flush()  # Ensure session is cleared
-
-    return redirect('/')
 
 
 def update_profile(request):
@@ -393,7 +369,8 @@ def create_staff(request):
                 messages.success(request, "Staff member added successfully!")
                 return redirect('/')  # Redirect after successful creation
             else:
-                messages.error(request, "There was an error in the form. Please correct it.")
+                messages.error(
+                    request, "There was an error in the form. Please correct it.")
 
         else:
             form = StaffModelForm()
@@ -453,3 +430,49 @@ def delete_files(request, id):
         # Adjust the redirect based on your URL name for the user list page
         return redirect('loan-page', loan_id)
     return redirect('loan-page', loan_id)
+
+
+def get_sidebar_menu(user_type):
+    """
+    Generate sidebar menu items based on user type.
+    """
+    menu = []
+
+    if user_type == 'admin':
+        menu = [
+            {'name': 'Dashboard', 'url': '/'},
+            {'name': 'Manage Franchises', 'url': '/list_franchise'},
+            {'name': 'Manage Staff', 'url': '/list_staff'},
+            {'name': 'Add Loan', 'url': '/add-loan'},
+        ]
+    elif user_type == 'franchise':
+        menu = [
+            {'name': 'Dashboard', 'url': '/franchise_dashboard'},
+            {'name': 'My Loans', 'url': '/loan-page'},
+            {'name': 'Profile', 'url': '/profile'},
+        ]
+    elif user_type == 'staff':
+        menu = [
+            {'name': 'Dashboard', 'url': '/dashboard'},
+            {'name': 'Assignments', 'url': '/staff_assignments'},
+            {'name': 'Profile', 'url': '/profile'},
+        ]
+    elif user_type == 'executive':
+        menu = [
+            {'name': 'Dashboard', 'url': f'/index/{user_type}'},
+            {'name': 'Profile', 'url': '/profile'},
+        ]
+
+    return menu
+
+
+def some_view(request):
+    user_type = request.session.get('user_type', None)
+    sidebar_menu = get_sidebar_menu(user_type)
+
+    context = {
+        'sidebar_menu': sidebar_menu,
+        # ...other context variables...
+    }
+
+    return render(request, 'some_template.html', context)
