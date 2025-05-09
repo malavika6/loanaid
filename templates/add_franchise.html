@@ -128,12 +128,11 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
                         <!-- Confirm Password -->
                         <div class="form-group row">
                             <label class="col-sm-2 col-form-label">Confirm Password</label>
                             <div class="col-sm-10">
-                                {{ form.confirm_password }}
+                                <input type="password" name="confirm_password" class="form-control" value="{{ form.confirm_password.value|default:form.fields.confirm_password.initial }}">
                                 {% if form.confirm_password.errors %}
                                     <div class="invalid-feedback">
                                         <p>{{ form.confirm_password.errors.as_text }}</p>

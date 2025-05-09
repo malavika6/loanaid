@@ -27,8 +27,8 @@ def add_franchise(request):
             franchise = form.save(commit=False)
             plain_password = request.POST.get('password')
 
-            # Hash the password before saving
-            franchise.password = make_password(plain_password)
+            # Use the set_password method to encrypt the password
+            franchise.set_password(plain_password)
 
             # If logged-in user is staff, set the staff relation
             if user_type == 'staff':
@@ -102,7 +102,7 @@ def delete_franchise(request, franchise_id):
         messages.error(request, "Unauthorized access.")
         return redirect('/login/')
 
-    franchise = get_object_or_404(Franchise, id=franchise_id)
+    franchise = get_object_or_404(Franchise, franchise_id=franchise_id)
     franchise.delete()
     messages.success(request, "Franchise deleted successfully.")
     return redirect('list_franchise')
@@ -119,6 +119,7 @@ def franchise_dashboard(request):
 
 def edit_franchise(request, franchise_id):
     franchise = get_object_or_404(Franchise, franchise_id=franchise_id)
+    print(franchise,"test tstets")
 
     if request.method == 'POST':
         form = FranchiseForm(request.POST, request.FILES, instance=franchise)
@@ -128,7 +129,9 @@ def edit_franchise(request, franchise_id):
             # Ensure password is not rehashed if unchanged
             plain_password = request.POST.get('password')
             if plain_password and plain_password != franchise.password:
-                franchise.password = make_password(plain_password)
+                # Use the set_password method to encrypt the password
+                franchise.set_password(plain_password)
+                franchise.confirm_password = plain_password
 
             franchise.save()
             messages.success(request, "Franchise updated successfully.")
@@ -138,10 +141,12 @@ def edit_franchise(request, franchise_id):
             messages.error(request, "Please correct the errors in the form.")
 
     else:
-        # Pre-fill password field
-        franchise.password = franchise.password  # Keeps existing password
+        # Pre-fill password field and confirm_password in the form instead
         form = FranchiseForm(instance=franchise)
-
+        # Use the get_password method to display the decrypted password
+        if franchise.password:
+            form.fields['password'].initial = franchise.get_password()
+            form.fields['confirm_password'].initial = franchise.get_password()
     return render(request, 'add_franchise.html', {'form': form, 'franchise': franchise, 'is_edit': True})
 
 

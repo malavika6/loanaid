@@ -347,6 +347,10 @@ class FranchiseForm(forms.ModelForm):
         if self.instance and self.instance.referral_code:
             self.fields["referral_code"].initial = self.instance.referral_code
 
+        # Pre-fill confirm_password with the password if an instance exists
+        if self.instance and self.instance.password:
+            self.fields['confirm_password'].initial = self.instance.password
+
     def clean_ac_no(self):
         """ Validate Account Number (should be 9 to 18 digits). """
         ac_no = self.cleaned_data.get("ac_no")

@@ -182,6 +182,16 @@ class Franchise(models.Model):
             self.password = make_password(self.password)  # Hash the password
         super().save(*args, **kwargs)
 
+    def set_password(self, raw_password):
+        """Encrypt and set the password."""
+        self.password = make_password(raw_password)
+
+    def get_password(self):
+        """Return the plain password if available, or indicate it is hashed."""
+        if self.password.startswith("pbkdf2_"):
+            return "[Password is hashed and cannot be decrypted]"
+        return self.password
+
     def __str__(self):
         return self.franchise_name
 
