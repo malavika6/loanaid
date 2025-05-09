@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,6 +25,10 @@ SECRET_KEY = 'django-insecure-au$#i1-8qzyxra0jcpw-v#7!67^7plc9m#b)r-pdj1%zz7=yp9
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+
+# Load environment variables from .env file
+load_dotenv()
 
 ALLOWED_HOSTS = ['*']
 
@@ -149,24 +154,12 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default session backen
 SESSION_COOKIE_AGE = 3600  # 1 hour session expiry
 SESSION_SAVE_EVERY_REQUEST = True  # Ensures session is refreshed on every request
   # Ensure the session does not expire when the browser is closed
-  
-  
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.gmail.com"  # Use your email provider's SMTP server
-# EMAIL_PORT = 587  # Use 465 for SSL, 587 for TLS
-# EMAIL_USE_TLS = True  # Use TLS for security
-# EMAIL_HOST_USER =   ""# Your email address
-# EMAIL_HOST_PASSWORD = ""# Use an app password for Gmail
-# DEFAULT_FROM_EMAIL = ""
-
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-
-EMAIL_HOST = "smtp.hostinger.com"   # Hostinger's SMTP server
-EMAIL_PORT = 465                    # Use 465 for SSL
-EMAIL_USE_SSL = True               # Use SSL instead of TLS
-
-EMAIL_HOST_USER = "info@loanaidindia.com"  # Your full Hostinger email
-EMAIL_HOST_PASSWORD = "Seltos@20"  # Set this securely (or use env var)
-
-DEFAULT_FROM_EMAIL = "info@loanaidindia.com"
+ 
+EMAIL_BACKEND =os.environ.get('EMAIL_BACKEND')
+EMAIL_HOST =os.environ.get('EMAIL_HOST')
+EMAIL_PORT =os.environ.get('EMAIL_PORT')
+EMAIL_USE_SSL =os.environ.get('EMAIL_USE_SSL')
+EMAIL_HOST_USER =os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD =os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL =os.environ.get('DEFAULT_FROM_EMAIL')
 
