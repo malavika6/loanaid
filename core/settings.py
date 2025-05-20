@@ -80,6 +80,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'UserApp.context_processors.sidebar_context',
+                'UserApp.context_processors.base_dropdown_items',
             ],
         },
     },

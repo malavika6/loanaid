@@ -78,6 +78,8 @@ def login(request):
                         # Store using PK so that get_user_context can look it up with pk.
                         request.session['user_id'] = str(franchise.pk)
                         request.session['user_type'] = 'franchise'
+                        request.session['franchise_id'] = str(franchise.pk)  # <-- THIS IS MISSING
+
                         # Clear old payment flags
                         request.session.pop('requires_payment', None)
                         request.session.set_expiry(
@@ -148,15 +150,19 @@ def staff_dashboard(request):
     if not sidebar_menu or not username:
         return redirect('/login')
 
-    # For example: fetch all loan applications assigned to this staff (assuming 'assigned_to' stores the staff PK).
     user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')  # add this
+
     staff_loans = LoanApplicationModel.objects.filter(assigned_to=user_id)
 
     context = {
         'sidebar_menu': sidebar_menu,
         'username': username,
         'staff_loans': staff_loans,
+        'is_staff': user_type == 'staff',  # this is now dynamic
+        'custom_user': username,  # if needed
     }
+
     return render(request, 'dashboard.html', context)
 
 

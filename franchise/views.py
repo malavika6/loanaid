@@ -85,7 +85,7 @@ def view_franchise_profile(request):
     franchise_id = request.session.get("franchise_id")
     if not franchise_id:
         messages.error(request, "Unauthorized access. Please log in.")
-        return redirect("franchise_login")
+        return redirect("login")
 
     # Fetch franchise details
     franchise = get_object_or_404(Franchise, franchise_id=franchise_id)
@@ -110,11 +110,12 @@ def delete_franchise(request, franchise_id):
 
 def franchise_dashboard(request):
     franchise_id = request.session.get("franchise_id")
+    print("Franchise ID from session:", franchise_id)  # Debugging line
     if not franchise_id:
-        return redirect("franchise_login")
+        return redirect("/login")
 
     franchise = get_object_or_404(Franchise, franchise_id=franchise_id)
-    return render(request, "franchise/dashboard.html", {"franchise": franchise})
+    return render(request, 'franchise_dashboard.html', {"franchise": franchise})
 
 
 def edit_franchise(request, franchise_id):
@@ -158,7 +159,7 @@ def edit_franchise(request, franchise_id):
 def franchise_logout(request):
     request.session.flush()  # Clear the session
     messages.success(request, "Logged out successfully.")
-    return redirect("franchise_login")
+    return redirect("login")
 
 
 def staff_uploaded(request):

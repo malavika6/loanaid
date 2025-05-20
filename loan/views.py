@@ -35,24 +35,24 @@ def loanform(request):
                 loan = LoanModel.objects.all()
             elif admin.is_staff:
                 connected_franchises = Franchise.objects.filter(staff=admin)
-                loan = LoanModel.objects.filter(franchise__in=connected_franchises)
+                loan = LoanApplicationModel.objects.filter(franchise__in=connected_franchises)
             else:
-                loan = LoanModel.objects.filter(franchise=admin)
+                loan = LoanApplicationModel.objects.filter(franchise=admin)
 
         elif user_type == 'staff':
             staff = StaffModel.objects.get(pk=user_id)
             username = f"{staff.first_name} {staff.last_name}".strip()
-            loan = LoanModel.objects.filter(franchise=staff.franchise)
+            loan = LoanApplicationModel.objects.filter(franchise=staff.franchise)
 
         elif user_type == 'franchise':
             franchise = Franchise.objects.get(pk=user_id)
-            username = franchise.name
-            loan = LoanModel.objects.filter(franchise=franchise)
+            username = franchise.franchise_name
+            loan = LoanApplicationModel.objects.filter(franchise=franchise)
 
         elif user_type == 'executive':
             executive = UserModel.objects.get(pk=user_id)
             username = executive.name
-            loan = LoanModel.objects.filter(executive=executive)
+            loan = LoanApplicationModel.objects.filter(executive=executive)
 
         else:
             logger.warning(f"Invalid user type detected: {user_type}. Redirecting to /login")
@@ -209,14 +209,14 @@ def all_app(request):
     # Handle Franchise User
     elif user_type == 'franchise':
         try:
-            franchise = Franchise.objects.get(id=user_id)
-            franchise_name = franchise.name
+            franchise = Franchise.objects.get(franchise_id=user_id)
+            franchise_name = franchise.franchise_name
         except Franchise.DoesNotExist:
             return redirect('/login')  # Redirect if franchise does not exist
 
         # Get loan applications specific to the franchise
         loan_app = LoanApplicationModel.objects.filter(franchise=franchise)
-        franchise_name = franchise.name
+        franchise_name = franchise.franchise_name
 
     else:
         return redirect('/login')

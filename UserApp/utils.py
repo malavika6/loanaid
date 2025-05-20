@@ -37,8 +37,8 @@ def get_sidebar_menu(user_type):
             ],
             'franchise': [
                 {'name': 'Dashboard', 'url': reverse('franchise_dashboard')},
-                {'name': 'Apply Loan', 'url': reverse('apply-loan')},
-                {'name': 'List Loan', 'url': reverse('list-loan')},
+                {'name': 'Apply Loan', 'url': reverse('form')},
+                {'name': 'List Loan', 'url': reverse('all-application')},
                 # {'name': 'Profile', 'url': reverse('profile')},
             ],
             'staff': [
