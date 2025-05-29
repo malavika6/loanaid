@@ -292,6 +292,7 @@ class ProfileUpdateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ProfileUpdateForm, self).__init__(*args, **kwargs)
 
+
 class FranchiseForm(forms.ModelForm):
     confirm_password = forms.CharField(
         widget=forms.PasswordInput(
@@ -355,7 +356,8 @@ class FranchiseForm(forms.ModelForm):
         """ Validate Account Number (should be 9 to 18 digits). """
         ac_no = self.cleaned_data.get("ac_no")
         if not ac_no.isdigit() or not (9 <= len(ac_no) <= 18):
-            raise ValidationError("Account Number must be between 9 to 18 digits and contain only numbers.")
+            raise ValidationError(
+                "Account Number must be between 9 to 18 digits and contain only numbers.")
         return ac_no
 
     def clean_ifsc_code(self):
@@ -370,7 +372,8 @@ class FranchiseForm(forms.ModelForm):
         ifsc_pattern = r"^[A-Z]{4}0[A-Z0-9]{6}$"
 
         if not re.match(ifsc_pattern, ifsc_code):
-            raise ValidationError("Enter a valid IFSC code (e.g., HDFC0001234).")
+            raise ValidationError(
+                "Enter a valid IFSC code (e.g., HDFC0001234).")
 
         return ifsc_code
 
@@ -382,7 +385,6 @@ class FranchiseForm(forms.ModelForm):
 
         if password and confirm_password and password != confirm_password:
             raise ValidationError("Passwords do not match.")
-
 
 
 class LoanApplicationForm(forms.ModelForm):
@@ -478,37 +480,46 @@ class LoanApplicationForm(forms.ModelForm):
 
 
 class StaffAssignmentForm(forms.ModelForm):
+    staff_name = forms.ModelChoiceField(
+        queryset=StaffModel.objects.all(),
+        widget=forms.Select(attrs={"class": "form-select form-control"}),
+        label="Staff Name"
+    )
+    franchise_name = forms.ModelMultipleChoiceField(
+        queryset=Franchise.objects.all(),
+        widget=forms.CheckboxSelectMultiple(
+            attrs={"class": "form-check-input"}),
+        label="Select Franchise(s)"
+    )
+
     class Meta:
         model = StaffAssignmentModel
-        fields = ["staff_name", "franchise_name",
-                  "franchise_mobile_no", "franchise_place", "assigned_by"]
-        widgets = {
-            "staff_name": forms.Select(attrs={"class": "form-select form-control"}),
-            "franchise_name": forms.Select(attrs={"class": "form-control", "placeholder": "Select Franchise"}),
-            "franchise_mobile_no": forms.TextInput(attrs={"class": "form-control", "placeholder": "Franchise Mobile No."}),
-            "franchise_place": forms.TextInput(attrs={"class": "form-control", "placeholder": "Franchise Place"}),
-        }
+        fields = ['staff_name', 'franchise_name']
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-        if user and isinstance(user, StaffModel):
-            self.instance.assigned_by = user
+        if user:
+            # Filter franchises based on user, if needed
+            self.fields["franchise_name"].queryset = Franchise.objects.all()
 
-        if self.instance.franchise_name:
-            self.fields['franchise_mobile_no'].initial = self.instance.franchise_name.mobile_no
-            self.fields['franchise_place'].initial = self.instance.franchise_name.place
+    def clean(self):
+        cleaned_data = super().clean()
+        staff = cleaned_data.get("staff_name")
+        franchises = cleaned_data.get("franchise_name")
 
-        self.fields['franchise_mobile_no'].widget.attrs['disabled'] = 'disabled'
-        self.fields['franchise_place'].widget.attrs['disabled'] = 'disabled'
+        if staff and franchises:
+            existing = StaffAssignmentModel.objects.filter(
+                staff_name=staff,
+                franchise_name__in=franchises
+            )
+            if self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
 
-    def clean_franchise_mobile_no(self):
-        mobile = self.cleaned_data.get("franchise_mobile_no")
-        if mobile and (len(mobile) != 10 or not mobile.isdigit()):
-            raise ValidationError(
-                "Franchise Mobile Number must be exactly 10 digits.")
-        return mobile
+            if existing.exists():
+                raise ValidationError(
+                    "One or more of the selected franchises are already assigned to this staff.")
 
 
 class LoanForm(forms.ModelForm):

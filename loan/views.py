@@ -1,3 +1,5 @@
+from django.shortcuts import render
+from django.http import HttpResponse
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import check_password
@@ -12,6 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def loanform(request):
     user_id = request.session.get('user_id')
     user_type = request.session.get('user_type')
@@ -23,7 +26,7 @@ def loanform(request):
     logger.info(f"User accessing loan form: ID={user_id}, Type={user_type}")
 
     # Initialize variables
-    loan = LoanModel.objects.none()  
+    loan = LoanModel.objects.none()
     username = "User"
 
     try:
@@ -35,14 +38,23 @@ def loanform(request):
                 loan = LoanModel.objects.all()
             elif admin.is_staff:
                 connected_franchises = Franchise.objects.filter(staff=admin)
-                loan = LoanApplicationModel.objects.filter(franchise__in=connected_franchises)
+                loan = LoanApplicationModel.objects.filter(
+                    franchise__in=connected_franchises)
             else:
                 loan = LoanApplicationModel.objects.filter(franchise=admin)
 
         elif user_type == 'staff':
             staff = StaffModel.objects.get(pk=user_id)
             username = f"{staff.first_name} {staff.last_name}".strip()
-            loan = LoanApplicationModel.objects.filter(franchise=staff.franchise)
+
+            # Fetch franchise via StaffAssignmentModel
+            assignment = StaffAssignmentModel.objects.filter(staff_name=staff).first()
+            if assignment:
+                franchises = assignment.franchise_name.all()
+                loan = LoanApplicationModel.objects.filter(franchise__in=franchises)
+            else:
+                loan = LoanApplicationModel.objects.none()
+
 
         elif user_type == 'franchise':
             franchise = Franchise.objects.get(pk=user_id)
@@ -55,7 +67,8 @@ def loanform(request):
             loan = LoanApplicationModel.objects.filter(executive=executive)
 
         else:
-            logger.warning(f"Invalid user type detected: {user_type}. Redirecting to /login")
+            logger.warning(
+                f"Invalid user type detected: {user_type}. Redirecting to /login")
             return redirect('/login')
 
     except Exception as e:
@@ -76,7 +89,19 @@ def loanform(request):
             if user_type == 'admin' and not admin.is_superadmin and not admin.is_staff:
                 loan_form.franchise = admin
             elif user_type == 'staff':
-                loan_form.franchise = staff.franchise
+    # Get the franchise(s) assigned to this staff
+                assignment = StaffAssignmentModel.objects.filter(staff_name=staff).first()
+                if assignment:
+                    # If you want to assign the loan to the first franchise in the assignment:
+                    franchise = assignment.franchise_name.first()  # franchise_name is ManyToMany
+                    if franchise:
+                        loan_form.franchise = franchise
+                    else:
+                        # No franchise assigned, handle error or set None
+                        loan_form.franchise = None
+                else:
+                    loan_form.franchise = None  # Or handle no assignment
+
             elif user_type == 'franchise':
                 loan_form.franchise = franchise
             elif user_type == 'executive':
@@ -85,7 +110,8 @@ def loanform(request):
             loan_form.save()
 
             for file in files:
-                UploadedFile.objects.create(file=file, loan_application=loan_form)
+                UploadedFile.objects.create(
+                    file=file, loan_application=loan_form)
 
             return redirect('/')
 
@@ -99,8 +125,6 @@ def loanform(request):
         'bank': bank,
         'form': form
     })
-
-
 
 
 def loan_page(request, form_id):
@@ -127,35 +151,50 @@ def loan_page(request, form_id):
 
         if request.POST.get('submit-form'):
             # Give same edit permissions to both superadmin and staff
-            form_instance.first_name = request.POST.get('first_name', form_instance.first_name)
-            form_instance.last_name = request.POST.get('last_name', form_instance.last_name)
-            form_instance.district = request.POST.get('district', form_instance.district)
-            form_instance.place = request.POST.get('place', form_instance.place)
-            form_instance.phone_no = request.POST.get('phone_no', form_instance.phone_no)
+            form_instance.first_name = request.POST.get(
+                'first_name', form_instance.first_name)
+            form_instance.last_name = request.POST.get(
+                'last_name', form_instance.last_name)
+            form_instance.district = request.POST.get(
+                'district', form_instance.district)
+            form_instance.place = request.POST.get(
+                'place', form_instance.place)
+            form_instance.phone_no = request.POST.get(
+                'phone_no', form_instance.phone_no)
 
             loan_id = request.POST.get('loan_name')
             if loan_id:
-                form_instance.loan_name = LoanModel.objects.get(loan_id=loan_id)
+                form_instance.loan_name = LoanModel.objects.get(
+                    loan_id=loan_id)
 
-            form_instance.loan_amount = request.POST.get('loan_amount', form_instance.loan_amount)
+            form_instance.loan_amount = request.POST.get(
+                'loan_amount', form_instance.loan_amount)
 
             bank_id = request.POST.get('bank_name')
             if bank_id:
-                form_instance.bank_name = BankModel.objects.get(bank_id=bank_id)
+                form_instance.bank_name = BankModel.objects.get(
+                    bank_id=bank_id)
 
-            form_instance.executive_name = request.POST.get('executive_name', form_instance.executive_name)
-            form_instance.mobileno_1 = request.POST.get('mobileno_1', form_instance.mobileno_1)
-            form_instance.mobileno_2 = request.POST.get('mobileno_2', form_instance.mobileno_2)
-            form_instance.followup_date = request.POST.get('followup_date', form_instance.followup_date)
-            form_instance.description = request.POST.get('description', form_instance.description)
+            form_instance.executive_name = request.POST.get(
+                'executive_name', form_instance.executive_name)
+            form_instance.mobileno_1 = request.POST.get(
+                'mobileno_1', form_instance.mobileno_1)
+            form_instance.mobileno_2 = request.POST.get(
+                'mobileno_2', form_instance.mobileno_2)
+            form_instance.followup_date = request.POST.get(
+                'followup_date', form_instance.followup_date)
+            form_instance.description = request.POST.get(
+                'description', form_instance.description)
 
             status_id = request.POST.get('status_name')
             if status_id:
-                form_instance.status_name = StatusModel.objects.get(status_id=status_id)
+                form_instance.status_name = StatusModel.objects.get(
+                    status_id=status_id)
 
-            form_instance.application_description = request.POST.get('application_description', form_instance.application_description)
+            form_instance.application_description = request.POST.get(
+                'application_description', form_instance.application_description)
             form_instance.save()
-            
+
             return redirect('/')
 
         if request.POST.get('new_files'):
@@ -176,8 +215,6 @@ def loan_page(request, form_id):
         'form': form,
         'files': files
     })
-
-
 
 
 def all_app(request):
@@ -230,10 +267,9 @@ def all_app(request):
     return render(request, 'all-files.html', {
         'username': admin_name if user_type == 'admin' else staff_name if user_type == 'staff' else franchise_name,
         'loan_applications': loan_app,  # Show the loan applications
-        'loan_name_filter': loan_name_filter  # Pass the current loan name filter back to the template
+        # Pass the current loan name filter back to the template
+        'loan_name_filter': loan_name_filter
     })
-
-
 
 
 def loan_application_status(request):
@@ -299,7 +335,7 @@ def addloan(request):
             return JsonResponse({"error": "Staff not found"}, status=403)
 
         admin_name = f"{staff.first_name} {staff.last_name if staff.last_name else ''}"
-    
+
     # Handle the form submission
     if request.method == 'POST':
         form = LoanForm(request.POST)
@@ -349,12 +385,13 @@ def addstatus(request):
         admin_name = f"{staff.first_name} {staff.last_name if staff.last_name else ''}"
 
     all_status = StatusModel.objects.all()
-    
+
     if request.method == 'POST':
         form = StatusForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('/')
+            # Redirect after successful form submission
+            return redirect('addstatus')
     else:
         form = StatusForm()
 
@@ -369,31 +406,31 @@ def addstatus(request):
 def addbank(request):
     user_id = request.session.get('user_id', None)
     user_type = request.session.get('user_type', None)
-    
+
     if not user_id or user_type not in ['admin', 'staff']:
         return redirect('/login')
-    
+
     # Handle Admin user
     if user_type == 'admin':
         try:
             admin = AdminModel.objects.get(admin_id=user_id)
         except AdminModel.DoesNotExist:
             return redirect('/login')  # Redirect if Admin not found
-        
+
         admin_name = f"{admin.admin_first_name} {admin.admin_last_name}" if admin.admin_last_name else admin.admin_first_name
-    
+
     # Handle Staff user
     elif user_type == 'staff':
         try:
             staff = StaffModel.objects.get(staff_id=user_id)
         except StaffModel.DoesNotExist:
             return redirect('/login')  # Redirect if Staff not found
-        
+
         admin_name = f"{staff.first_name} {staff.last_name if staff.last_name else ''}"
-    
+
     # Change allbank to all_bank to match the context variable
     allbank = BankModel.objects.all()
-    
+
     if request.method == 'POST':
         form = BankForm(request.POST)
         if form.is_valid():
@@ -402,13 +439,12 @@ def addbank(request):
             return redirect('addbank')
     else:
         form = BankForm()
-    
+
     return render(request, 'add-bank.html', {
         'username': admin_name,
         'form': form,
         'allbank': allbank
     })
-
 
 
 def delete_loan(request, loan_id):
@@ -478,16 +514,16 @@ def delete_loanpage(request, form_id):
         return redirect('/')
     return redirect('/')
 
+
 def delete_files(request, id):
     file = get_object_or_404(UploadedFile, pk=id)
     loan_id = file.loan_application.form_id
     if request.method == 'POST':
         file.delete()
-        return redirect('loan-page', loan_id)  # Adjust the redirect based on your URL name for the user list page
+        # Adjust the redirect based on your URL name for the user list page
+        return redirect('loan-page', loan_id)
     return redirect('loan-page', loan_id)
 
-from django.shortcuts import render
-from django.http import HttpResponse
 
 def apply_loan(request):
     """
@@ -495,7 +531,6 @@ def apply_loan(request):
     """
     return HttpResponse("Apply Loan Page")
 
-from django.http import HttpResponse
 
 def list_loan(request):
     """

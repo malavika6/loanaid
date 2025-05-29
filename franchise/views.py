@@ -7,6 +7,8 @@ from UserApp.models import *
 from UserApp.forms import *
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
+from django.db.models import Prefetch
+from collections import defaultdict
 
 
 def add_franchise(request):
@@ -110,12 +112,26 @@ def delete_franchise(request, franchise_id):
 
 def franchise_dashboard(request):
     franchise_id = request.session.get("franchise_id")
-    print("Franchise ID from session:", franchise_id)  # Debugging line
     if not franchise_id:
         return redirect("/login")
 
+    # Get the franchise object or 404 if not found
     franchise = get_object_or_404(Franchise, franchise_id=franchise_id)
-    return render(request, 'franchise_dashboard.html', {"franchise": franchise})
+
+    # Get loans related to this franchise
+    loans_from_franchises = LoanApplicationModel.objects.filter(franchise_id=franchise_id).select_related('franchise', 'loan_name')
+
+    # Count the loans
+    loan_count = loans_from_franchises.count()
+
+    # Pass franchise, loans, and loan_count to the template
+    context = {
+        "franchise": franchise,
+        "loans": loans_from_franchises,
+        "loan_count": loan_count,
+    }
+    return render(request, 'franchise_dashboard.html', context)
+
 
 
 def edit_franchise(request, franchise_id):
@@ -152,109 +168,91 @@ def edit_franchise(request, franchise_id):
 
 
 
-
-# Franchise logout
-
-
 def franchise_logout(request):
     request.session.flush()  # Clear the session
     messages.success(request, "Logged out successfully.")
     return redirect("login")
 
 
-def staff_uploaded(request):
-    print(
-        "Session Data in staff_uploaded view:", request.session.items()
-    )  # Debugging session data
-
-    # Check if user is logged in and is an admin
-    user_type = request.session.get("user_type")
-    if user_type != "admin":
-        print("User is not admin, redirecting to login")
-        return redirect("/login")  # Redirect to login if not an admin
-
-    user_id = request.session.get("user_id", None)
-    if user_id is None:
+def assign_staff(request):
+    user_id = request.session.get("user_id")
+    if not user_id:
         return redirect("/login")
 
-    # Assuming the admin object is related to 'user_id'
     admin = get_object_or_404(AdminModel, admin_id=user_id)
-    admin_name = (
-        f"{admin.admin_first_name} {admin.admin_last_name}"
-        if admin.admin_last_name
-        else admin.admin_first_name
-    )
 
-    # Your form and staff assignment logic
     if request.method == "POST":
-        form = StaffAssignmentForm(request.POST)
+        form = StaffAssignmentForm(request.POST, user=admin)
         if form.is_valid():
-            staff_assignment = form.save(commit=False)
-            staff_assignment.created_at = timezone.now()
-            staff_assignment.assigned_by = admin  # Set the admin assigning the staff
-            staff_assignment.save()
+            staff = form.cleaned_data["staff_name"]
+            franchises = form.cleaned_data["franchise_name"]
 
-            messages.success(
-                request, "Staff assignment uploaded successfully.")
-            return redirect("/")  # Redirect to a proper page (dashboard, etc.)
+            created_count = 0
+            duplicate_count = 0
+
+            for franchise in franchises:
+                existing = StaffAssignmentModel.objects.filter(
+                    staff_name=staff, franchise_name=franchise
+                ).first()
+
+                if existing:
+                    duplicate_count += 1
+                else:
+                    StaffAssignmentModel.objects.create(
+                        staff_name=staff,
+                        franchise_name=franchise,
+                        assigned_by=admin
+                    )
+                    created_count += 1
+
+            if created_count:
+                messages.success(request, f"Assigned {created_count} franchise(s) successfully.")
+            if duplicate_count:
+                messages.warning(request, f"{duplicate_count} franchise(s) were already assigned and skipped.")
+
+            return redirect("staff_assignments")
     else:
-        form = StaffAssignmentForm()
+        form = StaffAssignmentForm(user=admin)
 
-    return render(
-        request, "assign_assignment.html", {
-            "form": form, "username": admin_name}
-    )
+    return render(request, "assign_assignment.html", {
+        "form": form,
+        "username": f"{admin.admin_first_name} {admin.admin_last_name or ''}",
+    })
 
 
-# View all staff assignments (admin functionality)
-def all_assignments(request):
-    user = request.session.get("user", None)
-    if not user:
+def all_staff_assignments(request):
+    user_id = request.session.get("user_id")
+    if not user_id:
         return redirect("/login")
 
-    admin = get_object_or_404(AdminModel, admin_id=user)
-    admin_name = (
-        f"{admin.admin_first_name} {admin.admin_last_name}"
-        if admin.admin_last_name
-        else admin.admin_first_name
-    )
+    admin = get_object_or_404(AdminModel, admin_id=user_id)
 
-    # Filter assignments based on admin privileges
-    if admin.is_superadmin:
-        assignments = StaffAssignmentModel.objects.all()
-    else:
-        assignments = StaffAssignmentModel.objects.filter(assign_to=admin)
+    staff_assignments = defaultdict(list)
+    all_assignments = StaffAssignmentModel.objects.select_related('staff_name', 'assigned_by').prefetch_related('franchise_name')
 
-    all_staff = AdminModel.objects.filter(is_superadmin=False)
-    return render(
-        request,
-        "staff_assignments.html",
-        {
-            "assignments": assignments,
-            "admin": admin,
-            "username": admin_name,
-            "all_staff": all_staff,
-        },
-    )
+
+    for assignment in all_assignments:
+        staff_assignments[assignment.staff_name].append(assignment)
+
+    return render(request, "staff_assignments.html", {
+        "staff_assignments": dict(staff_assignments),
+        "admin": admin,
+        "username": f"{admin.admin_first_name} {admin.admin_last_name or ''}",
+    })
 
 
 # Update staff assignment
 
 
 def update_assignment(request, assignment_id):
+    assignment = get_object_or_404(StaffAssignmentModel, assignment_id=assignment_id)
     if request.method == "POST":
-        assigned_to_id = request.POST.get("assigned_to")
-        try:
-            assignment = StaffAssignmentModel.objects.get(
-                assignment_id=assignment_id)
-            if assigned_to_id:
-                assignment.assign_to = AdminModel.objects.get(
-                    admin_id=assigned_to_id)
-            else:
-                assignment.assign_to = None
-            assignment.save()
+        form = StaffAssignmentForm(request.POST, instance=assignment, user=request.user)
+        if form.is_valid():
+            form.save()
             messages.success(request, "Staff assignment updated successfully.")
-        except StaffAssignmentModel.DoesNotExist:
-            messages.error(request, "Assignment not found.")
+            return redirect("staff_assignments")
+    else:
+        form = StaffAssignmentForm(instance=assignment, user=request.user)
+    return render(request, "assign_assignment.html", {"form": form, "assignment": assignment})
 
-    return redirect("staff_assignments")

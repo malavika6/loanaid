@@ -1,165 +1,59 @@
 {% extends 'includes/base.html' %}
 {% load static %}
 {% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">
+        {% if assignment %} Update Assignment {% else %} Assign Staff to Franchise {% endif %}
+    </h2>
 
-<!-- Begin Page Content -->
-<div class="container-fluid">
-
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Lead</h1>
-    </div>
-
-    <!-- Content Row -->
-    <div class="row">
-        <!-- Area Chart -->
-        <div class="col-xl-12 col-lg-7">
-            <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Enter Details</h6>
-                </div>
-                <!-- Card Body -->
-                <div class="card-body">
-                    
-                    <form method="POST" action="{% url 'staff_upload' %}">
-                        {% csrf_token %}
-
-                        <!-- Display Admin's name -->
-                        <div class="form-group row">
-                            <label for="admin_name" class="col-sm-2 col-form-label">Assigned by</label>
-                            <div class="col-sm-10">
-                                <input type="text" id="admin_name" name="admin_name" value="{{ username }}" class="form-control" disabled style="background-color: #f8f9fc; border: 1px solid #d1d3e2; padding: 10px; border-radius: 5px;">
-                            </div>
-                        </div>
-
-                        <!-- Staff Assignment Form Fields -->
-                        <div class="form-group row">
-                            <label for="{{ form.staff_name.id_for_label }}" class="col-sm-2 col-form-label">Staff Name</label>
-                            <div class="col-sm-10">
-                                {{ form.staff_name }}
-                                {% if form.staff_name.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.staff_name.errors %}
-                                            <p>{{ error }}</p>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="{{ form.franchise_name.id_for_label }}" class="col-sm-2 col-form-label">Franchise Name</label>
-                            <div class="col-sm-10">
-                                {{ form.franchise_name }}
-                                {% if form.franchise_name.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.franchise_name.errors %}
-                                            <p>{{ error }}</p>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="{{ form.franchise_mobile_no.id_for_label }}" class="col-sm-2 col-form-label">Franchise Mobile No.</label>
-                            <div class="col-sm-10">
-                                {{ form.franchise_mobile_no }}
-                                {% if form.franchise_mobile_no.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.franchise_mobile_no.errors %}
-                                            <p>{{ error }}</p>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="{{ form.franchise_place.id_for_label }}" class="col-sm-2 col-form-label">Franchise Place</label>
-                            <div class="col-sm-10">
-                                {{ form.franchise_place }}
-                                {% if form.franchise_place.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.franchise_place.errors %}
-                                            <p>{{ error }}</p>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-user btn-block d-block mx-auto">Assign Staff</button>
-                    </form>
-                </div>
-            </div>
+    <!-- Form-wide errors -->
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
         </div>
-    </div>
+    {% endif %}
 
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Staff Name Field -->
+        <div class="mb-3">
+            <label for="staff_name" class="form-label">Staff Name</label>
+            {{ form.staff_name }}
+            {% if form.staff_name.errors %}
+                <div class="text-danger mt-1">
+                    {% for error in form.staff_name.errors %}
+                        <small>{{ error }}</small><br>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Franchise Selection (Checkboxes) -->
+        <div class="mb-3">
+            <label class="form-label">Franchise(s)</label>
+            {% for checkbox in form.franchise_name %}
+                <div class="form-check mb-2">
+                    {{ checkbox.tag }}
+                    <label class="form-check-label">{{ checkbox.choice_label }}</label>
+                </div>
+            {% endfor %}
+
+            {% if form.franchise_name.errors %}
+                <div class="text-danger mt-1">
+                    {% for error in form.franchise_name.errors %}
+                        <small>{{ error }}</small><br>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">
+            {% if assignment %} Update {% else %} Assign {% endif %}
+        </button>
+    </form>
 </div>
-<!-- /.container-fluid -->
-
-<script>
-    // JavaScript to handle dynamic updates of franchise fields based on franchise name selection
-    $(document).ready(function() {
-        // Handle changes in franchise name selection
-        $('#id_franchise_name').change(function() {
-            var franchiseId = $(this).val();
-            if (franchiseId) {
-                // Make AJAX request to get franchise details
-                $.ajax({
-                    url: '/get_franchise_details/' + franchiseId + '/', // Adjust this URL as needed
-                    method: 'GET',
-                    success: function(data) {
-                        $('#id_franchise_mobile_no').val(data.mobile_no).prop('disabled', false);
-                        $('#id_franchise_place').val(data.place).prop('disabled', false);
-                    },
-                    error: function() {
-                        alert('Error fetching franchise details.');
-                    }
-                });
-            } else {
-                // Reset fields when no franchise is selected
-                $('#id_franchise_mobile_no').val('').prop('disabled', true);
-                $('#id_franchise_place').val('').prop('disabled', true);
-            }
-        });
-    });
-</script>
-
-<style>
-    .logo {
-        height: 2.5rem;
-        width: 8rem;
-        background-position: center;
-        background-size: cover;
-        background-repeat: no-repeat;
-    }
-    .btn-block {
-        width: 50% !important;
-    }
-    hr {
-        border-top: 1px solid rgb(0 0 0 / 40%) !important;
-    }
-    .form-select {
-        font-size: 0.8rem !important;
-    }
-    .col-form-label {
-        color: #004647;
-        font-weight: 500;
-        text-transform: capitalize;
-    }
-    /* Apply consistent styling to all form fields */
-    .form-control {
-        background-color: #f8f9fc;
-        border: 1px solid #d1d3e2;
-        padding: 10px;
-        border-radius: 5px;
-    }
-</style>
-
-</body>
-</html>
-
 {% endblock %}

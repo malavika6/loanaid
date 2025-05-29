@@ -23,12 +23,13 @@ def get_sidebar_menu(user_type):
         # Define menu items based on user type
         menu_config = {
             'admin': [
-                {'name': 'Dashboard', 'url': reverse('index', args=[1])},  # Pass a valid user_id (e.g., 1)
+                {'name': 'Dashboard', 'url': reverse('home')},  # Pass a valid user_id (e.g., 1)
                 {'name': 'Application', 'url': reverse('form')},
                 {'name': 'All Applications', 'url': reverse('all-application')},
                 {'name': 'Create Staff', 'url': reverse('create_staff')},
                 {'name': 'All Staffs', 'url': reverse('list_staff')},
-                {'name': 'Staff Assignment', 'url': reverse('staff_upload')},
+                {'name': 'Staff Assignment', 'url': reverse('assign_staff')},
+                {'name': 'All Assignment', 'url': reverse('staff_assignments')},
                 {'name': 'Add Bank', 'url': reverse('addbank')},
                 {'name': 'Add Franchise', 'url': reverse('add_franchise')},
                 {'name': 'List Franchise', 'url': reverse('list_franchise')},

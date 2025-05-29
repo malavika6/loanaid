@@ -140,30 +140,35 @@ def login(request):
     return render(request, 'login.html', {'error': error})
 
 
-def staff_dashboard(request):
-    """
-    Dashboard view for staff users.
-    It uses get_user_context to fetch sidebar_menu and username.
-    Make sure that get_user_context looks up the staff using pk rather than a custom field if needed.
-    """
-    sidebar_menu, username = get_user_context(request)
-    if not sidebar_menu or not username:
-        return redirect('/login')
+# def staff_dashboard(request):
+#     sidebar_menu, username = get_user_context(request)
+#     if not sidebar_menu or not username:
+#         return redirect('/login')
 
-    user_id = request.session.get('user_id')
-    user_type = request.session.get('user_type')  # add this
+#     user_id = request.session.get('user_id')
 
-    staff_loans = LoanApplicationModel.objects.filter(assigned_to=user_id)
+#     # Get franchises assigned to this staff
+#     staff = StaffModel.objects.get(pk=user_id)
+#     assigned_franchises = Franchise.objects.filter(staffassignmentmodel__staff_name=staff).distinct()
 
-    context = {
-        'sidebar_menu': sidebar_menu,
-        'username': username,
-        'staff_loans': staff_loans,
-        'is_staff': user_type == 'staff',  # this is now dynamic
-        'custom_user': username,  # if needed
-    }
+#     # Loans assigned to staff or franchises they are assigned to
+#     staff_loans = LoanApplicationModel.objects.filter(assigned_to=staff)
+#     franchise_loans = LoanApplicationModel.objects.filter(franchise__in=assigned_franchises)
+#     all_loans = (staff_loans | franchise_loans).distinct()
 
-    return render(request, 'dashboard.html', context)
+#     assigned_franchise_count = assigned_franchises.count()
+#     franchise_loan_count = franchise_loans.count()
+
+#     context = {
+#         'sidebar_menu': sidebar_menu,
+#         'username': username,
+#         'all_loans': franchise_loans,  # send loans as all_loans for template
+#         'franchise_loans': franchise_loan_count,
+#         'assigned_franchise_count': assigned_franchise_count,
+#         'assigned_franchises': assigned_franchises,
+#     }
+#     return render(request, 'dashboard.html', context)
+
 
 
 def home(request):
@@ -208,15 +213,42 @@ def home(request):
         return render(request, 'index.html', context)
 
     elif user_type == 'staff':
-        staff_loans = LoanApplicationModel.objects.filter(
-            assigned_to=request.session.get('user_id'))
+        staff_id = request.session.get('user_id')
+        staff = StaffModel.objects.get(staff_id=staff_id)
+
+
+        # Get the franchises assigned to this staff from StaffAssignmentModel
+        assigned_franchise_qs = Franchise.objects.filter(
+            staffassignmentmodel__staff_name=staff
+        ).distinct()
+
+        # Convert to set
+        assigned_franchises = set()
+        for franchise in assigned_franchise_qs:
+            assigned_franchises.add(franchise)
+
+        # Count of assigned franchises
+        assigned_franchise_count = len(assigned_franchises)
+
+        # Get loans assigned to this staff directly
+        staff_loans = LoanApplicationModel.objects.filter(assigned_to=staff_id)
+
+        # Get loans associated with the assigned franchises
+        loans_from_franchises = LoanApplicationModel.objects.filter(franchise__in=assigned_franchises)
+        franchise_loan_count = loans_from_franchises.count()
 
         context = {
             'username': username,
             'sidebar_menu': sidebar_menu,
+            'all_loans': loans_from_franchises,
             'staff_loans': staff_loans,
+            'franchise_loans': franchise_loan_count,
+            'assigned_franchise_count': assigned_franchise_count,
+            'assigned_franchises': assigned_franchises,
         }
         return render(request, 'dashboard.html', context)
+
+
     elif user_type == 'franchise':
         staff_loans = LoanApplicationModel.objects.filter(
             assigned_to=request.session.get('staff_id'))

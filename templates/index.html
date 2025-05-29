@@ -44,7 +44,6 @@
                   </div>
                 </div>
               </div>
-              {% if admin.is_superadmin %}
               <!-- Earnings (Monthly) Card Example -->
               <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-primary shadow h-100 py-2">
@@ -67,7 +66,28 @@
                   </div>
                 </div>
               </div>
-              {% endif %}
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                  <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div
+                          class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+                        >
+                        Staff
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                          {{total_staff_count}}
+                        </div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            
 
               <!-- Earnings (Monthly) Card Example -->
               <div class="col-xl-3 col-md-6 mb-4">
@@ -95,7 +115,7 @@
 
             <!-- Content Row -->
 
-            <div class="row">
+            {% comment %} <div class="row"> 
               <!-- Area Chart -->
               <div class="col-xl-9 col-lg-7">
                 <div class="card shadow mb-4">
@@ -104,8 +124,7 @@
                     class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
                   >
                     <h6 class="m-0 font-weight-bold text-primary">
-                      {% if admin.is_superadmin %} Earnings Overview {% else %}
-                      New Loans {% endif %}
+                      Earnings Overview
                     </h6>
                   </div>
                   <!-- Card Body -->
@@ -181,45 +200,7 @@
                     {% endif %}
                   </div>
                 </div>
-              </div>
-
-              <!-- Notifications -->
-              {% comment %} <div class="col-xl-3 col-lg-5">
-                <div class="card shadow mb-4">
-                  <!-- Card Header - Dropdown -->
-                  <div
-                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
-                  >
-                    <h6 class="m-0 font-weight-bold text-primary">
-                      Notifications
-                    </h6>
-                  </div>
-                  <!-- Card Body -->
-                  <div
-                    class="card-body messages"
-                    style="
-                      max-height: 360px;
-                      overflow-y: auto;
-                      padding: 10px;
-                      border: 1px solid #ccc;
-                      border-radius: 5px;
-                    "
-                  >
-                    {% if loans %} {% for loan in loans %}
-                    <a href="{% url 'loan-page' loan.form_id %}">
-                      <p>Name: {{ loan.first_name }} {{ loan.last_name }}</p>
-                      <p>Type: {{ loan.loan_name }}</p>
-                      <p>Amount: {{ loan.loan_amount }}</p>
-                    </a>
-                    <hr />
-
-                    {% endfor %} {% else %}
-                    <p>No messages.</p>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-            </div> {% endcomment %}
+              </div>{% endcomment %}
 
             <!-- Content Row -->
             <div class="row">
