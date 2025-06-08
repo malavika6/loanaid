@@ -28,7 +28,13 @@
                                         <tr>
                                             <td>{{ forloop.parentloop.counter }}</td>
                                             <td>{{ assignment.staff_full_name }}</td>
-                                            <td>{{ assignment.franchise_name.franchise_name }}</td>
+                                            <td>
+                                            {% for franchise in assignment.franchise_name.all %}
+                                                {{ franchise.franchise_name }}{% if not forloop.last %}, {% endif %}
+                                            {% empty %}
+                                                <span class="text-muted">No Franchise</span>
+                                            {% endfor %}
+                                            </td>
                                             <td>{{ assignment.assigned_by.admin_first_name }} {{ assignment.assigned_by.admin_last_name }}</td>
                                             <td>
                                                 <a href="{% url 'update_assignment' assignment.assignment_id %}" class="btn btn-sm btn-warning">Edit</a>

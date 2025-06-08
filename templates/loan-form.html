@@ -16,6 +16,7 @@
           <form class="p-5 user" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <!-- Franchise and Referral -->
+            {% if not 'franchise' in hide_fields %}
             <div class="form-group row">
               <label class="col-sm-2 col-form-label">Franchise</label>
               <div class="col-sm-10">
@@ -23,16 +24,21 @@
                 <!-- This will render the franchise dropdown -->
               </div>
             </div>
+            {% endif %}
 
             <!-- Personal Details -->
+            {% if not 'first_name' in hide_fields %}
             <div class="form-group row">
               <label class="col-sm-2 col-form-label">First Name</label>
               <div class="col-sm-10">{{ form.first_name }}</div>
             </div>
+            {% endif %}
+            {% if not 'last_name' in hide_fields %}
             <div class="form-group row">
               <label class="col-sm-2 col-form-label">Last Name</label>
               <div class="col-sm-10">{{ form.last_name }}</div>
             </div>
+            {% endif %}
             <div class="form-group row">
               <label class="col-sm-2 col-form-label">District</label>
               <div class="col-sm-10">{{ form.district }}</div>
@@ -41,10 +47,12 @@
               <label class="col-sm-2 col-form-label">Place</label>
               <div class="col-sm-10">{{ form.place }}</div>
             </div>
+            {% if not 'phone_no' in hide_fields %}
             <div class="form-group row">
               <label class="col-sm-2 col-form-label">Phone Number</label>
               <div class="col-sm-10">{{ form.phone_no }}</div>
             </div>
+            {% endif %}
 
             <!-- Job & CIBIL Details -->
             <h6 class="m-0 font-weight-bold text-primary mt-4">
@@ -68,18 +76,20 @@
             </div>
 
             <!-- Loan Details -->
-            <div class="form-group row">
+            <div class="form-group row" {% if 'loan_name' in hide_fields %}style="display:none;"{% endif %}>
               <label class="col-sm-2 col-form-label">Loan Name</label>
               <div class="col-sm-10">{{ form.loan_name }}</div>
             </div>
-            <div class="form-group row">
+            <div class="form-group row" {% if 'loan_amount' in hide_fields %}style="display:none;"{% endif %}>
               <label class="col-sm-2 col-form-label">Loan Amount</label>
               <div class="col-sm-10">{{ form.loan_amount }}</div>
             </div>
+            {% if not 'followup_date' in hide_fields %}
             <div class="form-group row">
               <label class="col-sm-2 col-form-label">Follow-up Date</label>
               <div class="col-sm-10">{{ form.followup_date }}</div>
             </div>
+            {% endif %}
 
             <!-- Guarantor Details -->
             <h6 class="m-0 font-weight-bold text-primary mt-4">
@@ -90,9 +100,7 @@
               <div class="col-sm-10">{{ form.guaranter_name }}</div>
             </div>
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label"
-                >Guarantor Phone Number</label
-              >
+              <label class="col-sm-2 col-form-label">Guarantor Phone Number</label>
               <div class="col-sm-10">{{ form.guaranter_phoneno }}</div>
             </div>
             <div class="form-group row">
@@ -100,26 +108,16 @@
               <div class="col-sm-10">{{ form.guaranter_job }}</div>
             </div>
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label"
-                >Guarantor CIBIL Score</label
-              >
+              <label class="col-sm-2 col-form-label">Guarantor CIBIL Score</label>
               <div class="col-sm-10">{{ form.guaranter_cibil_score }}</div>
             </div>
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label"
-                >Guarantor CIBIL Issue</label
-              >
+              <label class="col-sm-2 col-form-label">Guarantor CIBIL Issue</label>
               <div class="col-sm-10">{{ form.guaranter_cibil_issue }}</div>
             </div>
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label"
-                >Guarantor IT Payable</label
-              >
+              <label class="col-sm-2 col-form-label">Guarantor IT Payable</label>
               <div class="col-sm-10">{{ form.guaranter_it_payable }}</div>
-            </div>
-            <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Guarantor Years</label>
-              <div class="col-sm-10">{{ form.guaranter_years }}</div>
             </div>
 
             <!-- Additional Information -->
@@ -130,21 +128,16 @@
               <label class="col-sm-2 col-form-label">Description</label>
               <div class="col-sm-10">{{ form.description }}</div>
             </div>
-            <div class="form-group row">
-              <label class="col-sm-2 col-form-label"
-                >Application Description</label
-              >
-              <div class="col-sm-10">{{ form.application_description }}</div>
-            </div>
 
             <!-- Status and Work Status -->
+            {% if not 'status_name' in hide_fields %}
             <div class="form-group row">
               <label class="col-sm-2 col-form-label">Status</label>
               <div class="col-sm-10">
                 {{ form.status_name}}
-                <!-- This will render the franchise dropdown -->
               </div>
             </div>
+            {% endif %}
 
             <!-- Bank and Executive Details -->
             <div class="form-group row">
@@ -154,20 +147,24 @@
                 <!-- This will render the franchise dropdown -->
               </div>
             </div>
+            {% if not 'executive_name' in hide_fields %}
             <div class="form-group row">
               <label class="col-sm-2 col-form-label">Executive Name</label>
               <div class="col-sm-10">{{ form.executive_name }}</div>
             </div>
-
-            <!-- Contact Information -->
+            {% endif %}
+            {% if not 'mobileno_1' in hide_fields %}
             <div class="form-group row">
               <label class="col-sm-2 col-form-label">Mobile Number 1</label>
               <div class="col-sm-10">{{ form.mobileno_1 }}</div>
             </div>
+            {% endif %}
+            {% if not 'mobileno_2' in hide_fields %}
             <div class="form-group row">
               <label class="col-sm-2 col-form-label">Mobile Number 2</label>
               <div class="col-sm-10">{{ form.mobileno_2 }}</div>
             </div>
+            {% endif %}
 
             <!-- Document Description -->
             <div class="form-group row">

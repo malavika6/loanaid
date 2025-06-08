@@ -398,6 +398,24 @@ class LoanApplicationForm(forms.ModelForm):
                                "class": "form-control", "placeholder": "Franchise Place", "disabled": "disabled"}),
         required=False
     )
+    cibil_issue = forms.ChoiceField(
+        choices=[('Yes', 'Yes'), ('No', 'No'), ("Don't Know", "Don't Know")],
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    it_payable = forms.ChoiceField(
+        choices=[('Yes', 'Yes'), ('No', 'No')],
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    guaranter_cibil_issue = forms.ChoiceField(
+        choices=[('Yes', 'Yes'), ('No', 'No'), ("Don't Know", "Don't Know")],
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=False
+    )
+    guaranter_it_payable = forms.ChoiceField(
+        choices=[('Yes', 'Yes'), ('No', 'No')],
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=False
+    )
 
     class Meta:
         model = LoanApplicationModel
@@ -416,7 +434,6 @@ class LoanApplicationForm(forms.ModelForm):
             "guaranter_cibil_score",
             "guaranter_cibil_issue",
             "guaranter_it_payable",
-            "guaranter_years",
             "job",
             "cibil_score",
             "cibil_issue",
@@ -426,7 +443,6 @@ class LoanApplicationForm(forms.ModelForm):
             "followup_date",
             "description",
             "status_name",
-            "application_description",
             "bank_name",
             "executive_name",
             "mobileno_1",
@@ -444,19 +460,17 @@ class LoanApplicationForm(forms.ModelForm):
             "guaranter_phoneno": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Guarantor Phone Number"}),
             "guaranter_job": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Guarantor Job"}),
             "guaranter_cibil_score": forms.NumberInput(attrs={"class": "form-control form-control-user", "placeholder": "Guarantor CIBIL Score"}),
-            "guaranter_cibil_issue": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Guarantor CIBIL Issue"}),
-            "guaranter_it_payable": forms.NumberInput(attrs={"class": "form-control form-control-user", "placeholder": "Guarantor IT Payable"}),
-            "guaranter_years": forms.NumberInput(attrs={"class": "form-control form-control-user", "placeholder": "Guarantor Years"}),
+            "guaranter_cibil_issue": forms.Select(attrs={"class": "form-select form-control"}),
+            "guaranter_it_payable": forms.Select(attrs={"class": "form-select form-control"}),
             "job": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Job"}),
             "cibil_score": forms.NumberInput(attrs={"class": "form-control form-control-user", "placeholder": "CIBIL Score"}),
-            "cibil_issue": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "CIBIL Issue"}),
-            "it_payable": forms.NumberInput(attrs={"class": "form-control form-control-user", "placeholder": "IT Payable"}),
+            "cibil_issue": forms.Select(attrs={"class": "form-select form-control"}),
+            "it_payable": forms.Select(attrs={"class": "form-select form-control"}),
             'loan_name': forms.Select(attrs={'class': 'form-select form-control', 'required': False}),
             "loan_amount": forms.NumberInput(attrs={"class": "form-control form-control-user", "placeholder": "Loan Amount"}),
             "followup_date": forms.DateInput(attrs={"class": "form-control form-control-user", "placeholder": "Follow-up Date", "type": "date"}),
             "description": forms.Textarea(attrs={"class": "form-control form-control-user", "placeholder": "Description", "rows": 3}),
             "status_name": forms.Select(attrs={"class": "form-select form-control"}),
-            "application_description": forms.Textarea(attrs={"class": "form-control form-control-user", "placeholder": "Application Description", "rows": 3}),
             "bank_name": forms.Select(attrs={"class": "form-select form-control"}),
             "executive_name": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Executive Name"}),
             "mobileno_1": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Mobile Number 1"}),
@@ -465,8 +479,14 @@ class LoanApplicationForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop("user", None)
+        user_type = kwargs.pop('user_type', None)
         super().__init__(*args, **kwargs)
+        if user_type == 'franchise':
+            self.fields['followup_date'].widget.attrs['disabled'] = True
+            self.fields['status_name'].widget.attrs['disabled'] = True
+            self.fields['executive_name'].widget.attrs['disabled'] = True
+            self.fields['mobileno_1'].widget.attrs['disabled'] = True
+            self.fields['mobileno_2'].widget.attrs['disabled'] = True
 
         # Ensure franchise dropdown is populated
         self.fields['franchise'].queryset = Franchise.objects.all()

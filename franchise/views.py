@@ -3,12 +3,14 @@ from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from datetime import datetime
 from django.utils import timezone
+from UserApp.models import Franchise
 from UserApp.models import *
 from UserApp.forms import *
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.db.models import Prefetch
 from collections import defaultdict
+from django.contrib.auth.hashers import make_password
 
 
 def add_franchise(request):
@@ -29,8 +31,8 @@ def add_franchise(request):
             franchise = form.save(commit=False)
             plain_password = request.POST.get('password')
 
-            # Use the set_password method to encrypt the password
-            franchise.set_password(plain_password)
+            # Use Django's make_password to hash the password
+            franchise.password = make_password(plain_password)
 
             # If logged-in user is staff, set the staff relation
             if user_type == 'staff':
@@ -100,7 +102,7 @@ def delete_franchise(request, franchise_id):
     user_id = request.session.get('user_id')
     user_type = request.session.get('user_type')
 
-    if not user_id or user_type != 'admin':
+    if not user_id or user_type not in ['admin', 'staff']:
         messages.error(request, "Unauthorized access.")
         return redirect('/login/')
 
@@ -160,10 +162,11 @@ def edit_franchise(request, franchise_id):
     else:
         # Pre-fill password field and confirm_password in the form instead
         form = FranchiseForm(instance=franchise)
-        # Use the get_password method to display the decrypted password
-        if franchise.password:
-            form.fields['password'].initial = franchise.get_password()
-            form.fields['confirm_password'].initial = franchise.get_password()
+        # Remove get_password usage; do not pre-fill password fields for security
+        # If you want to pre-fill with the hashed password (not recommended), use:
+        # form.fields['password'].initial = franchise.password
+        # form.fields['confirm_password'].initial = franchise.password
+        # But best practice is to leave them blank
     return render(request, 'add_franchise.html', {'form': form, 'franchise': franchise, 'is_edit': True})
 
 
@@ -190,20 +193,18 @@ def assign_staff(request):
             created_count = 0
             duplicate_count = 0
 
-            for franchise in franchises:
-                existing = StaffAssignmentModel.objects.filter(
-                    staff_name=staff, franchise_name=franchise
-                ).first()
-
-                if existing:
-                    duplicate_count += 1
-                else:
-                    StaffAssignmentModel.objects.create(
-                        staff_name=staff,
-                        franchise_name=franchise,
-                        assigned_by=admin
-                    )
-                    created_count += 1
+            # Create one StaffAssignmentModel per staff, then set franchises (ManyToMany)
+            assignment, created = StaffAssignmentModel.objects.get_or_create(
+                staff_name=staff,
+                assigned_by=admin
+            )
+            # Check for duplicates before setting
+            existing_franchises = set(assignment.franchise_name.all())
+            new_franchises = set(franchises) - existing_franchises
+            duplicate_count = len(franchises) - len(new_franchises)
+            if new_franchises:
+                assignment.franchise_name.add(*new_franchises)
+                created_count = len(new_franchises)
 
             if created_count:
                 messages.success(request, f"Assigned {created_count} franchise(s) successfully.")

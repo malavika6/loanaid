@@ -20,7 +20,7 @@ def base_dropdown_items(request):
     return {
         'dropdown_items': dropdown_items,
         'is_staff': request.session.get('user_type') == 'staff',
-        'user': request.session.get('username', 'Guest'),
+        'username': request.session.get('username'),
     }
 
 def sidebar_context(request):

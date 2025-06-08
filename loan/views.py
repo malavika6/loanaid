@@ -78,9 +78,19 @@ def loanform(request):
     status = StatusModel.objects.all()
     bank = BankModel.objects.all()
 
+    # Always define hide_fields before request.method check
+    if user_type == 'franchise':
+        hide_fields = ['followup_date', 'status_name', 'executive_name', 'mobileno_1', 'mobileno_2']
+    else:
+        hide_fields = []
+
     if request.method == 'POST':
         files = request.FILES.getlist('files')
-        form = LoanApplicationForm(request.POST, request.FILES)
+        form = LoanApplicationForm(request.POST, request.FILES, user_type=user_type)
+        if user_type == 'franchise':
+            for field in hide_fields:
+                if field in form.fields:
+                    form.fields.pop(field)
 
         if form.is_valid():
             loan_form = form.save(commit=False)
@@ -89,19 +99,15 @@ def loanform(request):
             if user_type == 'admin' and not admin.is_superadmin and not admin.is_staff:
                 loan_form.franchise = admin
             elif user_type == 'staff':
-    # Get the franchise(s) assigned to this staff
                 assignment = StaffAssignmentModel.objects.filter(staff_name=staff).first()
                 if assignment:
-                    # If you want to assign the loan to the first franchise in the assignment:
-                    franchise = assignment.franchise_name.first()  # franchise_name is ManyToMany
+                    franchise = assignment.franchise_name.first()
                     if franchise:
                         loan_form.franchise = franchise
                     else:
-                        # No franchise assigned, handle error or set None
                         loan_form.franchise = None
                 else:
-                    loan_form.franchise = None  # Or handle no assignment
-
+                    loan_form.franchise = None
             elif user_type == 'franchise':
                 loan_form.franchise = franchise
             elif user_type == 'executive':
@@ -113,17 +119,22 @@ def loanform(request):
                 UploadedFile.objects.create(
                     file=file, loan_application=loan_form)
 
-            return redirect('/')
+            return redirect('all-application')
 
     else:
-        form = LoanApplicationForm()
+        form = LoanApplicationForm(user_type=user_type)
+        if user_type == 'franchise':
+            for field in hide_fields:
+                if field in form.fields:
+                    form.fields.pop(field)
 
     return render(request, 'loan-form.html', {
         'username': username,
         'loan': loan,
         'status': status,
         'bank': bank,
-        'form': form
+        'form': form,
+        'hide_fields': hide_fields
     })
 
 

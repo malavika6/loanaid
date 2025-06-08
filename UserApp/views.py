@@ -59,12 +59,14 @@ def login(request):
 
         user = None
         user_type = None
+        username = None
 
         # Check Admin
         try:
             admin = AdminModel.objects.get(admin_email=identifier)
             if check_password(password, admin.admin_password):
                 user, user_type = admin, 'admin'
+                username = f"{admin.admin_first_name} {admin.admin_last_name or ''}".strip()
         except AdminModel.DoesNotExist:
             pass
 
@@ -75,17 +77,13 @@ def login(request):
                 if check_password(password, franchise.password):
                     if franchise.payment_status:  # Payment verified
                         request.session.flush()
-                        # Store using PK so that get_user_context can look it up with pk.
                         request.session['user_id'] = str(franchise.pk)
                         request.session['user_type'] = 'franchise'
-                        request.session['franchise_id'] = str(franchise.pk)  # <-- THIS IS MISSING
-
-                        # Clear old payment flags
+                        request.session['franchise_id'] = str(franchise.pk)
+                        request.session['username'] = franchise.franchise_name
                         request.session.pop('requires_payment', None)
-                        request.session.set_expiry(
-                            3600)  # 1-hour session expiry
-                        logger.info(
-                            f"Franchise login successful (ID: {franchise.pk})")
+                        request.session.set_expiry(3600)
+                        logger.info(f"Franchise login successful (ID: {franchise.pk})")
                         return redirect('/franchise_dashboard')
                     # If payment is not active, set flags for payment redirect
                     request.session['franchise_id'] = str(franchise.pk)
@@ -101,6 +99,7 @@ def login(request):
                 # NOTE: For security, you should use hashed passwords.
                 if password == staff.password:
                     user, user_type = staff, 'staff'
+                    username = f"{staff.first_name} {staff.last_name or ''}".strip()
             except StaffModel.DoesNotExist:
                 pass
 
@@ -110,15 +109,16 @@ def login(request):
                 executive = UserModel.objects.get(email=identifier)
                 if check_password(password, executive.password):
                     user, user_type = executive, 'executive'
+                    username = executive.name
             except UserModel.DoesNotExist:
                 pass
 
         # Login handling
         if user:
             request.session.flush()  # Clear any existing session data
-            # Use the object's primary key so that our get_user_context (which should look up via PK) succeeds.
             request.session['user_id'] = str(user.pk)
             request.session['user_type'] = user_type
+            request.session['username'] = username
             request.session.set_expiry(3600)  # 1-hour session expiry
 
             logger.info(f"Login successful: {user_type} (ID: {user.pk})")
@@ -405,7 +405,7 @@ def create_staff(request):
                 staff = form.save(commit=False)
                 staff.save()  # Save staff with all details
                 messages.success(request, "Staff member added successfully!")
-                return redirect('/')  # Redirect after successful creation
+                return redirect('/list_staff')  # Redirect after successful creation
             else:
                 messages.error(
                     request, "There was an error in the form. Please correct it.")
@@ -456,8 +456,8 @@ def delete_staff(request, staff_id):
 
         staff_member.delete()
 
-        return redirect('/')
-    return redirect('/')
+        return redirect('/list_staff')
+    return redirect('/list_staff')
 
 
 def delete_files(request, id):
