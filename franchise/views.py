@@ -11,6 +11,7 @@ from django.core.mail import send_mail
 from django.db.models import Prefetch
 from collections import defaultdict
 from django.contrib.auth.hashers import make_password
+from django.db import IntegrityError
 
 
 def add_franchise(request):
@@ -43,20 +44,26 @@ def add_franchise(request):
                     messages.error(request, "Staff user not found.")
                     return redirect('/login/')
 
-            franchise.save()
+            try:
+                franchise.save()
 
-            # Send email with franchise details
-            send_mail(
-                "Franchise Account Created",
-                f"Hello {franchise.franchise_owner},\n\nYour franchise account has been created successfully!\n\nUsername: {franchise.email}\nPassword: {plain_password}\nReferral Code: {franchise.referral_code}\n\nPlease log in and update your password immediately.",
-                "info@loanaidindia.com",
-                [franchise.email],
-                fail_silently=False,
-            )
+                # Send email with franchise details
+                send_mail(
+                    "Franchise Account Created",
+                    f"Hello {franchise.franchise_owner},\n\nYour franchise account has been created successfully!\n\nUsername: {franchise.email}\nPassword: {plain_password}\nReferral Code: {franchise.referral_code}\n\nPlease log in and update your password immediately.",
+                    "info@loanaidindia.com",
+                    [franchise.email],
+                    fail_silently=False,
+                )
 
-            messages.success(
-                request, "Franchise added successfully and credentials sent via email.")
-            return redirect("list_franchise")
+                messages.success(
+                    request, "Franchise added successfully and credentials sent via email.")
+                return redirect("list_franchise")
+            except IntegrityError as e:
+                if 'email' in str(e):
+                    form.add_error('email', 'Franchise with this Email already exists.')
+                if 'referral_code' in str(e):
+                    form.add_error('referral_code', 'Franchise with this Referral code already exists.')
         else:
             # If the form is invalid, return the form again with errors
             messages.error(request, "Please correct the errors in the form.")
