@@ -548,3 +548,28 @@ def list_loan(request):
     Placeholder view for listing loans.
     """
     return HttpResponse("List Loan Page")
+
+
+def delete_application(request, form_id):
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
+    if not user_id or user_type not in ['admin', 'staff', 'franchise']:
+        return redirect('/login')
+
+    loan_app = get_object_or_404(LoanApplicationModel, form_id=form_id)
+
+    # Only allow admin, staff, or the franchise owner to delete
+    if user_type == 'admin':
+        pass  # Admin can delete any
+    elif user_type == 'staff':
+        staff = StaffModel.objects.get(pk=user_id)
+        # Optionally, check if staff is assigned to this franchise
+    elif user_type == 'franchise':
+        franchise = Franchise.objects.get(pk=user_id)
+        if loan_app.franchise != franchise:
+            return redirect('/login')
+
+    if request.method == 'POST':
+        loan_app.delete()
+        return redirect('all-application')
+    return render(request, 'confirm_delete.html', {'object': loan_app})

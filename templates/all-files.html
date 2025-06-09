@@ -38,7 +38,6 @@
                                         <th scope="col">FollowUp Date</th>
                                         <th scope="col">Description</th>
                                         <th scope="col">Status</th>
-                                        <th scope="col">Application Description</th>
                                         <th scope="col">Bank</th>
                                         <th scope="col">Executive Name</th>
                                         <th scope="col">Mobile No 1</th>
@@ -59,7 +58,6 @@
                                         <td>{{ form.followup_date }}</td>
                                         <td>{{ form.description }}</td>
                                         <td>{{ form.status_name }}</td>
-                                        <td>{{ form.application_description }}</td>
                                         <td>{{ form.bank_name }}</td>
                                         <td>{{ form.executive_name }}</td>
                                         <td>
@@ -68,6 +66,10 @@
                                         </td>
                                         <td>
                                             <a href="{% url 'loan-page' form.form_id %}">Check this</a>
+                                            <form method="POST" action="{% url 'delete_application' form.form_id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
                                         </td>
                                     </tr>
                                     {% endfor %}

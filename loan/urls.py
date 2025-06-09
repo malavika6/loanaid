@@ -17,4 +17,5 @@ urlpatterns = [
     path('delete_loan_page/<int:form_id>/', views.delete_loanpage, name='delete_loan_page'),
     path('apply-loan/', views.apply_loan, name='apply-loan'),
     path('list-loan/', views.list_loan, name='list-loan'),
+    path('delete-application/<int:form_id>/', views.delete_application, name='delete_application'),
 ]
