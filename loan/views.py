@@ -5,9 +5,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from datetime import datetime
-from UserApp.models import *
+from users.models import *
 from django.http import JsonResponse
-from UserApp.forms import *
+from users.forms import *
 
 
 import logging

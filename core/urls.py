@@ -21,10 +21,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('UserApp.urls')),  # User-related URLs
-    path('loan/', include('loan.urls')),  # Loan-related URLs
-    path('franchise/', include('franchise.urls')),  # Franchise-related URLs
-    path('dashboard/', include('dashboard.urls')),  # Dashboard-related URLs
+    path('', include('users.urls')),  # User-related URLs
+    path('loan/', include('loan.urls')),  # Loan-related URLs 
+    path('payment/', include('payment.urls')),  # Dashboard-related URLs
+    path('authapp/', include('authapp.urls')),  # Dashboard-related URLs
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:

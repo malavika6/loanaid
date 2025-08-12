@@ -2693,3 +2693,49 @@
 2025-06-09 11:17:30,716 - DEBUG - Sidebar menu for user_type admin: [{'name': 'Dashboard', 'url': '/'}, {'name': 'Application', 'url': '/loan/application/'}, {'name': 'All Applications', 'url': '/loan/all-application/'}, {'name': 'Create Staff', 'url': '/create-user/'}, {'name': 'All Staffs', 'url': '/list_staff/'}, {'name': 'Staff Assignment', 'url': '/franchise/assign/'}, {'name': 'All Assignment', 'url': '/franchise/assignments/'}, {'name': 'Add Bank', 'url': '/loan/add-bank/'}, {'name': 'Add Franchise', 'url': '/franchise/add_franchise/'}, {'name': 'List Franchise', 'url': '/franchise/list_franchise/'}, {'name': 'Add Loan', 'url': '/loan/add-loan/'}, {'name': 'Add Status', 'url': '/loan/add-status/'}]
 2025-06-09 11:17:35,062 - DEBUG - Session user_id: 1, user_type: admin
 2025-06-09 11:17:35,062 - DEBUG - Sidebar menu for user_type admin: [{'name': 'Dashboard', 'url': '/'}, {'name': 'Application', 'url': '/loan/application/'}, {'name': 'All Applications', 'url': '/loan/all-application/'}, {'name': 'Create Staff', 'url': '/create-user/'}, {'name': 'All Staffs', 'url': '/list_staff/'}, {'name': 'Staff Assignment', 'url': '/franchise/assign/'}, {'name': 'All Assignment', 'url': '/franchise/assignments/'}, {'name': 'Add Bank', 'url': '/loan/add-bank/'}, {'name': 'Add Franchise', 'url': '/franchise/add_franchise/'}, {'name': 'List Franchise', 'url': '/franchise/list_franchise/'}, {'name': 'Add Loan', 'url': '/loan/add-loan/'}, {'name': 'Add Status', 'url': '/loan/add-status/'}]
+2025-06-24 23:53:00,401 - DEBUG - Session user_id: None, user_type: None
+2025-06-24 23:53:00,401 - WARNING - Missing user_id or user_type in session.
+2025-06-24 23:53:00,517 - DEBUG - Session user_id: None, user_type: None
+2025-06-24 23:53:00,517 - WARNING - Missing user_id or user_type in session.
+2025-06-24 23:53:12,257 - DEBUG - Session user_id: None, user_type: None
+2025-06-24 23:53:12,257 - WARNING - Missing user_id or user_type in session.
+2025-06-25 16:25:40,618 - DEBUG - Session user_id: None, user_type: None
+2025-06-25 16:25:40,620 - WARNING - Missing user_id or user_type in session.
+2025-07-09 23:28:03,210 - DEBUG - Session user_id: None, user_type: None
+2025-07-09 23:28:03,210 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:11:20,140 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:11:20,143 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:11:20,241 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:11:20,241 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:15:25,521 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:15:25,522 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:15:31,692 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:15:31,692 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:15:46,482 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:15:46,482 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:15:56,843 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:15:56,843 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:16:04,852 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:16:04,852 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:16:10,502 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:16:10,502 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:26:34,351 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:26:34,351 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:26:39,848 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:26:39,848 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:26:46,913 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:26:46,913 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:26:49,720 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:26:49,720 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:27:03,242 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:27:03,242 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:27:05,799 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:27:05,799 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:30:33,427 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:30:33,427 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:34:33,387 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:34:33,387 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:34:42,335 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:34:42,335 - WARNING - Missing user_id or user_type in session.
+2025-07-15 23:34:44,668 - DEBUG - Session user_id: None, user_type: None
+2025-07-15 23:34:44,668 - WARNING - Missing user_id or user_type in session.

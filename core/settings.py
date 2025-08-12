@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-au$#i1-8qzyxra0jcpw-v#7!67^7plc9m#b)r-pdj1%zz7=yp9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 
 # Load environment variables from .env file
@@ -49,9 +49,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'UserApp',
+    'users',
     'loan',
-    'franchise',
+    'payment',
+    'authapp',
 ]
 
 MIDDLEWARE = [
@@ -79,8 +80,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'UserApp.context_processors.sidebar_context',
-                'UserApp.context_processors.base_dropdown_items',
+                'users.context_processors.sidebar_context',
+                'users.context_processors.base_dropdown_items',
             ],
         },
     },
