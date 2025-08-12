@@ -110,76 +110,26 @@ def login(request):
 
 
 def staff_dashboard(request):
-    sidebar_menu, username = get_user_context(request)
-    if not sidebar_menu or not username:
-        return redirect('/login')
-
-    user_id = request.session.get('user_id')
-
-    # Get franchises assigned to this staff
-    staff = StaffModel.objects.get(pk=user_id)
-    assigned_franchises = Franchise.objects.filter(staffassignmentmodel__staff_name=staff).distinct()
-
-    # Loans assigned to staff or franchises they are assigned to
-    staff_loans = LoanApplicationModel.objects.filter(assigned_to=staff)
-    franchise_loans = LoanApplicationModel.objects.filter(franchise__in=assigned_franchises)
-    all_loans = (staff_loans | franchise_loans).distinct()
-
-    assigned_franchise_count = assigned_franchises.count()
-    franchise_loan_count = franchise_loans.count()
-
-    context = {
-        'sidebar_menu': sidebar_menu,
-        'username': username,
-        'all_loans': franchise_loans,  # send loans as all_loans for template
-        'franchise_loans': franchise_loan_count,
-        'assigned_franchise_count': assigned_franchise_count,
-        'assigned_franchises': assigned_franchises,
-    }
-    return render(request, 'dashboard.html', context)
+    """
+    Staff dashboard view - now optimized and delegated to staff_views
+    """
+    from .staff_views import StaffDashboardView
+    
+    # Use the optimized staff dashboard view
+    staff_view = StaffDashboardView()
+    return staff_view.get(request)
 
 
 
 def home(request):
     """
-    Dashboard view for admin users.
+    Dashboard view for admin users - now optimized and delegated to AdminDashboardView
     """
-    sidebar_menu, username = get_user_context(request)
-    if not sidebar_menu or not username:
-        return redirect('/login')
-
-    user_type = request.session.get('user_type')
-    print(
-        "user_type", user_type)  # Debugging line to check user_type)
-    if user_type == 'admin':
-        today = datetime.now().date()
-        all_loans = LoanApplicationModel.objects.filter(followup_date=today)
-        loan_followup = all_loans.filter(
-            assigned_to=request.session.get('user_id'))
-
-        all_franchises = Franchise.objects.all()
-        franchise_count = all_franchises.count()
-
-        all_staff = StaffModel.objects.all()
-        staff_count = all_staff.count()
-
-        loan_app = LoanApplicationModel.objects.all()
-        loan_app_count = loan_app.count()
-        last_loan_app = loan_app.order_by('-form_id')[:10]
-
-        context = {
-            'username': username,
-            'forms': last_loan_app,
-            'loans': all_loans,
-            'total_franchise_count': franchise_count,
-            'total_staff_count': staff_count,
-            'loan_app_count': loan_app_count,
-            'all_franchises': all_franchises,
-            'all_staff': all_staff,
-            'sidebar_menu': sidebar_menu,
-            'can_add_loan': True
-        }
-        return render(request, 'index.html', context)
+    from .admin_views import AdminDashboardView
+    
+    # Use the optimized admin dashboard view
+    admin_view = AdminDashboardView()
+    return admin_view.get(request)
 
     elif user_type == 'staff':
         staff_id = request.session.get('user_id')
@@ -219,14 +169,14 @@ def home(request):
 
 
     elif user_type == 'franchise':
-        staff_loans = LoanApplicationModel.objects.filter(
-            assigned_to=request.session.get('staff_id'))
-
-        context = {
-            'username': username,
-            'sidebar_menu': sidebar_menu,
-        }
-        return render(request, 'franchise_dashboard.html', context)
+        """
+        Franchise dashboard view - now optimized and delegated to franchise_views
+        """
+        from .franchise_views import FranchiseDashboardView
+        
+        # Use the optimized franchise dashboard view
+        franchise_view = FranchiseDashboardView()
+        return franchise_view.get(request)
     else:
         # If the user is neither admin nor staff, redirect them to login or another page.
         return redirect('/login')
@@ -343,112 +293,35 @@ def update_profile(request):
 
 
 def create_staff(request):
-    user_id = request.session.get("user_id")
-    user_type = request.session.get("user_type")
-
-    if not user_id or user_type != "admin":
-        messages.error(request, "Unauthorized access. Please log in.")
-        return redirect("/login/")
-
-    if request.method == "POST":
-        form = StaffModelForm(request.POST, request.FILES)
-        if form.is_valid():
-            plain_password = form.cleaned_data.get("password")
-            try:
-                staff = form.save(commit=False)
-                staff.password = make_password(plain_password)  # Hash password
-                staff.save()  # Auto-generates employee_id
-
-                # Send email with credentials
-                send_mail(
-                    subject="Staff Account Created",
-                    message=(
-                        f"Hello {staff.get_full_name()},\n\n"
-                        f"Your staff account has been created successfully.\n\n"
-                        f"Employee ID: {staff.employee_id}\n"
-                        f"Email: {staff.email}\n"
-                        f"Password: {plain_password}\n\n"
-                        f"Please log in and change your password after first login.\n\n"
-                        f"Regards,\nAdmin Team"
-                    ),
-                    from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=[staff.email],
-                    fail_silently=False,
-                )
-
-                messages.success(request, "Staff member added and email sent successfully!")
-                return redirect("/list_staff")
-
-            except IntegrityError as e:
-                if "email" in str(e):
-                    form.add_error("email", "A staff member with this email already exists.")
-                else:
-                    messages.error(request, "Failed to create staff member.")
-
-        else:
-            messages.error(request, "Please correct the errors in the form.")
-            print("Form errors:", form.errors)
-
-    else:
-        form = StaffModelForm()
-
-    return render(request, "create-staff.html", {"form": form})  # Handle case where admin doesn't exist
+    """
+    Staff creation view - now optimized and delegated to admin_views
+    """
+    from .admin_views import create_staff_view
+    return create_staff_view(request)
 
 
 def view_staffs(request, staff_id):
-    user_id = request.session.get('user_id')
-    user_type = request.session.get('user_type')
-
-    if not user_id or user_type != 'admin':
-        messages.error(request, "Unauthorized access.")
-        return redirect('/login')
-
-    try:
-        admin = AdminModel.objects.get(admin_id=user_id)
-        staff_member = get_object_or_404(StaffModel, pk=staff_id)
-
-        return render(request, 'staff_detail.html', {
-            'staff_member': staff_member,
-            'admin_name': f"{admin.admin_first_name} {admin.admin_last_name or ''}".strip()
-        })
-
-    except AdminModel.DoesNotExist:
-        messages.error(request, "Admin not found.")
-        return redirect('/login')
+    """
+    Staff detail view - now optimized and delegated to admin_views
+    """
+    from .admin_views import view_staff_detail
+    return view_staff_detail(request, staff_id)
 
 
 def list_staff(request):
-    user_id = request.session.get('user_id')
-    user_type = request.session.get('user_type')
-
-    if not user_id or user_type != 'admin':
-        messages.error(request, "Unauthorized access.")
-        return redirect('/login')
-
-    all_staff = StaffModel.objects.all().order_by('-created_at')
-    return render(request, 'all_staffs.html', {'all_staff': all_staff})
+    """
+    Staff listing view - now optimized and delegated to admin_views
+    """
+    from .admin_views import list_staff_view
+    return list_staff_view(request)
 
 
 def delete_staff(request, staff_id):
-    user_id = request.session.get('user_id')
-    user_type = request.session.get('user_type')
-
-    if not user_id or user_type != 'admin':
-        messages.error(request, "Unauthorized access.")
-        return redirect('/login')
-
-    staff_member = get_object_or_404(StaffModel, pk=staff_id)
-
-    if request.method == 'POST':
-        # Unassign all related loan applications
-        LoanApplicationModel.objects.filter(assigned_to=staff_member).update(assigned_to=None)
-
-        staff_member.delete()
-        messages.success(request, "Staff member deleted successfully.")
-        return redirect('/list_staff')
-
-    messages.warning(request, "Invalid request method.")
-    return redirect('/list_staff')
+    """
+    Staff deletion view - now optimized and delegated to admin_views
+    """
+    from .admin_views import delete_staff_view
+    return delete_staff_view(request, staff_id)
 
 
 

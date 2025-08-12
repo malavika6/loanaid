@@ -45,6 +45,11 @@ class StaffModel(models.Model):
     )
     password = models.CharField(max_length=128, null=True)
     profile_picture = models.ImageField(upload_to="staff_profiles/", null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    can_create_loans = models.BooleanField(default=True)
+    can_assign_franchises = models.BooleanField(default=False)
+    can_view_reports = models.BooleanField(default=True)
+    managed_by = models.ForeignKey('AdminModel', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
 
@@ -71,6 +76,16 @@ class StaffModel(models.Model):
 
     def get_full_name(self):
         return f"{self.first_name} {self.last_name or ''}".strip()
+    
+    def check_password(self, raw_password):
+        """Check if the provided password matches the stored hash"""
+        from django.contrib.auth.hashers import check_password
+        return check_password(raw_password, self.password)
+    
+    def set_password(self, raw_password):
+        """Set the password with proper hashing"""
+        from django.contrib.auth.hashers import make_password
+        self.password = make_password(raw_password)
 
 
 def generate_referral_code():
@@ -121,3 +136,13 @@ class Franchise(models.Model):
 
     def __str__(self):
         return self.franchise_name
+    
+    def check_password(self, raw_password):
+        """Check if the provided password matches the stored hash"""
+        from django.contrib.auth.hashers import check_password
+        return check_password(raw_password, self.password)
+    
+    def set_password(self, raw_password):
+        """Set the password with proper hashing"""
+        from django.contrib.auth.hashers import make_password
+        self.password = make_password(raw_password)
