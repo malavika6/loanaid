@@ -14,12 +14,23 @@
               class="d-sm-flex align-items-center justify-content-between mb-4"
             >
               <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+              <div class="btn-group" role="group">
+                <a href="{% url 'create_staff' %}" class="btn btn-primary btn-sm">
+                  <i class="fas fa-user-plus"></i> Add Staff
+                </a>
+                <a href="{% url 'add_franchise' %}" class="btn btn-success btn-sm">
+                  <i class="fas fa-building"></i> Add Franchise
+                </a>
+                <a href="{% url 'addloan' %}" class="btn btn-info btn-sm">
+                  <i class="fas fa-plus"></i> Add Application
+                </a>
+              </div>
             </div>
 
             <!-- Content Row -->
             <div class="row">
               <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card bg-gradient-secondary shadow h-100 py-2">
+                <div class="card border-left-info shadow h-100 py-2">
                   <div class="card-body">
                     <div
                       class="row justify-content-center no-gutters align-items-center"
@@ -30,21 +41,25 @@
                         >
                           <i
                             class="fas fa-user fa-2x"
-                            style="color:#8eaed7"
+                            style="color:#36b9cc"
                           ></i>
                         </div>
                       </div>
                       <div
-                        class="col-lg-9 text-white d-flex flex-column justify-content-center align-items-center"
-                        style="text-transform: uppercase"
+                        class="col-lg-9 d-flex flex-column justify-content-center align-items-center"
                       >
-                        Welcome {{username}}
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                          Welcome
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                          {{username|default:"User"}}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <!-- Earnings (Monthly) Card Example -->
+              <!-- Franchises Card -->
               <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-primary shadow h-100 py-2">
                   <div class="card-body">
@@ -60,19 +75,20 @@
                         </div>
                       </div>
                       <div class="col-auto">
-                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                        <i class="fas fa-building fa-2x text-gray-300"></i>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+              <!-- Staff Card -->
               <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card border-left-warning shadow h-100 py-2">
                   <div class="card-body">
                     <div class="row no-gutters align-items-center">
                       <div class="col mr-2">
                         <div
-                          class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+                          class="text-xs font-weight-bold text-warning text-uppercase mb-1"
                         >
                         Staff
                         </div>
@@ -87,9 +103,7 @@
                   </div>
                 </div>
               </div>
-            
-
-              <!-- Earnings (Monthly) Card Example -->
+              <!-- Loans Card -->
               <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-success shadow h-100 py-2">
                   <div class="card-body">
@@ -306,7 +320,7 @@
                 <!-- Project Card Example -->
                 <div class="card shadow mb-4">
                   <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">All Staff</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Staff</h6>
                   </div>
                   <div class="card-body">
                     <div class="table-responsive-xxl">
@@ -372,4 +386,44 @@
       <!-- End of Content Wrapper -->
     </div>
     <!-- End of Page Wrapper -->
+
+<script>
+// Dashboard card interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Make dashboard cards clickable
+    const cards = document.querySelectorAll('.card.border-left-primary, .card.border-left-success, .card.border-left-warning, .card.border-left-info');
+    
+    cards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Add a subtle click effect
+            this.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+        });
+    });
+
+    // Add loading animation for numbers (only for numeric values)
+    const numbers = document.querySelectorAll('.h5.mb-0.font-weight-bold.text-gray-800');
+    numbers.forEach(number => {
+        const finalValue = number.textContent.trim();
+        
+        // Only animate if the value is numeric
+        if (finalValue && !isNaN(finalValue) && finalValue !== 'User' && finalValue !== 'NAN') {
+            number.textContent = '0';
+            
+            let currentValue = 0;
+            const increment = parseInt(finalValue) / 20;
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= parseInt(finalValue)) {
+                    currentValue = parseInt(finalValue);
+                    clearInterval(timer);
+                }
+                number.textContent = Math.floor(currentValue);
+            }, 50);
+        }
+    });
+});
+</script>
 {% endblock %}

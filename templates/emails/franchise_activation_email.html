@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Franchise Account Activation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+            font-size: 28px;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #007bff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .logo-text {
+            font-size: 16px;
+            color: #6c757d;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        .logo-container {
+            margin-bottom: 20px;
+        }
+        .logo-image {
+            width: 120px;
+            height: 60px;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: #ffffff;
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .activation-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .activation-button:hover {
+            background-color: #0056b3;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <div class="logo-image">💰 Loan Aid</div>
+            </div>
+            <div class="logo-text">Financial Solutions & Support</div>
+            <h1>🎉 Welcome to Loan Aid!</h1>
+            <p>Your Franchise Account is Ready for Activation</p>
+        </div>
+
+        <div class="content">
+            <p>Dear <strong>{{ franchise.franchise_owner }}</strong>,</p>
+
+            <p>Congratulations! Your franchise account has been successfully created in the Loan Aid system. We're excited to have you on board!</p>
+
+            <div class="info-box">
+                <h3>📋 Your Account Details:</h3>
+                <ul>
+                    <li><strong>Franchise Name:</strong> {{ franchise.franchise_name }}</li>
+                    <li><strong>Email Address:</strong> {{ franchise.email }}</li>
+                    <li><strong>Referral Code:</strong> {{ franchise.referral_code }}</li>
+                    <li><strong>Franchise Type:</strong> {{ franchise.get_franchise_type_display }}</li>
+                </ul>
+            </div>
+
+            <div class="highlight">
+                <h3>🔐 Next Steps:</h3>
+                <p>To complete your account setup and access your franchise dashboard, please:</p>
+                <ol>
+                    <li>Click the activation button below</li>
+                    <li>Set a secure password for your account</li>
+                    <li>Complete your profile information</li>
+                    <li>Start managing your loan applications!</li>
+                </ol>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{ activation_url }}" class="activation-button">
+                    🚀 Activate My Account
+                </a>
+            </div>
+
+            <p><strong>Important Notes:</strong></p>
+            <ul>
+                <li>This activation link will expire in 24 hours for security reasons</li>
+                <li>Please use a strong password (at least 8 characters)</li>
+                <li>After activation, you'll need to complete your profile before accessing the dashboard</li>
+                <li>Keep your referral code safe - you'll need it for business operations</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>Loan Aid Team</strong></p>
+            <p>If you have any questions or need assistance, please contact our support team.</p>
+            <p>This is an automated message - please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

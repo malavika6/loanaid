@@ -1,6 +1,7 @@
 from users.utils import get_sidebar_menu, get_user_context
-from users.forms import StaffModelForm
+from users.forms import StaffModelForm, StaffActivationForm, FranchiseActivationForm, FranchiseProfileForm
 from users.models import AdminModel, StaffModel, Franchise
+from users.jwt_utils import generate_activation_token, verify_activation_token
 from loan.models import LoanApplicationModel, UploadedFile
 from payment.models import Payment
 import uuid
@@ -12,6 +13,10 @@ from django.contrib.auth import logout as django_logout
 from django.contrib.auth.hashers import check_password
 from datetime import datetime
 from django.contrib import messages
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.urls import reverse
+from django.conf import settings
 from .utils import get_sidebar_menu, get_user_context
 
 
@@ -53,7 +58,22 @@ def login(request):
         if not user:
             try:
                 franchise = Franchise.objects.get(email=identifier)
-                if check_password(password, franchise.password):
+                if not franchise.is_active:
+                    error = "Your account is not activated. Please check your email for activation link or contact administrator."
+                elif franchise.password and check_password(password, franchise.password):
+                    # Check if profile is complete
+                    if not franchise.is_profile_complete():
+                        # Profile not complete, redirect to profile completion
+                        request.session.flush()
+                        request.session['user_id'] = str(franchise.pk)
+                        request.session['user_type'] = 'franchise'
+                        request.session['franchise_id'] = str(franchise.pk)
+                        request.session['username'] = franchise.franchise_name
+                        request.session.set_expiry(3600)
+                        logger.info(f"Franchise login successful but profile incomplete (ID: {franchise.pk})")
+                        return redirect('franchise_profile_completion')
+                    
+                    # Profile complete, check payment status
                     if franchise.payment_status:  # Payment verified
                         request.session.flush()
                         request.session['user_id'] = str(franchise.pk)
@@ -64,10 +84,13 @@ def login(request):
                         request.session.set_expiry(3600)
                         logger.info(f"Franchise login successful (ID: {franchise.pk})")
                         return redirect('/franchise_dashboard')
-                    # If payment is not active, set flags for payment redirect
-                    request.session['franchise_id'] = str(franchise.pk)
-                    request.session['requires_payment'] = True
-                    return redirect('payment_redirect')
+                    else:
+                        # If payment is not active, set flags for payment redirect
+                        request.session['franchise_id'] = str(franchise.pk)
+                        request.session['requires_payment'] = True
+                        return redirect('payment_redirect')
+                else:
+                    error = "Invalid credentials. Please try again."
             except Franchise.DoesNotExist:
                 pass
 
@@ -75,10 +98,14 @@ def login(request):
         if not user:
             try:
                 staff = StaffModel.objects.get(email=identifier)
-                # NOTE: For security, you should use hashed passwords.
-                if password == staff.password:
+                # Check if staff is active
+                if not staff.is_active:
+                    error = "Your account is not activated. Please check your email for activation link or contact administrator."
+                elif staff.password and check_password(password, staff.password):
                     user, user_type = staff, 'staff'
                     username = f"{staff.first_name} {staff.last_name or ''}".strip()
+                else:
+                    error = "Invalid credentials. Please try again."
             except StaffModel.DoesNotExist:
                 pass
 
@@ -102,9 +129,10 @@ def login(request):
             elif user_type == 'executive':
                 return redirect(f'/index/{user.pk}')
         else:
-            error = "Invalid credentials. Please try again."
+            if not error:
+                error = "Invalid credentials. Please try again."
             logger.warning(f"Login failed for identifier: {identifier}")
-            messages.error(request, "Invalid credentials. Please try again.")
+            messages.error(request, error)
 
     return render(request, 'login.html', {'error': error})
 
@@ -144,13 +172,24 @@ def home(request):
     """
     Dashboard view for admin users.
     """
+    print("=== DEBUG: Home view called ===")
+    print(f"Session data: {dict(request.session)}")
+    
     sidebar_menu, username = get_user_context(request)
-    if not sidebar_menu or not username:
+    print(f"get_user_context returned: sidebar_menu={sidebar_menu is not None}, username='{username}'")
+    
+    # Fallback: Get username from session if get_user_context fails
+    if not username:
+        username = request.session.get('username', 'User')
+        print(f"Using fallback username: {username}")
+    
+    if not sidebar_menu:
+        print("No sidebar menu, redirecting to login")
         return redirect('/login')
 
     user_type = request.session.get('user_type')
-    print(
-        "user_type", user_type)  # Debugging line to check user_type)
+    print(f"Final values - user_type: {user_type}, username: {username}")
+    print("=== END DEBUG ===")
     if user_type == 'admin':
         today = datetime.now().date()
         all_loans = LoanApplicationModel.objects.filter(followup_date=today)
@@ -353,30 +392,42 @@ def create_staff(request):
     if request.method == "POST":
         form = StaffModelForm(request.POST, request.FILES)
         if form.is_valid():
-            plain_password = form.cleaned_data.get("password")
             try:
                 staff = form.save(commit=False)
-                staff.password = make_password(plain_password)  # Hash password
+                staff.is_active = False  # Set inactive by default
                 staff.save()  # Auto-generates employee_id
 
-                # Send email with credentials
-                send_mail(
-                    subject="Staff Account Created",
-                    message=(
-                        f"Hello {staff.get_full_name()},\n\n"
-                        f"Your staff account has been created successfully.\n\n"
-                        f"Employee ID: {staff.employee_id}\n"
-                        f"Email: {staff.email}\n"
-                        f"Password: {plain_password}\n\n"
-                        f"Please log in and change your password after first login.\n\n"
-                        f"Regards,\nAdmin Team"
-                    ),
-                    from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=[staff.email],
-                    fail_silently=False,
+                # Generate JWT activation token
+                activation_token = generate_activation_token(staff.email, 'staff', staff.staff_id)
+
+                # Create activation URL
+                activation_url = request.build_absolute_uri(
+                    reverse('staff_activation', kwargs={'token': activation_token})
                 )
 
-                messages.success(request, "Staff member added and email sent successfully!")
+                # Send activation email
+                try:
+                    # Render email template
+                    html_message = render_to_string('emails/staff_activation_email.html', {
+                        'staff': staff,
+                        'activation_url': activation_url,
+                    })
+                    plain_message = strip_tags(html_message)
+
+                    send_mail(
+                        subject="Activate Your Staff Account - Loan Aid",
+                        message=plain_message,
+                        html_message=html_message,
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[staff.email],
+                        fail_silently=False,
+                    )
+
+                    messages.success(request, f"Staff member {staff.get_full_name()} created successfully! An activation email has been sent to {staff.email}.")
+                except Exception as e:
+                    messages.warning(request, f"Staff created but email could not be sent. Error: {str(e)}")
+                    logger.error(f"Failed to send activation email to {staff.email}: {str(e)}")
+
                 return redirect("/list_staff")
 
             except IntegrityError as e:
@@ -384,6 +435,7 @@ def create_staff(request):
                     form.add_error("email", "A staff member with this email already exists.")
                 else:
                     messages.error(request, "Failed to create staff member.")
+                    logger.error(f"IntegrityError creating staff: {str(e)}")
 
         else:
             messages.error(request, "Please correct the errors in the form.")
@@ -392,7 +444,48 @@ def create_staff(request):
     else:
         form = StaffModelForm()
 
-    return render(request, "create-staff.html", {"form": form})  # Handle case where admin doesn't exist
+    return render(request, "create-staff.html", {"form": form})
+
+def staff_activation(request, token):
+    """Handle staff account activation using JWT"""
+    # Verify the JWT token
+    email = verify_activation_token(token, 'staff')
+    
+    if not email:
+        return render(request, 'staff_activation.html', {
+            'error': 'Invalid or expired activation link. Please contact the administrator.'
+        })
+
+    try:
+        staff = StaffModel.objects.get(
+            email=email,
+            is_active=False
+        )
+    except StaffModel.DoesNotExist:
+        return render(request, 'staff_activation.html', {
+            'error': 'Staff account not found or already activated.'
+        })
+
+    if request.method == 'POST':
+        form = StaffActivationForm(request.POST)
+        if form.is_valid():
+            password = form.cleaned_data['password']
+            
+            # Set password and activate account
+            staff.password = make_password(password)
+            staff.is_active = True
+            staff.save()
+            
+            # Redirect to login page with success message
+            messages.success(request, 'Your account has been activated successfully! You can now log in with your email and password.')
+            return redirect('/login')
+    else:
+        form = StaffActivationForm()
+
+    return render(request, 'staff_activation.html', {
+        'form': form,
+        'staff': staff
+    })
 
 
 def view_staffs(request, staff_id):
@@ -407,9 +500,13 @@ def view_staffs(request, staff_id):
         admin = AdminModel.objects.get(admin_id=user_id)
         staff_member = get_object_or_404(StaffModel, pk=staff_id)
 
+        # Get sidebar menu context
+        sidebar_menu = get_sidebar_menu(user_type)
+
         return render(request, 'staff_detail.html', {
             'staff_member': staff_member,
-            'admin_name': f"{admin.admin_first_name} {admin.admin_last_name or ''}".strip()
+            'admin_name': f"{admin.admin_first_name} {admin.admin_last_name or ''}".strip(),
+            'sidebar_menu': sidebar_menu
         })
 
     except AdminModel.DoesNotExist:
@@ -426,7 +523,14 @@ def list_staff(request):
         return redirect('/login')
 
     all_staff = StaffModel.objects.all().order_by('-created_at')
-    return render(request, 'all_staffs.html', {'all_staff': all_staff})
+    
+    # Get sidebar menu context
+    sidebar_menu = get_sidebar_menu(user_type)
+    
+    return render(request, 'all_staffs.html', {
+        'all_staff': all_staff,
+        'sidebar_menu': sidebar_menu
+    })
 
 
 def delete_staff(request, staff_id):
@@ -506,3 +610,107 @@ def some_view(request):
     }
 
     return render(request, 'some_template.html', context)
+
+
+def activate_staff(request, staff_id):
+    """
+    Activate a staff member's account (admin only)
+    """
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
+
+    if not user_id or user_type != 'admin':
+        messages.error(request, "Unauthorized access.")
+        return redirect('/login')
+
+    try:
+        admin = AdminModel.objects.get(admin_id=user_id)
+        staff_member = get_object_or_404(StaffModel, pk=staff_id)
+
+        if request.method == 'POST':
+            staff_member.is_active = True
+            staff_member.save()
+            messages.success(request, f"Account activated successfully for {staff_member.get_full_name()}.")
+            return redirect('view_profile', staff_id=staff_id)
+        else:
+            messages.warning(request, "Invalid request method.")
+            return redirect('view_profile', staff_id=staff_id)
+
+    except AdminModel.DoesNotExist:
+        messages.error(request, "Admin not found.")
+        return redirect('/login')
+
+
+def franchise_activation(request, token):
+    """Handle franchise account activation"""
+    
+    try:
+        # Verify the activation token
+        email = verify_activation_token(token, 'franchise')
+        
+        if not email:
+            return render(request, 'franchise_activation.html', {
+                'error': 'Invalid or expired activation link. Please contact the administrator.'
+            })
+        
+        # Get the franchise
+        try:
+            franchise = Franchise.objects.get(email=email, is_active=False)
+        except Franchise.DoesNotExist:
+            return render(request, 'franchise_activation.html', {
+                'error': 'Franchise account not found or already activated.'
+            })
+        
+        if request.method == 'POST':
+            form = FranchiseActivationForm(request.POST)
+            if form.is_valid():
+                # Set password and activate account
+                franchise.password = make_password(form.cleaned_data['password'])
+                franchise.is_active = True
+                franchise.save()
+                
+                messages.success(request, "Account activated successfully! Please log in with your email and password.")
+                return redirect('login')
+        else:
+            form = FranchiseActivationForm()
+        
+        return render(request, 'franchise_activation.html', {
+            'form': form,
+            'franchise': franchise,
+            'token': token
+        })
+        
+    except Exception:
+        return render(request, 'franchise_activation.html', {
+            'error': 'An error occurred during activation. Please contact support.'
+        })
+
+
+
+
+def franchise_profile_completion(request):
+    """Handle franchise profile completion after login"""
+    franchise_id = request.session.get('franchise_id')
+    if not franchise_id:
+        messages.error(request, "Please log in first.")
+        return redirect('login')
+    
+    franchise = get_object_or_404(Franchise, franchise_id=franchise_id)
+    
+    if not franchise.is_active:
+        messages.error(request, "Your account is not activated.")
+        return redirect('login')
+    
+    if request.method == 'POST':
+        form = FranchiseProfileForm(request.POST, request.FILES, instance=franchise)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile completed successfully!")
+            return redirect('franchise_dashboard')
+    else:
+        form = FranchiseProfileForm(instance=franchise)
+    
+    return render(request, 'franchise_profile_completion.html', {
+        'form': form,
+        'franchise': franchise
+    })

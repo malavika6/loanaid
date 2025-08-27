@@ -22,6 +22,18 @@
                     </h6>
                 </div>
                 <div class="card-body">
+                    <!-- Info Alert -->
+                    <div class="alert alert-info" role="alert">
+                        <h5 class="alert-heading"><i class="fas fa-info-circle"></i> Franchise Creation Process</h5>
+                        <p>When you create a new franchise:</p>
+                        <ul class="mb-0">
+                            <li>The franchise account will be created with <strong>is_franchise = True</strong> and <strong>is_active = False</strong></li>
+                            <li>No password will be set during creation</li>
+                            <li>An activation email will be sent to the franchise with a link to set their password</li>
+                            <li>After activation, the franchise must complete their profile before accessing the dashboard</li>
+                        </ul>
+                    </div>
+                    
                     <form class="p-5 user" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         

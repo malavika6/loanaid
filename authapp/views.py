@@ -3,7 +3,7 @@ from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from datetime import datetime
 from django.utils import timezone
-from users.models import Franchise
+from users.models import Franchise, StaffModel
 from users.models import *
 from users.forms import *
 from django.contrib.auth.decorators import login_required
@@ -12,6 +12,10 @@ from django.db.models import Prefetch
 from collections import defaultdict
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
+from django.urls import reverse
+from django.conf import settings
+from django.template.loader import render_to_string
+from users.jwt_utils import generate_activation_token, verify_activation_token
 
 
 def add_franchise(request):
@@ -25,15 +29,16 @@ def add_franchise(request):
 
     # Handle POST request
     if request.method == 'POST':
-        form = FranchiseForm(request.POST, request.FILES)
+        form = FranchiseCreationForm(request.POST, request.FILES)
         if form.is_valid():
             # Form is valid, process and save
             print("Form is valid, saving data...")
             franchise = form.save(commit=False)
-            plain_password = request.POST.get('password')
-
-            # Use Django's make_password to hash the password
-            franchise.password = make_password(plain_password)
+            
+            # Set default values for activation flow
+            franchise.is_franchise = True
+            franchise.is_active = False
+            franchise.password = None  # No password during creation
 
             # If logged-in user is staff, set the staff relation
             if user_type == 'staff':
@@ -47,17 +52,54 @@ def add_franchise(request):
             try:
                 franchise.save()
 
-                # Send email with franchise details
-                send_mail(
-                    "Franchise Account Created",
-                    f"Hello {franchise.franchise_owner},\n\nYour franchise account has been created successfully!\n\nUsername: {franchise.email}\nPassword: {plain_password}\nReferral Code: {franchise.referral_code}\n\nPlease log in and update your password immediately.",
-                    "info@loanaidindia.com",
-                    [franchise.email],
-                    fail_silently=False,
+                # Generate activation token
+                activation_token = generate_activation_token(franchise.email, 'franchise')
+                
+                # Send activation email
+                activation_url = request.build_absolute_uri(
+                    reverse('franchise_activation', kwargs={'token': activation_token})
                 )
+                
+                # Send email with activation link
+                try:
+                    # Render HTML email template
+                    html_message = render_to_string('emails/franchise_activation_email.html', {
+                        'franchise': franchise,
+                        'activation_url': activation_url,
+                    })
+                    
+                    # Create plain text version
+                    plain_message = f"""Hello {franchise.franchise_owner},
 
-                messages.success(
-                    request, "Franchise added successfully and credentials sent via email.")
+Your franchise account has been created successfully!
+
+Email: {franchise.email}
+Referral Code: {franchise.referral_code}
+Franchise Type: {franchise.get_franchise_type_display()}
+
+Please click the following link to activate your account and set your password:
+{activation_url}
+
+This link will expire in 24 hours.
+
+Best regards,
+Loan Aid Team"""
+                    
+                    send_mail(
+                        "🎉 Welcome to Loan Aid - Activate Your Franchise Account",
+                        plain_message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [franchise.email],
+                        html_message=html_message,
+                        fail_silently=False,
+                    )
+                    messages.success(
+                        request, "Franchise added successfully. Activation email sent.")
+                except Exception as e:
+                    print(f"Failed to send activation email: {e}")
+                    messages.warning(
+                        request, "Franchise added but failed to send activation email. Please contact the franchise directly.")
+                
                 return redirect("list_franchise")
             except IntegrityError as e:
                 if 'email' in str(e):
@@ -72,7 +114,7 @@ def add_franchise(request):
 
     # Handle GET request (initial form rendering)
     else:
-        form = FranchiseForm()
+        form = FranchiseCreationForm()
         return render(request, 'add_franchise.html', {'form': form})
 
 
@@ -263,4 +305,72 @@ def update_assignment(request, assignment_id):
     else:
         form = StaffAssignmentForm(instance=assignment, user=request.user)
     return render(request, "assign_assignment.html", {"form": form, "assignment": assignment})
+
+
+def franchise_activation(request, token):
+    """Handle franchise account activation"""
+    try:
+        # Verify the activation token
+        email = verify_activation_token(token, 'franchise')
+        if not email:
+            messages.error(request, "Invalid or expired activation link.")
+            return redirect('login')
+        
+        # Get the franchise
+        franchise = get_object_or_404(Franchise, email=email)
+        
+        if franchise.is_active:
+            messages.info(request, "Your account is already activated. Please log in.")
+            return redirect('login')
+        
+        if request.method == 'POST':
+            form = FranchiseActivationForm(request.POST)
+            if form.is_valid():
+                # Set password and activate account
+                franchise.password = make_password(form.cleaned_data['password'])
+                franchise.is_active = True
+                franchise.save()
+                
+                messages.success(request, "Account activated successfully! Please log in with your email and password.")
+                return redirect('login')
+        else:
+            form = FranchiseActivationForm()
+        
+        return render(request, 'franchise_activation.html', {
+            'form': form,
+            'franchise': franchise,
+            'token': token
+        })
+        
+    except Exception as e:
+        messages.error(request, "An error occurred during activation. Please contact support.")
+        return redirect('login')
+
+
+def franchise_profile_completion(request):
+    """Handle franchise profile completion after login"""
+    franchise_id = request.session.get('franchise_id')
+    if not franchise_id:
+        messages.error(request, "Please log in first.")
+        return redirect('login')
+    
+    franchise = get_object_or_404(Franchise, franchise_id=franchise_id)
+    
+    if not franchise.is_active:
+        messages.error(request, "Your account is not activated.")
+        return redirect('login')
+    
+    if request.method == 'POST':
+        form = FranchiseProfileForm(request.POST, request.FILES, instance=franchise)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile completed successfully!")
+            return redirect('franchise_dashboard')
+    else:
+        form = FranchiseProfileForm(instance=franchise)
+    
+    return render(request, 'franchise_profile_completion.html', {
+        'form': form,
+        'franchise': franchise
+    })
 

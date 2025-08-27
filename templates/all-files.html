@@ -8,7 +8,7 @@
 
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">All Applications</h1>
+        <h1 class="h3 mb-0 text-gray-800">Applications</h1>
     </div>
 
     <div class="row">
@@ -19,6 +19,9 @@
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Applications</h6>
+                    <a href="{% url 'addloan' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Add Loan
+                    </a>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">

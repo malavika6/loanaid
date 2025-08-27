@@ -80,7 +80,7 @@ class Migration(migrations.Migration):
                 ('email', models.EmailField(max_length=254, unique=True)),
                 ('mobile_no', models.CharField(max_length=10, validators=[django.core.validators.RegexValidator('^\\d{10}$', message='Enter a valid 10-digit mobile number.')])),
                 ('password', models.CharField(max_length=128, null=True)),
-                ('referral_code', models.CharField(default=users.models.generate_referral_code, max_length=8, unique=True)),
+                ('referral_code', models.CharField(default='FR001', max_length=8, unique=True)),
                 ('aadhar', models.CharField(blank=True, max_length=50, null=True)),
                 ('GST', models.CharField(blank=True, max_length=50, null=True)),
                 ('pan', models.CharField(blank=True, max_length=50, null=True)),

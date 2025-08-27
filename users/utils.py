@@ -23,41 +23,37 @@ def get_sidebar_menu(user_type):
         # Define menu items based on user type
         menu_config = {
             'admin': [
-                {'name': 'Dashboard', 'url': reverse('home')},  # Pass a valid user_id (e.g., 1)
-                {'name': 'Application', 'url': reverse('form')},
-                {'name': 'All Applications', 'url': reverse('all-application')},
-                {'name': 'Create Staff', 'url': reverse('create_staff')},
-                {'name': 'All Staffs', 'url': reverse('list_staff')},
-                {'name': 'Staff Assignment', 'url': reverse('assign_staff')},
-                {'name': 'All Assignment', 'url': reverse('staff_assignments')},
-                {'name': 'Add Bank', 'url': reverse('addbank')},
-                {'name': 'Add Franchise', 'url': reverse('add_franchise')},
-                {'name': 'List Franchise', 'url': reverse('list_franchise')},
-                {'name': 'Add Loan', 'url': reverse('addloan')},
-                {'name': 'Add Status', 'url': reverse('addstatus')},
+                {'name': 'Dashboard', 'url': reverse('home'), 'icon': 'fas fa-tachometer-alt'},
+                {'name': 'Applications', 'url': reverse('all-application'), 'icon': 'fas fa-file-alt'},
+                {'name': 'Staffs', 'url': reverse('list_staff'), 'icon': 'fas fa-users'},
+                {'name': 'Staff Assignment', 'url': reverse('assign_staff'), 'icon': 'fas fa-user-plus'},
+                {'name': 'Assignments', 'url': reverse('staff_assignments'), 'icon': 'fas fa-tasks'},
+                {'name': 'Banks', 'url': reverse('addbank'), 'icon': 'fas fa-university'},
+                {'name': 'Franchises', 'url': reverse('list_franchise'), 'icon': 'fas fa-building'},
+                {'name': 'Loan Types', 'url': reverse('addloan'), 'icon': 'fas fa-plus-circle'},
+                {'name': 'Status', 'url': reverse('addstatus'), 'icon': 'fas fa-flag'},
             ],
             'franchise': [
-                {'name': 'Dashboard', 'url': reverse('franchise_dashboard')},
-                {'name': 'Apply Loan', 'url': reverse('form')},
-                {'name': 'List Loan', 'url': reverse('all-application')},
-                # {'name': 'Profile', 'url': reverse('profile')},
+                {'name': 'Dashboard', 'url': reverse('franchise_dashboard'), 'icon': 'fas fa-tachometer-alt'},
+                {'name': 'Apply Loan', 'url': reverse('form'), 'icon': 'fas fa-file-signature'},
+                {'name': 'Loans', 'url': reverse('all-application'), 'icon': 'fas fa-file-alt'},
+                # {'name': 'Profile', 'url': reverse('profile'), 'icon': 'fas fa-user'},
             ],
             'staff': [
-                {'name': 'Dashboard', 'url': reverse('home')},
-                {'name': 'Application', 'url': reverse('form')},
-                {'name': 'All Applications', 'url': reverse('all-application')},
-                {'name': 'Add Bank', 'url': reverse('addbank')},
-                {'name': 'Add Franchise', 'url': reverse('add_franchise')},
-                {'name': 'List Franchise', 'url': reverse('list_franchise')},
-                {'name': 'Add Loan', 'url': reverse('addloan')},
-                {'name': 'Add Status', 'url': reverse('addstatus')},
-                # {'name': 'Profile Update', 'url': reverse('update_profile')},
+                {'name': 'Dashboard', 'url': reverse('home'), 'icon': 'fas fa-tachometer-alt'},
+                {'name': 'Application', 'url': reverse('form'), 'icon': 'fas fa-file-signature'},
+                {'name': 'Applications', 'url': reverse('all-application'), 'icon': 'fas fa-file-alt'},
+                {'name': 'Banks', 'url': reverse('addbank'), 'icon': 'fas fa-university'},
+                {'name': 'Franchises', 'url': reverse('list_franchise'), 'icon': 'fas fa-building'},
+                {'name': 'Loan Types', 'url': reverse('addloan'), 'icon': 'fas fa-plus-circle'},
+                {'name': 'Status', 'url': reverse('addstatus'), 'icon': 'fas fa-flag'},
+                # {'name': 'Profile Update', 'url': reverse('update_profile'), 'icon': 'fas fa-user-edit'},
             ],
             # 'executive': [
-            #     {'name': 'Dashboard', 'url': reverse('index', args=[1])},  # Pass a valid user_id (e.g., 1)
-            #     {'name': 'Apply Loan', 'url': reverse('apply-loan')},
-            #     {'name': 'List Loan', 'url': reverse('list-loan')},
-            #     {'name': 'Profile', 'url': reverse('update_profile')},
+            #     {'name': 'Dashboard', 'url': reverse('index', args=[1]), 'icon': 'fas fa-tachometer-alt'},
+            #     {'name': 'Apply Loan', 'url': reverse('apply-loan'), 'icon': 'fas fa-file-signature'},
+            #     {'name': 'List Loan', 'url': reverse('list-loan'), 'icon': 'fas fa-file-alt'},
+            #     {'name': 'Profile', 'url': reverse('update_profile'), 'icon': 'fas fa-user'},
             # ],
         }
 
@@ -75,20 +71,24 @@ def get_user_context(request):
     """
     user_id = request.session.get('user_id')
     user_type = request.session.get('user_type')
+    session_username = request.session.get('username')
 
-    logger.debug(f"Session user_id: {user_id}, user_type: {user_type}")
+    print(f"=== DEBUG: get_user_context ===")
+    print(f"user_id: {user_id}, user_type: {user_type}, session_username: {session_username}")
 
     if not user_id or not user_type:
-        logger.warning("Missing user_id or user_type in session.")
+        print("Missing user_id or user_type in session.")
         return None, None
 
     username = None
     if user_type == 'admin':
         try:
+            print(f"Looking for admin with admin_id: {user_id}")
             admin = AdminModel.objects.get(admin_id=user_id)
             username = f"{admin.admin_first_name} {admin.admin_last_name or ''}".strip()
+            print(f"Found admin: {username}")
         except AdminModel.DoesNotExist:
-            logger.error(f"Admin with ID {user_id} does not exist.")
+            print(f"Admin with ID {user_id} does not exist.")
             return None, None
     elif user_type == 'franchise':
         try:
@@ -99,10 +99,12 @@ def get_user_context(request):
             return None, None
     elif user_type == 'staff':
         try:
+            print(f"Looking for staff with staff_id: {user_id}")
             staff = StaffModel.objects.get(staff_id=user_id)
             username = f"{staff.first_name} {staff.last_name or ''}".strip()
+            print(f"Found staff: {username}")
         except StaffModel.DoesNotExist:
-            logger.error(f"Staff with ID {user_id} does not exist.")
+            print(f"Staff with ID {user_id} does not exist.")
             return None, None
     elif user_type == 'executive':
         try:
@@ -112,6 +114,12 @@ def get_user_context(request):
             logger.error(f"Executive with ID {user_id} does not exist.")
             return None, None
 
+    # If username is still None, use session username as fallback
+    if not username and session_username:
+        username = session_username
+        print(f"Using session username as fallback: {username}")
+    
     sidebar_menu = get_sidebar_menu(user_type)
-    logger.debug(f"Sidebar menu for user_type {user_type}: {sidebar_menu}")
+    print(f"Sidebar menu for user_type {user_type}: {len(sidebar_menu) if sidebar_menu else 0} items")
+    print(f"=== END DEBUG: get_user_context, returning username: '{username}' ===")
     return sidebar_menu, username
