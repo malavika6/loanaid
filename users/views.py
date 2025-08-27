@@ -138,33 +138,14 @@ def login(request):
 
 
 def staff_dashboard(request):
-    sidebar_menu, username = get_user_context(request)
-    if not sidebar_menu or not username:
-        return redirect('/login')
-
-    user_id = request.session.get('user_id')
-
-    # Get franchises assigned to this staff
-    staff = StaffModel.objects.get(pk=user_id)
-    assigned_franchises = Franchise.objects.filter(staffassignmentmodel__staff_name=staff).distinct()
-
-    # Loans assigned to staff or franchises they are assigned to
-    staff_loans = LoanApplicationModel.objects.filter(assigned_to=staff)
-    franchise_loans = LoanApplicationModel.objects.filter(franchise__in=assigned_franchises)
-    all_loans = (staff_loans | franchise_loans).distinct()
-
-    assigned_franchise_count = assigned_franchises.count()
-    franchise_loan_count = franchise_loans.count()
-
-    context = {
-        'sidebar_menu': sidebar_menu,
-        'username': username,
-        'all_loans': franchise_loans,  # send loans as all_loans for template
-        'franchise_loans': franchise_loan_count,
-        'assigned_franchise_count': assigned_franchise_count,
-        'assigned_franchises': assigned_franchises,
-    }
-    return render(request, 'dashboard.html', context)
+    """
+    Staff dashboard view - now optimized and delegated to staff_views
+    """
+    from .staff_views import StaffDashboardView
+    
+    # Use the optimized staff dashboard view
+    staff_view = StaffDashboardView()
+    return staff_view.get(request)
 
 
 
@@ -258,14 +239,14 @@ def home(request):
 
 
     elif user_type == 'franchise':
-        staff_loans = LoanApplicationModel.objects.filter(
-            assigned_to=request.session.get('staff_id'))
-
-        context = {
-            'username': username,
-            'sidebar_menu': sidebar_menu,
-        }
-        return render(request, 'franchise_dashboard.html', context)
+        """
+        Franchise dashboard view - now optimized and delegated to franchise_views
+        """
+        from .franchise_views import FranchiseDashboardView
+        
+        # Use the optimized franchise dashboard view
+        franchise_view = FranchiseDashboardView()
+        return franchise_view.get(request)
     else:
         # If the user is neither admin nor staff, redirect them to login or another page.
         return redirect('/login')
@@ -534,25 +515,11 @@ def list_staff(request):
 
 
 def delete_staff(request, staff_id):
-    user_id = request.session.get('user_id')
-    user_type = request.session.get('user_type')
-
-    if not user_id or user_type != 'admin':
-        messages.error(request, "Unauthorized access.")
-        return redirect('/login')
-
-    staff_member = get_object_or_404(StaffModel, pk=staff_id)
-
-    if request.method == 'POST':
-        # Unassign all related loan applications
-        LoanApplicationModel.objects.filter(assigned_to=staff_member).update(assigned_to=None)
-
-        staff_member.delete()
-        messages.success(request, "Staff member deleted successfully.")
-        return redirect('/list_staff')
-
-    messages.warning(request, "Invalid request method.")
-    return redirect('/list_staff')
+    """
+    Staff deletion view - now optimized and delegated to admin_views
+    """
+    from .admin_views import delete_staff_view
+    return delete_staff_view(request, staff_id)
 
 
 
