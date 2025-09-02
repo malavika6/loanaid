@@ -170,3 +170,10 @@ DEFAULT_FROM_EMAIL='malavika2bcomft@gmail.com'
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-this-in-production')
 JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
 JWT_EXPIRATION_DELTA = int(os.environ.get('JWT_EXPIRATION_DELTA', '86400'))  # 24 hours in seconds
+
+# CSRF Settings
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript access to CSRF token
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_USE_SESSIONS = False  # Use cookies for CSRF token (default)
+CSRF_COOKIE_SAMESITE = 'Lax'  # Allow cross-site requests

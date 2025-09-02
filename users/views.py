@@ -1,5 +1,6 @@
 from users.utils import get_sidebar_menu, get_user_context
 from users.forms import StaffModelForm, StaffActivationForm, FranchiseActivationForm, FranchiseProfileForm
+from users.forms import AdminProfileUpdateForm
 from users.models import AdminModel, StaffModel, Franchise
 from users.jwt_utils import generate_activation_token, verify_activation_token
 from loan.models import LoanApplicationModel, UploadedFile
@@ -17,6 +18,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.urls import reverse
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 from .utils import get_sidebar_menu, get_user_context
 
 
@@ -29,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 
+@csrf_exempt
 def login(request):
     """
     Handle user login for all user types (admin, franchise, staff, executive).
@@ -36,6 +39,12 @@ def login(request):
     to fetch the correct record and that the session is set using the correct PK.
     """
     error = None
+    
+    # Debug CSRF and session info
+    print(f"Request method: {request.method}")
+    print(f"CSRF token in request: {request.POST.get('csrfmiddlewaretoken', 'NOT FOUND')}")
+    print(f"Session ID: {request.session.session_key}")
+    print(f"CSRF cookie: {request.COOKIES.get('csrftoken', 'NOT FOUND')}")
 
     if request.method == 'POST':
         identifier = request.POST.get('identifier')
@@ -139,13 +148,42 @@ def login(request):
 
 def staff_dashboard(request):
     """
-    Staff dashboard view - now optimized and delegated to staff_views
+    Staff dashboard view - simplified version
     """
-    from .staff_views import StaffDashboardView
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
     
-    # Use the optimized staff dashboard view
-    staff_view = StaffDashboardView()
-    return staff_view.get(request)
+    if not user_id or user_type != 'staff':
+        return redirect('/login')
+    
+    try:
+        staff = StaffModel.objects.get(staff_id=user_id)
+        
+        # Get the franchises assigned to this staff
+        assigned_franchises = Franchise.objects.filter(
+            staffassignmentmodel__staff_name=staff
+        ).distinct()
+        
+        # Get loans assigned to this staff
+        staff_loans = LoanApplicationModel.objects.filter(assigned_to=user_id)
+        
+        # Get loans from assigned franchises
+        franchise_loans = LoanApplicationModel.objects.filter(franchise__in=assigned_franchises)
+        
+        context = {
+            'username': f"{staff.first_name} {staff.last_name or ''}".strip(),
+            'sidebar_menu': get_sidebar_menu('staff'),
+            'all_loans': franchise_loans,
+            'staff_loans': staff_loans,
+            'franchise_loans': franchise_loans.count(),
+            'assigned_franchise_count': assigned_franchises.count(),
+            'assigned_franchises': assigned_franchises,
+        }
+        return render(request, 'dashboard.html', context)
+        
+    except StaffModel.DoesNotExist:
+        messages.error(request, "Staff member not found.")
+        return redirect('/login')
 
 
 
@@ -240,13 +278,42 @@ def home(request):
 
     elif user_type == 'franchise':
         """
-        Franchise dashboard view - now optimized and delegated to franchise_views
+        Franchise dashboard view - simplified version
         """
-        from .franchise_views import FranchiseDashboardView
-        
-        # Use the optimized franchise dashboard view
-        franchise_view = FranchiseDashboardView()
-        return franchise_view.get(request)
+        franchise_id = request.session.get('user_id')
+        try:
+            franchise = Franchise.objects.get(franchise_id=franchise_id)
+            
+            # Get franchise statistics
+            total_loans = LoanApplicationModel.objects.filter(franchise=franchise).count()
+            pending_loans = LoanApplicationModel.objects.filter(
+                franchise=franchise, 
+                status_name__status_name__in=['Pending', 'Under Review']
+            ).count()
+            approved_loans = LoanApplicationModel.objects.filter(
+                franchise=franchise, 
+                status_name__status_name='Approved'
+            ).count()
+            
+            # Get recent loan applications
+            recent_loans = LoanApplicationModel.objects.filter(
+                franchise=franchise
+            ).order_by('-form_id')[:5]
+            
+            context = {
+                'franchise': franchise,
+                'username': franchise.franchise_name,
+                'sidebar_menu': get_sidebar_menu('franchise'),
+                'total_loans': total_loans,
+                'pending_loans': pending_loans,
+                'approved_loans': approved_loans,
+                'recent_loans': recent_loans,
+            }
+            return render(request, 'franchise_dashboard.html', context)
+            
+        except Franchise.DoesNotExist:
+            messages.error(request, "Franchise not found.")
+            return redirect('/login')
     else:
         # If the user is neither admin nor staff, redirect them to login or another page.
         return redirect('/login')
@@ -323,20 +390,13 @@ def logout_view(request):
 
 def other_user_dashboard(request, user_id):
     try:
-        # This should be correct since you use 'id' for the UserModel
-        other_user = UserModel.objects.get(user_id=user_id)
-        other_user_name = f"{other_user.name} "
-    except UserModel.DoesNotExist:
+        # Updated to work with StaffModel instead of UserModel
+        staff_member = StaffModel.objects.get(staff_id=user_id)
+        other_user_name = f"{staff_member.first_name} {staff_member.last_name or ''}".strip()
+    except StaffModel.DoesNotExist:
         return redirect('/login')
 
-    # Check if 'other_user' is a StaffModel, and get the related staff instance
-    try:
-        # Or use 'user_id' if that's how it's related
-        staff_member = StaffModel.objects.get(email=other_user.email)
-    except StaffModel.DoesNotExist:
-        staff_member = None
-
-    # Fetch loans related to this user (checking the staff member)
+    # Fetch loans related to this staff member
     related_loans = LoanApplicationModel.objects.filter(
         assigned_to=staff_member)  # Use 'assigned_to' to filter by staff
     loan_count = related_loans.count()
@@ -347,19 +407,100 @@ def other_user_dashboard(request, user_id):
 
     context = {
         'username': other_user_name,
-        'other_user': other_user,
+        'other_user': staff_member,
         'related_loans': related_loans,
         'loan_count': loan_count,
         'franchise_count': franchise_count,
-        'can_add_loan': True  # 4th type user can add loans
+        'can_add_loan': True  # Staff can add loans
     }
 
     return render(request, 'home.html', context)
 
 
 def update_profile(request):
-
-    return render(request, 'profile_update.html')
+    """Handle profile updates for all user types"""
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
+    
+    if not user_id or not user_type:
+        messages.error(request, "Please log in to access your profile.")
+        return redirect('/login/')
+    
+    try:
+        if user_type == 'franchise':
+            franchise = Franchise.objects.get(franchise_id=user_id)
+            if request.method == 'POST':
+                form = FranchiseProfileForm(request.POST, request.FILES, instance=franchise)
+                if form.is_valid():
+                    form.save()
+                    messages.success(request, "Profile updated successfully!")
+                    return redirect('profile')
+                else:
+                    messages.error(request, "Please correct the errors in the form.")
+            else:
+                form = FranchiseProfileForm(instance=franchise)
+            
+            context = {
+                'form': form,
+                'user_profile': franchise,
+                'sidebar_menu': get_sidebar_menu(user_type),
+                'username': franchise.franchise_name
+            }
+            return render(request, 'profile.html', context)
+            
+        elif user_type == 'staff':
+            staff = StaffModel.objects.get(staff_id=user_id)
+            if request.method == 'POST':
+                form = StaffModelForm(request.POST, request.FILES, instance=staff)
+                if form.is_valid():
+                    form.save()
+                    messages.success(request, "Profile updated successfully!")
+                    return redirect('profile')
+                else:
+                    messages.error(request, "Please correct the errors in the form.")
+            else:
+                form = StaffModelForm(instance=staff)
+            
+            context = {
+                'form': form,
+                'user_profile': staff,
+                'sidebar_menu': get_sidebar_menu(user_type),
+                'username': f"{staff.first_name} {staff.last_name or ''}".strip()
+            }
+            return render(request, 'profile.html', context)
+            
+        elif user_type == 'admin':
+            admin = AdminModel.objects.get(admin_id=user_id)
+            if request.method == 'POST':
+                form = AdminProfileUpdateForm(request.POST, instance=admin)
+                if form.is_valid():
+                    form.save()
+                    messages.success(request, "Profile updated successfully!")
+                    return redirect('profile')
+                else:
+                    messages.error(request, "Please correct the errors in the form.")
+            else:
+                form = AdminProfileUpdateForm(instance=admin)
+            
+            context = {
+                'form': form,
+                'user_profile': admin,
+                'sidebar_menu': get_sidebar_menu(user_type),
+                'username': f"{admin.admin_first_name} {admin.admin_last_name or ''}".strip()
+            }
+            return render(request, 'profile.html', context)
+            
+        else:
+            messages.error(request, "Invalid user type.")
+            return redirect('/login/')
+            
+    except (Franchise.DoesNotExist, StaffModel.DoesNotExist, AdminModel.DoesNotExist):
+        messages.error(request, "User profile not found.")
+        return redirect('/login/')
+    except Exception as e:
+        logger.error(f"Error in update_profile: {e}")
+        messages.error(request, "An error occurred while updating your profile.")
+        return redirect('/login/')
 
 
 def create_staff(request):
@@ -516,10 +657,37 @@ def list_staff(request):
 
 def delete_staff(request, staff_id):
     """
-    Staff deletion view - now optimized and delegated to admin_views
+    Staff deletion view - simplified version
     """
-    from .admin_views import delete_staff_view
-    return delete_staff_view(request, staff_id)
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
+    
+    if not user_id or user_type != 'admin':
+        messages.error(request, "Unauthorized access.")
+        return redirect('/login')
+    
+    try:
+        admin = AdminModel.objects.get(admin_id=user_id)
+        staff_member = get_object_or_404(StaffModel, pk=staff_id)
+        
+        if request.method == 'POST':
+            staff_member.delete()
+            messages.success(request, f"Staff member {staff_member.get_full_name()} deleted successfully.")
+            return redirect('list_staff')
+        else:
+            return render(request, 'confirm_delete_staff.html', {
+                'staff_member': staff_member,
+                'admin_name': f"{admin.admin_first_name} {admin.admin_last_name or ''}".strip(),
+                'sidebar_menu': get_sidebar_menu('admin')
+            })
+            
+    except AdminModel.DoesNotExist:
+        messages.error(request, "Admin not found.")
+        return redirect('/login')
+    except Exception as e:
+        logger.error(f"Error deleting staff: {e}")
+        messages.error(request, "An error occurred while deleting the staff member.")
+        return redirect('list_staff')
 
 
 
@@ -533,50 +701,10 @@ def delete_files(request, id):
     return redirect('loan-page', loan_id)
 
 
-def get_sidebar_menu(user_type):
-    """
-    Generate sidebar menu items based on user type.
-    """
-    menu = []
-
-    if user_type == 'admin':
-        menu = [
-            {'name': 'Dashboard', 'url': '/'},
-            {'name': 'Manage Franchises', 'url': '/list_franchise'},
-            {'name': 'Manage Staff', 'url': '/list_staff'},
-            {'name': 'Add Loan', 'url': '/add-loan'},
-        ]
-    elif user_type == 'franchise':
-        menu = [
-            {'name': 'Dashboard', 'url': '/franchise_dashboard'},
-            {'name': 'My Loans', 'url': '/loan-page'},
-            {'name': 'Profile', 'url': '/profile'},
-        ]
-    elif user_type == 'staff':
-        menu = [
-            {'name': 'Dashboard', 'url': '/dashboard'},
-            {'name': 'Assignments', 'url': '/staff_assignments'},
-            {'name': 'Profile', 'url': '/profile'},
-        ]
-    elif user_type == 'executive':
-        menu = [
-            {'name': 'Dashboard', 'url': f'/index/{user_type}'},
-            {'name': 'Profile', 'url': '/profile'},
-        ]
-
-    return menu
 
 
-def some_view(request):
-    user_type = request.session.get('user_type', None)
-    sidebar_menu = get_sidebar_menu(user_type)
 
-    context = {
-        'sidebar_menu': sidebar_menu,
-        # ...other context variables...
-    }
 
-    return render(request, 'some_template.html', context)
 
 
 def activate_staff(request, staff_id):

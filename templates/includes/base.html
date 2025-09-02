@@ -214,6 +214,8 @@
           margin-left: 10px;
         }
       }
+
+
     </style>
 </head>
 
@@ -230,8 +232,7 @@
 
             <!-- Dynamic Sidebar Navigation Items -->
             {% for item in sidebar_menu %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ item.url }}">
+                <li class="nav-item">                    <a class="nav-link {% if 'list_staff' in item.url %}active{% endif %}" href="{{ item.url }}">
                         <i class="{{ item.icon }}"></i>
                         <span>{{ item.name }}</span>
                     </a>
@@ -256,10 +257,21 @@
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" 
                                data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-fw fa-user"></i>
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ username }}</span>
+                                <!-- Profile Photo -->
+                                <div class="profile-photo-container me-2">
+                                    {% if user_profile.profile_picture %}
+                                        <img src="{{ user_profile.profile_picture.url }}" alt="Profile Photo" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user text-white" style="font-size: 16px;"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <!-- User Name -->
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small fw-bold">{{ username }}</span>
+                                <i class="fas fa-chevron-down text-gray-400 small"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" 
                               aria-labelledby="userDropdown">

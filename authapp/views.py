@@ -6,6 +6,7 @@ from django.utils import timezone
 from users.models import Franchise, StaffModel
 from users.models import *
 from users.forms import *
+from loan.models import LoanApplicationModel
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.db.models import Prefetch

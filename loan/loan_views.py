@@ -8,7 +8,7 @@ from django.views import View
 from django.contrib.auth.hashers import check_password
 import logging
 
-from users.models import AdminModel, StaffModel, Franchise, UserModel
+from users.models import AdminModel, StaffModel, Franchise
 from users.decorators import admin_required, staff_required, franchise_required, login_required
 from .models import (
     LoanApplicationModel, LoanModel, StatusModel, BankModel, 
@@ -42,9 +42,9 @@ class LoanApplicationView(View):
                 can_access_all = False
                 
             elif user_type == 'executive':
-                user = UserModel.objects.get(pk=user_id)
-                username = user.name
-                can_access_all = False
+                # Executive functionality removed - UserModel was deleted
+                # For now, return None to redirect to login
+                return None, None, None
                 
             else:
                 return None, None, None
@@ -85,11 +85,9 @@ class LoanApplicationView(View):
             ).prefetch_related('uploaded_files')
             
         elif user_type == 'executive':
-            return LoanApplicationModel.objects.filter(
-                executive=user
-            ).select_related(
-                'franchise', 'loan_name', 'status_name', 'bank_name'
-            ).prefetch_related('uploaded_files')
+            # Executive functionality removed - UserModel was deleted
+            # For now, return empty queryset
+            return LoanApplicationModel.objects.none()
             
         return LoanApplicationModel.objects.none()
     

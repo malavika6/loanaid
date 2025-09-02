@@ -307,20 +307,30 @@ class FranchiseProfileForm(forms.ModelForm):
     class Meta:
         model = Franchise
         fields = [
+            "franchise_name",
+            "franchise_owner", 
+            "franchise_place",
+            "email",
+            "mobile_no",
             "aadhar",
             "GST", 
             "pan",
             "ac_no",
             "ifsc_code",
-            "screenshot",
+            "profile_picture",
         ]
         widgets = {
-            "aadhar": forms.TextInput(attrs={"class": "form-control", "placeholder": "Aadhar Number"}),
-            "GST": forms.TextInput(attrs={"class": "form-control", "placeholder": "GST Number"}),
-            "pan": forms.TextInput(attrs={"class": "form-control", "placeholder": "PAN Number"}),
-            "ac_no": forms.TextInput(attrs={"class": "form-control", "placeholder": "Account Number"}),
-            "ifsc_code": forms.TextInput(attrs={"class": "form-control", "placeholder": "IFSC Code"}),
-            "screenshot": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "franchise_name": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Franchise Name"}),
+            "franchise_owner": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Franchise Owner"}),
+            "franchise_place": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Franchise Place"}),
+            "email": forms.EmailInput(attrs={"class": "form-control form-control-user", "placeholder": "Email Address"}),
+            "mobile_no": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Mobile Number"}),
+            "aadhar": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Aadhar Number"}),
+            "GST": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "GST Number"}),
+            "pan": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "PAN Number"}),
+            "ac_no": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Account Number"}),
+            "ifsc_code": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "IFSC Code"}),
+            "profile_picture": forms.ClearableFileInput(attrs={"class": "form-control form-control-user"}),
         }
 
     def clean_ac_no(self):
@@ -367,6 +377,136 @@ class FranchiseActivationForm(forms.Form):
 
         if password and confirm_password and password != confirm_password:
             raise ValidationError("Passwords do not match.")
+
+        return cleaned_data
+
+
+# ============================================================================
+# ADMIN FORMS
+# ============================================================================
+
+class AdminProfileUpdateForm(forms.ModelForm):
+    """Form for updating admin profile (without password change)"""
+    
+    class Meta:
+        model = AdminModel
+        fields = [
+            "admin_first_name",
+            "admin_last_name",
+            "admin_email",
+            "admin_phone",
+        ]
+        widgets = {
+            "admin_first_name": forms.TextInput(
+                attrs={
+                    "class": "form-control form-control-user",
+                    "placeholder": "First Name"
+                }
+            ),
+            "admin_last_name": forms.TextInput(
+                attrs={
+                    "class": "form-control form-control-user",
+                    "placeholder": "Last Name"
+                }
+            ),
+            "admin_email": forms.EmailInput(
+                attrs={
+                    "class": "form-control form-control-user",
+                    "placeholder": "Email Address"
+                }
+            ),
+            "admin_phone": forms.TextInput(
+                attrs={
+                    "class": "form-control form-control-user",
+                    "placeholder": "Phone Number"
+                }
+            ),
+        }
+
+    def clean_admin_email(self):
+        """Validate email uniqueness for profile updates"""
+        email = self.cleaned_data.get("admin_email")
+        if email:
+            existing_admin = AdminModel.objects.filter(admin_email=email).exclude(pk=self.instance.pk)
+            if existing_admin.exists():
+                raise ValidationError("An admin with this email already exists.")
+        return email.lower().strip()
+
+
+class AdminPasswordChangeForm(forms.Form):
+    """Form for changing admin password"""
+    
+    current_password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control form-control-user",
+                "placeholder": "Current Password"
+            }
+        ),
+        required=True,
+        help_text="Enter your current password"
+    )
+    
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control form-control-user",
+                "placeholder": "New Password"
+            }
+        ),
+        required=True,
+        help_text="Enter your new password"
+    )
+    
+    confirm_new_password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control form-control-user",
+                "placeholder": "Confirm New Password"
+            }
+        ),
+        required=True,
+        help_text="Confirm your new password"
+    )
+
+    def __init__(self, admin_instance, *args, **kwargs):
+        self.admin_instance = admin_instance
+        super().__init__(*args, **kwargs)
+
+    def clean_current_password(self):
+        """Validate current password"""
+        current_password = self.cleaned_data.get("current_password")
+        if not self.admin_instance.check_password(current_password):
+            raise ValidationError("Current password is incorrect.")
+        return current_password
+
+    def clean_new_password(self):
+        """Validate new password strength"""
+        new_password = self.cleaned_data.get("new_password")
+        if len(new_password) < 8:
+            raise ValidationError("Password must be at least 8 characters long.")
+        
+        if not any(c.isupper() for c in new_password):
+            raise ValidationError("Password must contain at least one uppercase letter.")
+        
+        if not any(c.islower() for c in new_password):
+            raise ValidationError("Password must contain at least one lowercase letter.")
+        
+        if not any(c.isdigit() for c in new_password):
+            raise ValidationError("Password must contain at least one number.")
+        
+        if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in new_password):
+            raise ValidationError("Password must contain at least one special character.")
+        
+        return new_password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get("new_password")
+        confirm_new_password = cleaned_data.get("confirm_new_password")
+
+        if new_password and confirm_new_password and new_password != confirm_new_password:
+            raise ValidationError("New passwords do not match.")
 
         return cleaned_data
 

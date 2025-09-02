@@ -161,7 +161,7 @@ class Franchise(models.Model):
     def is_profile_complete(self):
         """Check if franchise profile is complete"""
         required_fields = [
-            self.aadhar, self.GST, self.pan, 
+            self.aadhar, self.pan, 
             self.ac_no, self.ifsc_code
         ]
         return all(field for field in required_fields)
@@ -169,11 +169,13 @@ class Franchise(models.Model):
     def get_profile_completion_percentage(self):
         """Get profile completion percentage"""
         required_fields = [
-            self.aadhar, self.GST, self.pan, 
+            self.aadhar, self.pan, 
             self.ac_no, self.ifsc_code
         ]
-        completed = sum(1 for field in required_fields if field)
-        return (completed / len(required_fields)) * 100
+        optional_fields = [self.GST]  # GST is optional
+        total_fields = len(required_fields) + len(optional_fields)
+        completed = sum(1 for field in required_fields if field) + sum(1 for field in optional_fields if field)
+        return (completed / total_fields) * 100
 
 
 class Wallet(models.Model):
