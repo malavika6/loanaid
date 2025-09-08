@@ -1,6 +1,7 @@
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
 from django.db import models
+from decimal import Decimal
 import uuid
 
 
@@ -16,6 +17,7 @@ class AdminModel(models.Model):
         blank=True,
     )
     admin_password = models.CharField(max_length=128)
+    profile_picture = models.ImageField(upload_to="admin_profiles/", null=True, blank=True)
     is_superadmin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -181,9 +183,9 @@ class Franchise(models.Model):
 class Wallet(models.Model):
     wallet_id = models.AutoField(primary_key=True)
     franchise = models.OneToOneField(Franchise, on_delete=models.CASCADE, related_name='wallet')
-    allowance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Allowance")
-    commission = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Commission")
-    incentive = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Incentive")
+    allowance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('10000.00'), verbose_name="Allowance")
+    commission = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="Commission")
+    incentive = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="Incentive")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -191,9 +193,25 @@ class Wallet(models.Model):
         return f"Wallet for {self.franchise.franchise_name}"
 
     def get_total_balance(self):
-        """Calculate total wallet balance"""
-        return self.allowance + self.commission + self.incentive
+        """Calculate total wallet balance using Decimal and handling Nones"""
+        a = self.allowance or Decimal('0.00')
+        c = self.commission or Decimal('0.00')
+        i = self.incentive or Decimal('0.00')
+        return a + c + i
 
     class Meta:
         verbose_name = "Wallet"
         verbose_name_plural = "Wallets"
+
+# Auto-create a wallet with default allowance for each new franchise
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+@receiver(post_save, sender=Franchise)
+def ensure_franchise_wallet(sender, instance: Franchise, created: bool, **kwargs):
+    if created:
+        Wallet.objects.get_or_create(franchise=instance)
+    else:
+        # Ensure wallet exists even if franchise existed before this feature
+        Wallet.objects.get_or_create(franchise=instance)

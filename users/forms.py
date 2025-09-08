@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 from .models import *
+from loan.models import StaffAssignmentModel
 
 
 class AdminForm(forms.ModelForm):
@@ -393,8 +394,7 @@ class AdminProfileUpdateForm(forms.ModelForm):
         fields = [
             "admin_first_name",
             "admin_last_name",
-            "admin_email",
-            "admin_phone",
+            "profile_picture",
         ]
         widgets = {
             "admin_first_name": forms.TextInput(
@@ -409,28 +409,14 @@ class AdminProfileUpdateForm(forms.ModelForm):
                     "placeholder": "Last Name"
                 }
             ),
-            "admin_email": forms.EmailInput(
+            "profile_picture": forms.ClearableFileInput(
                 attrs={
-                    "class": "form-control form-control-user",
-                    "placeholder": "Email Address"
-                }
-            ),
-            "admin_phone": forms.TextInput(
-                attrs={
-                    "class": "form-control form-control-user",
-                    "placeholder": "Phone Number"
+                    "class": "form-control form-control-user"
                 }
             ),
         }
 
-    def clean_admin_email(self):
-        """Validate email uniqueness for profile updates"""
-        email = self.cleaned_data.get("admin_email")
-        if email:
-            existing_admin = AdminModel.objects.filter(admin_email=email).exclude(pk=self.instance.pk)
-            if existing_admin.exists():
-                raise ValidationError("An admin with this email already exists.")
-        return email.lower().strip()
+    # Limit admin profile updates to only name and profile picture
 
 
 class AdminPasswordChangeForm(forms.Form):
@@ -510,4 +496,111 @@ class AdminPasswordChangeForm(forms.Form):
 
         return cleaned_data
 
+
+# =============================================================================
+# WALLET FORM
+# =============================================================================
+
+class WalletUpdateForm(forms.Form):
+    franchise = forms.ChoiceField(
+        choices=[],
+        widget=forms.Select(attrs={"class": "form-select form-control"}),
+        required=True,
+        help_text="Choose a franchise"
+    )
+
+    commission = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Commission", "min": "0", "step": "0.01"})
+    )
+    incentive = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Incentive", "min": "0", "step": "0.01"})
+    )
+
+    def __init__(self, *args, **kwargs):
+        user_type = kwargs.pop('user_type', None)
+        user_id = kwargs.pop('user_id', None)
+        super().__init__(*args, **kwargs)
+        # Dynamically set queryset and empty label
+        qs = Franchise.objects.all().order_by('franchise_name')
+        if user_type == 'staff' and user_id:
+            try:
+                staff = StaffModel.objects.get(staff_id=user_id)
+                from loan.models import StaffAssignmentModel
+                qs = Franchise.objects.filter(staffassignmentmodel__staff_name=staff).distinct().order_by('franchise_name')
+            except Exception:
+                pass
+        self.fields['franchise'].choices = [('', 'Select Franchise')] + [
+            (str(f.pk), f.franchise_name) for f in qs
+        ]
+
+    def save(self):
+        franchise_id = self.cleaned_data['franchise']
+        from .models import Wallet
+        franchise = Franchise.objects.get(pk=franchise_id)
+        wallet, _ = Wallet.objects.get_or_create(franchise=franchise)
+        # Allowance is fixed at 10,000 (non-editable)
+        if self.cleaned_data.get('commission') is not None:
+            wallet.commission = self.cleaned_data['commission']
+        if self.cleaned_data.get('incentive') is not None:
+            wallet.incentive = self.cleaned_data['incentive']
+        wallet.save()
+        return wallet
+
+# =============================================================================
+# STAFF ASSIGNMENT FORM
+# =============================================================================
+
+class StaffAssignmentForm(forms.ModelForm):
+    """Form to assign one staff to multiple franchises, or edit an assignment"""
+
+    # Override staff_name as ChoiceField to ensure consistent rendering
+    staff_name = forms.ChoiceField(
+        choices=[],
+        widget=forms.Select(attrs={"class": "form-select form-control"}),
+        required=True,
+        label="Staff"
+    )
+
+    class Meta:
+        model = StaffAssignmentModel
+        fields = [
+            "staff_name",
+            "franchise_name",
+        ]
+        widgets = {
+            "franchise_name": forms.CheckboxSelectMultiple(
+                attrs={
+                    "class": "form-check-input",
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        # Optional user context (admin) passed from views
+        self.user_context = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+        # Populate staff choices explicitly to ensure rendering
+        staff_qs = StaffModel.objects.all().order_by("first_name", "last_name")
+        self.fields["staff_name"].choices = [('', 'Select Staff')] + [
+            (str(s.pk), f"{s.first_name} {s.last_name or ''}".strip()) for s in staff_qs
+        ]
+        self.fields["franchise_name"].queryset = Franchise.objects.all().order_by("franchise_name")
+
+    def save(self, commit=True):
+        # Convert selected staff id back to instance before saving
+        staff_id = self.cleaned_data.get('staff_name')
+        if staff_id:
+            self.instance.staff_name = StaffModel.objects.get(pk=staff_id)
+        instance = super().save(commit=commit)
+        # Ensure ManyToMany is saved when commit=True; if commit=False, caller must handle save_m2m
+        if commit and hasattr(self, "save_m2m"):
+            self.save_m2m()
+        return instance
 

@@ -1,7 +1,8 @@
 from users.utils import get_sidebar_menu, get_user_context
 from users.forms import StaffModelForm, StaffActivationForm, FranchiseActivationForm, FranchiseProfileForm
+from users.forms import WalletUpdateForm
 from users.forms import AdminProfileUpdateForm
-from users.models import AdminModel, StaffModel, Franchise
+from users.models import AdminModel, StaffModel, Franchise, Wallet
 from users.jwt_utils import generate_activation_token, verify_activation_token
 from loan.models import LoanApplicationModel, UploadedFile
 from payment.models import Payment
@@ -191,24 +192,22 @@ def home(request):
     """
     Dashboard view for admin users.
     """
-    print("=== DEBUG: Home view called ===")
-    print(f"Session data: {dict(request.session)}")
+    # Debug removed
     
     sidebar_menu, username = get_user_context(request)
-    print(f"get_user_context returned: sidebar_menu={sidebar_menu is not None}, username='{username}'")
+    # Debug removed
     
     # Fallback: Get username from session if get_user_context fails
     if not username:
         username = request.session.get('username', 'User')
-        print(f"Using fallback username: {username}")
+        # Debug removed
     
     if not sidebar_menu:
-        print("No sidebar menu, redirecting to login")
+        # Debug removed
         return redirect('/login')
 
     user_type = request.session.get('user_type')
-    print(f"Final values - user_type: {user_type}, username: {username}")
-    print("=== END DEBUG ===")
+    # Debug removed
     if user_type == 'admin':
         today = datetime.now().date()
         all_loans = LoanApplicationModel.objects.filter(followup_date=today)
@@ -249,19 +248,25 @@ def home(request):
             staffassignmentmodel__staff_name=staff
         ).distinct()
 
-        # Convert to set
-        assigned_franchises = set()
+        # Build detailed list with wallet and loan counts
+        from users.models import Wallet
+        assigned_franchise_data = []
         for franchise in assigned_franchise_qs:
-            assigned_franchises.add(franchise)
+            # Ensure wallet exists
+            wallet, _ = Wallet.objects.get_or_create(franchise=franchise)
+            # Loan count for this franchise
+            loan_count = LoanApplicationModel.objects.filter(franchise=franchise).count()
+            assigned_franchise_data.append({
+                'franchise': franchise,
+                'wallet': wallet,
+                'loan_count': loan_count,
+                'wallet_total': wallet.get_total_balance(),
+            })
 
-        # Count of assigned franchises
-        assigned_franchise_count = len(assigned_franchises)
-
-        # Get loans assigned to this staff directly
+        # Counts
+        assigned_franchise_count = len(assigned_franchise_data)
         staff_loans = LoanApplicationModel.objects.filter(assigned_to=staff_id)
-
-        # Get loans associated with the assigned franchises
-        loans_from_franchises = LoanApplicationModel.objects.filter(franchise__in=assigned_franchises)
+        loans_from_franchises = LoanApplicationModel.objects.filter(franchise__in=[i['franchise'] for i in assigned_franchise_data])
         franchise_loan_count = loans_from_franchises.count()
 
         context = {
@@ -271,7 +276,7 @@ def home(request):
             'staff_loans': staff_loans,
             'franchise_loans': franchise_loan_count,
             'assigned_franchise_count': assigned_franchise_count,
-            'assigned_franchises': assigned_franchises,
+            'assigned_franchises': assigned_franchise_data,
         }
         return render(request, 'dashboard.html', context)
 
@@ -472,7 +477,7 @@ def update_profile(request):
         elif user_type == 'admin':
             admin = AdminModel.objects.get(admin_id=user_id)
             if request.method == 'POST':
-                form = AdminProfileUpdateForm(request.POST, instance=admin)
+                form = AdminProfileUpdateForm(request.POST, request.FILES, instance=admin)
                 if form.is_valid():
                     form.save()
                     messages.success(request, "Profile updated successfully!")
@@ -481,14 +486,13 @@ def update_profile(request):
                     messages.error(request, "Please correct the errors in the form.")
             else:
                 form = AdminProfileUpdateForm(instance=admin)
-            
-            context = {
+
+            return render(request, 'admin_profile.html', {
                 'form': form,
                 'user_profile': admin,
                 'sidebar_menu': get_sidebar_menu(user_type),
                 'username': f"{admin.admin_first_name} {admin.admin_last_name or ''}".strip()
-            }
-            return render(request, 'profile.html', context)
+            })
             
         else:
             messages.error(request, "Invalid user type.")
@@ -808,4 +812,89 @@ def franchise_profile_completion(request):
     return render(request, 'franchise_profile_completion.html', {
         'form': form,
         'franchise': franchise
+    })
+
+
+def wallet_manage(request):
+    """Add/update wallet values for a franchise and view totals.
+    Accessible to admin and staff.
+    """
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
+    if not user_id or user_type not in ['admin', 'staff']:
+        messages.error(request, 'Unauthorized access.')
+        return redirect('/login')
+
+    sidebar_menu = get_sidebar_menu(user_type)
+
+    wallet = None
+    selected_franchise = None
+    total = None
+    # Build franchise list for dropdown
+    if user_type == 'admin':
+        franchise_qs = Franchise.objects.all().order_by('franchise_name')
+    else:
+        try:
+            staff = StaffModel.objects.get(staff_id=user_id)
+            from loan.models import StaffAssignmentModel
+            assigned = StaffAssignmentModel.objects.filter(staff_name=staff).prefetch_related('franchise_name')
+            franchise_set = []
+            for a in assigned:
+                franchise_set.extend(list(a.franchise_name.all()))
+            # Deduplicate and sort by name
+            unique_ids = {f.pk for f in franchise_set}
+            franchise_qs = Franchise.objects.filter(pk__in=unique_ids).order_by('franchise_name')
+        except StaffModel.DoesNotExist:
+            franchise_qs = Franchise.objects.none()
+
+    # Build wallet rows for list view (for all accessible franchises)
+    wallet_rows = []
+    for f in franchise_qs:
+        wallet_obj, _ = Wallet.objects.get_or_create(franchise=f)
+        wallet_rows.append({
+            'franchise': f,
+            'wallet': wallet_obj,
+            'total': wallet_obj.get_total_balance(),
+        })
+
+    if request.method == 'POST':
+        form = WalletUpdateForm(request.POST, user_type=user_type, user_id=user_id)
+        if form.is_valid():
+            wallet = form.save()
+            selected_franchise = wallet.franchise
+            total = wallet.get_total_balance()
+            messages.success(request, 'Wallet updated successfully.')
+        else:
+            messages.error(request, 'Please correct the errors in the form.')
+    else:
+        form = WalletUpdateForm(user_type=user_type, user_id=user_id)
+
+    # If franchise is selected from GET param, show its wallet
+    fid = request.GET.get('franchise')
+    if fid:
+        try:
+            selected_franchise = Franchise.objects.get(pk=fid)
+            wallet, _ = Wallet.objects.get_or_create(franchise=selected_franchise)
+            total = wallet.get_total_balance()
+            if request.method != 'POST':
+                form = WalletUpdateForm(
+                    user_type=user_type,
+                    user_id=user_id,
+                    initial={
+                        'franchise': str(selected_franchise.pk),
+                        'commission': wallet.commission,
+                        'incentive': wallet.incentive,
+                    }
+                )
+        except Franchise.DoesNotExist:
+            pass
+
+    return render(request, 'wallet_manage.html', {
+        'form': form,
+        'sidebar_menu': sidebar_menu,
+        'selected_franchise': selected_franchise,
+        'wallet': wallet,
+        'total': total,
+        'franchises': franchise_qs,
+        'wallet_rows': wallet_rows,
     })

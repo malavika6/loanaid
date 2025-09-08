@@ -22,4 +22,5 @@ urlpatterns = [
     path('franchise/activate/<str:token>/', views.franchise_activation, name='franchise_activation'),
 
     path('franchise/profile-completion/', views.franchise_profile_completion, name='franchise_profile_completion'),
+    path('wallet/', views.wallet_manage, name='wallet_manage'),
 ]

@@ -35,6 +35,37 @@ body {
   padding: 0;
 }
 
+/* Dark mode root */
+.dark body {
+  background: var(--gray-900);
+  color: var(--gray-100);
+}
+
+.dark .sidebar {
+  background: linear-gradient(180deg, #0b1220 0%, #0e1626 100%);
+}
+
+.dark .card,
+.dark .table-responsive,
+.dark .table,
+.dark .modal-content {
+  background: #0f172a;
+  color: var(--gray-100);
+}
+
+.dark .card-header { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%) }
+.dark .table thead th { background: #0b1220; color: var(--gray-200); }
+.dark .table tbody tr:hover { background: rgba(255,255,255,0.05); }
+.dark .form-control { background: #0b1220; color: var(--gray-100); border-color: #1f2a44; }
+.dark .form-control::placeholder { color: #7785a1; }
+.dark .topbar { background: #0b1220; }
+.dark .sidebar .nav-item .nav-link { color: #b8c1d9; }
+.dark .sidebar .nav-item .nav-link.active,
+.dark .sidebar .nav-item .nav-link:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
 /* Main Layout Fixes */
 #wrapper {
   display: flex;
@@ -221,6 +252,7 @@ body {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   background: var(--white);
+  table-layout: fixed;
 }
 
 .table thead th {
@@ -272,9 +304,10 @@ body {
 /* Fix table container alignment */
 .table-responsive {
   border-radius: 8px;
-  overflow: hidden;
+  overflow: auto;
   margin: 0;
   background: var(--white);
+  max-height: 60vh;
 }
 
 /* Enhanced Form Styling */
@@ -395,7 +428,7 @@ body {
 
 .sidebar .nav-item .nav-link:hover {
   color: var(--white);
-  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  background: rgba(255, 255, 255, 0.08);
   transform: translateX(4px);
 }
 
@@ -406,11 +439,7 @@ body {
 }
 
 /* Always highlight Staffs item */
-.sidebar .nav-item .nav-link[href*="list_staff"] {
-  color: var(--white) !important;
-  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%) !important;
-  box-shadow: var(--shadow-md) !important;
-}
+
 
 .sidebar .nav-item .nav-link i {
   width: 1.25rem;

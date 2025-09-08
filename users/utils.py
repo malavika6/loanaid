@@ -21,7 +21,7 @@ def get_sidebar_menu(user_type):
     Generate sidebar menu items based on user type.
     """
     # Check if the menu is cached
-    cache_key = f"sidebar_menu_{user_type}"
+    cache_key = f"v5_sidebar_menu_{user_type}"
     menu = cache.get(cache_key)
 
     if menu is None:
@@ -30,32 +30,30 @@ def get_sidebar_menu(user_type):
             'admin': [
                 {'name': 'Dashboard', 'url': reverse('home'), 'icon': 'fas fa-tachometer-alt'},
                 {'name': 'Applications', 'url': reverse('all-application'), 'icon': 'fas fa-file-alt'},
-                {'name': 'Staffs', 'url': reverse('list_staff'), 'icon': 'fas fa-users'},
-                {'name': 'Staff Assignment', 'url': reverse('assign_staff'), 'icon': 'fas fa-user-plus'},
+                {'name': 'Staff List', 'url': reverse('list_staff'), 'icon': 'fas fa-users'},
                 {'name': 'Assignments', 'url': reverse('staff_assignments'), 'icon': 'fas fa-tasks'},
+                {'name': 'Wallet', 'url': reverse('wallet_manage'), 'icon': 'fas fa-wallet'},
                 {'name': 'Banks', 'url': reverse('addbank'), 'icon': 'fas fa-university'},
                 {'name': 'Franchises', 'url': reverse('list_franchise'), 'icon': 'fas fa-building'},
                 {'name': 'Loan Types', 'url': reverse('addloan'), 'icon': 'fas fa-plus-circle'},
                 {'name': 'Status', 'url': reverse('addstatus'), 'icon': 'fas fa-flag'},
-                {'name': 'Profile', 'url': reverse('profile'), 'icon': 'fas fa-user'},
                 {'name': 'Logout', 'url': reverse('logout'), 'icon': 'fas fa-sign-out-alt'},
             ],
             'franchise': [
                 {'name': 'Dashboard', 'url': reverse('franchise_dashboard'), 'icon': 'fas fa-tachometer-alt'},
                 {'name': 'Apply Loan', 'url': reverse('form'), 'icon': 'fas fa-file-signature'},
                 {'name': 'Loans', 'url': reverse('all-application'), 'icon': 'fas fa-file-alt'},
-                {'name': 'Profile', 'url': reverse('profile'), 'icon': 'fas fa-user'},
                 {'name': 'Logout', 'url': reverse('logout'), 'icon': 'fas fa-sign-out-alt'},
             ],
             'staff': [
                 {'name': 'Dashboard', 'url': reverse('home'), 'icon': 'fas fa-tachometer-alt'},
                 {'name': 'Application', 'url': reverse('form'), 'icon': 'fas fa-file-signature'},
                 {'name': 'Applications', 'url': reverse('all-application'), 'icon': 'fas fa-file-alt'},
+                {'name': 'Wallet', 'url': reverse('wallet_manage'), 'icon': 'fas fa-wallet'},
                 {'name': 'Banks', 'url': reverse('addbank'), 'icon': 'fas fa-university'},
                 {'name': 'Franchises', 'url': reverse('list_franchise'), 'icon': 'fas fa-building'},
                 {'name': 'Loan Types', 'url': reverse('addloan'), 'icon': 'fas fa-plus-circle'},
                 {'name': 'Status', 'url': reverse('addstatus'), 'icon': 'fas fa-flag'},
-                {'name': 'Profile', 'url': reverse('update_profile'), 'icon': 'fas fa-user'},
                 {'name': 'Logout', 'url': reverse('logout'), 'icon': 'fas fa-sign-out-alt'},
             ],
             # 'executive': [
@@ -82,20 +80,19 @@ def get_user_context(request):
     user_type = request.session.get('user_type')
     session_username = request.session.get('username')
 
-    print(f"=== DEBUG: get_user_context ===")
-    print(f"user_id: {user_id}, user_type: {user_type}, session_username: {session_username}")
+    # Debug logs removed
 
     if not user_id or not user_type:
-        print("Missing user_id or user_type in session.")
+        # Debug logs removed
         return None, None
 
     username = None
     if user_type == 'admin':
         try:
-            print(f"Looking for admin with admin_id: {user_id}")
+            # Debug logs removed
             admin = AdminModel.objects.get(admin_id=user_id)
             username = f"{admin.admin_first_name} {admin.admin_last_name or ''}".strip()
-            print(f"Found admin: {username}")
+            
         except AdminModel.DoesNotExist:
             print(f"Admin with ID {user_id} does not exist.")
             return None, None
@@ -108,10 +105,10 @@ def get_user_context(request):
             return None, None
     elif user_type == 'staff':
         try:
-            print(f"Looking for staff with staff_id: {user_id}")
+            # Debug logs removed
             staff = StaffModel.objects.get(staff_id=user_id)
             username = f"{staff.first_name} {staff.last_name or ''}".strip()
-            print(f"Found staff: {username}")
+            
         except StaffModel.DoesNotExist:
             print(f"Staff with ID {user_id} does not exist.")
             return None, None
@@ -123,11 +120,10 @@ def get_user_context(request):
     # If username is still None, use session username as fallback
     if not username and session_username:
         username = session_username
-        print(f"Using session username as fallback: {username}")
+        # Debug logs removed
     
     sidebar_menu = get_sidebar_menu(user_type)
-    print(f"Sidebar menu for user_type {user_type}: {len(sidebar_menu) if sidebar_menu else 0} items")
-    print(f"=== END DEBUG: get_user_context, returning username: '{username}' ===")
+    # Debug logs removed
     return sidebar_menu, username
 
 # ============================================================================

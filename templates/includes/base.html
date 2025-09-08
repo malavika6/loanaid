@@ -24,15 +24,14 @@
     
     <!-- Custom styles -->
     <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
-    <link href="{% static 'css/custom-styles.css' %}" rel="stylesheet">
+    <link href="{% static 'css/custom-styles.css' %}?v=4" rel="stylesheet">
 
     <style>
       .logo {
         height: 7.5rem;
         width: 9rem;
-        background-position: center;
-        background-size: cover;
-        background-repeat: no-repeat;
+        object-fit: contain;
+        display: block;
       }
 
       .btn-block {
@@ -225,14 +224,15 @@
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
             <!-- Sidebar Brand -->
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'home' %}">
-                <div class="logo" style="background-image: url({% static 'img/Loan Aid.png' %})"></div>
+                <img class="logo" src="{% static 'img/Loan Aid.png' %}" alt="Loan Aid"/>
             </a>
 
             <hr class="sidebar-divider my-0">
 
             <!-- Dynamic Sidebar Navigation Items -->
             {% for item in sidebar_menu %}
-                <li class="nav-item">                    <a class="nav-link {% if 'list_staff' in item.url %}active{% endif %}" href="{{ item.url }}">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == item.url %}active{% endif %}" href="{{ item.url }}">
                         <i class="{{ item.icon }}"></i>
                         <span>{{ item.name }}</span>
                     </a>
@@ -256,6 +256,11 @@
 
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">
+                        <li class="nav-item d-flex align-items-center me-3">
+                            <button id="themeToggle" class="btn btn-sm btn-outline-secondary" title="Toggle dark mode">
+                                <i class="fas fa-moon"></i>
+                            </button>
+                        </li>
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" 
                                data-bs-toggle="dropdown" aria-expanded="false">
@@ -315,5 +320,30 @@
     <script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
     {% comment %} <script src="{% static 'js/demo/chart-area-demo.js' %}"></script> {% endcomment %}
     <script src="{% static 'js/demo/chart-pie-demo.js' %}"></script>
+    <script>
+      (function() {
+        var root = document.documentElement;
+        var saved = localStorage.getItem('theme');
+        if (saved === 'dark') {
+          root.classList.add('dark');
+        }
+        var btn = document.getElementById('themeToggle');
+        var setIcon = function() {
+          if (!btn) return;
+          var icon = btn.querySelector('i');
+          if (!icon) return;
+          if (root.classList.contains('dark')) { icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); }
+          else { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); }
+        };
+        setIcon();
+        if (btn) {
+          btn.addEventListener('click', function() {
+            root.classList.toggle('dark');
+            localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+            setIcon();
+          });
+        }
+      })();
+    </script>
 </body>
 </html>

@@ -28,9 +28,10 @@ DEBUG = True
 # Load environment variables from .env file (with error handling)
 try:
     load_dotenv()
-    print("✅ .env file loaded successfully")
+    # Logging simple ASCII-only message to avoid Unicode issues in some terminals
+    print(".env file loaded successfully")
 except Exception as e:
-    print(f"⚠️ Warning: Could not load .env file: {e}")
+    print("Warning: Could not load .env file:", e)
     print("Using default configuration values")
 
 ALLOWED_HOSTS = ['*']
