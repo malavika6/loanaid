@@ -2,58 +2,22 @@
 
 {% block content %}
 <div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Wallet Management</h1>
+    <a href="{% url 'wallet_update' %}" class="btn btn-primary btn-sm">
+      <i class="fas fa-list"></i> Manage
+    </a>
+  </div>
+
+  <!-- Content Row -->
   <div class="row">
     <div class="col-12">
-      <div class="card mt-4 shadow-sm">
-        <div class="card-header d-flex align-items-center justify-content-between">
-          <h5 class="mb-0">Wallet Management</h5>
-          <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#walletModal"><i class="fas fa-list me-1"></i> Manage</button>
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Wallets</h6>
         </div>
         <div class="card-body">
-          <!-- Modal for managing wallet (Add/Update) -->
-          <div class="modal fade" id="walletModal" tabindex="-1" aria-labelledby="walletModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <form method="post" class="modal-content">
-                {% csrf_token %}
-                <div class="modal-header">
-                  <h5 class="modal-title" id="walletModalLabel">Manage Wallet</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <div class="mb-3">
-                    <label class="form-label">Franchise</label>
-                    <select name="franchise" id="walletFranchise" class="form-select">
-                      <option value="">Select Franchise</option>
-                      {% for f in franchises %}
-                        <option value="{{ f.pk }}">{{ f.franchise_name }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                  <div class="row g-3">
-                    <div class="col-12">
-                      <label class="form-label">Allowance (fixed)</label>
-                      <input class="form-control" value="10000.00" readonly>
-                    </div>
-                    <div class="col-12 col-md-6">
-                      <label class="form-label">Commission</label>
-                      <input type="number" step="0.01" min="0" name="commission" id="walletCommission" class="form-control" placeholder="Commission">
-                    </div>
-                    <div class="col-12 col-md-6">
-                      <label class="form-label">Incentive</label>
-                      <input type="number" step="0.01" min="0" name="incentive" id="walletIncentive" class="form-control" placeholder="Incentive">
-                    </div>
-                  </div>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save</button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <hr>
-          <h6 class="mb-3" id="wallets">Wallets</h6>
           <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle">
               <thead>
@@ -75,9 +39,9 @@
                   <td>₹{{ row.wallet.incentive|default:'0.00' }}</td>
                   <td><strong>₹{{ row.total|default:'0.00' }}</strong></td>
                   <td>
-                    <button type="button" class="btn btn-sm btn-warning wallet-manage-btn" data-bs-toggle="modal" data-bs-target="#walletModal" data-id="{{ row.franchise.pk }}" data-commission="{{ row.wallet.commission }}" data-incentive="{{ row.wallet.incentive }}">
+                    <a href="{% url 'wallet_update' %}?franchise={{ row.franchise.pk }}" class="btn btn-sm btn-warning">
                       <i class="fas fa-edit"></i> Manage
-                    </button>
+                    </a>
                   </td>
                 </tr>
                 {% empty %}
@@ -91,30 +55,6 @@
     </div>
   </div>
 </div>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var modalEl = document.getElementById('walletModal');
-    var franchiseSelect = document.getElementById('walletFranchise');
-    var commissionInput = document.getElementById('walletCommission');
-    var incentiveInput = document.getElementById('walletIncentive');
-
-    modalEl.addEventListener('show.bs.modal', function (event) {
-      var trigger = event.relatedTarget;
-      var id = trigger && trigger.getAttribute('data-id') ? trigger.getAttribute('data-id') : '';
-      var com = trigger && trigger.getAttribute('data-commission') ? trigger.getAttribute('data-commission') : '';
-      var inc = trigger && trigger.getAttribute('data-incentive') ? trigger.getAttribute('data-incentive') : '';
-      if (franchiseSelect) franchiseSelect.value = id;
-      if (commissionInput) commissionInput.value = com;
-      if (incentiveInput) incentiveInput.value = inc;
-    });
-    // Clear on hide to avoid flashing previous values
-    modalEl.addEventListener('hidden.bs.modal', function() {
-      if (franchiseSelect) franchiseSelect.value = '';
-      if (commissionInput) commissionInput.value = '';
-      if (incentiveInput) incentiveInput.value = '';
-    });
-  });
-</script>
 {% endblock %}
 
 

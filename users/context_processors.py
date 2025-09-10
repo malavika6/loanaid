@@ -1,5 +1,6 @@
 from .utils import get_user_context 
 from django.urls import reverse
+import time
 
 def base_dropdown_items(request):
     dropdown_items = []
@@ -35,4 +36,5 @@ def sidebar_context(request):
     return {
         'sidebar_menu': sidebar_menu,
         'username': username,
+        'timestamp': int(time.time()),
     }

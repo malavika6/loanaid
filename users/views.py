@@ -13,11 +13,13 @@ from django.db import IntegrityError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout as django_logout
 from django.contrib.auth.hashers import check_password
+from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.urls import reverse
+from decimal import Decimal
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from .utils import get_sidebar_menu, get_user_context
@@ -898,3 +900,74 @@ def wallet_manage(request):
         'franchises': franchise_qs,
         'wallet_rows': wallet_rows,
     })
+
+
+def wallet_update(request):
+    """Wallet update form view for admin and staff"""
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
+    
+    if not user_id or user_type not in ['admin', 'staff']:
+        messages.error(request, 'Unauthorized access.')
+        return redirect('/login')
+    
+    # Get accessible franchises
+    if user_type == 'admin':
+        franchises = Franchise.objects.all().order_by('franchise_name')
+    else:  # staff
+        try:
+            staff = StaffModel.objects.get(staff_id=user_id)
+            from loan.models import StaffAssignmentModel
+            assigned = StaffAssignmentModel.objects.filter(staff_name=staff).prefetch_related('franchise_name')
+            franchise_set = []
+            for a in assigned:
+                franchise_set.extend(list(a.franchise_name.all()))
+            # Deduplicate and sort by name
+            unique_ids = {f.pk for f in franchise_set}
+            franchises = Franchise.objects.filter(pk__in=unique_ids).order_by('franchise_name')
+        except StaffModel.DoesNotExist:
+            franchises = Franchise.objects.none()
+    
+    selected_franchise = request.GET.get('franchise')
+    current_commission = ''
+    current_incentive = ''
+    
+    if selected_franchise:
+        try:
+            franchise = Franchise.objects.get(pk=selected_franchise)
+            wallet, created = Wallet.objects.get_or_create(franchise=franchise)
+            current_commission = wallet.commission
+            current_incentive = wallet.incentive
+        except Franchise.DoesNotExist:
+            selected_franchise = None
+    
+    if request.method == 'POST':
+        franchise_id = request.POST.get('franchise')
+        commission = request.POST.get('commission', 0)
+        incentive = request.POST.get('incentive', 0)
+        
+        if franchise_id:
+            try:
+                franchise = Franchise.objects.get(pk=franchise_id)
+                wallet, created = Wallet.objects.get_or_create(franchise=franchise)
+                
+                # Set absolute amounts (not add to existing)
+                wallet.commission = Decimal(commission or 0)
+                wallet.incentive = Decimal(incentive or 0)
+                wallet.save()
+                
+                messages.success(request, f'Wallet updated for {franchise.franchise_name}')
+                return redirect('wallet_manage')
+            except Franchise.DoesNotExist:
+                messages.error(request, 'Franchise not found')
+        else:
+            messages.error(request, 'Please select a franchise')
+    
+    context = {
+        'franchises': franchises,
+        'selected_franchise': selected_franchise,
+        'current_commission': current_commission,
+        'current_incentive': current_incentive,
+    }
+    
+    return render(request, 'wallet_update.html', context)

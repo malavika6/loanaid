@@ -141,6 +141,75 @@ body {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+/* Force consistent styling across all pages */
+.card-header.py-3 {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%) !important;
+  color: var(--white) !important;
+  border: none !important;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 1rem 1.5rem !important;
+  font-weight: 700 !important;
+}
+
+.card-header.py-3 h6 {
+  color: var(--white) !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  font-size: 1rem !important;
+}
+
+/* Ensure all page headings are consistent */
+.h3.mb-0.text-gray-800 {
+  color: var(--gray-800) !important;
+  font-weight: 600 !important;
+  font-size: 1.75rem !important;
+}
+
+/* Force all pages to use identical styling */
+.container-fluid .card {
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-md) !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.container-fluid .card-header {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%) !important;
+  color: var(--white) !important;
+  border: none !important;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 1rem 1.5rem !important;
+  font-weight: 700 !important;
+}
+
+.container-fluid .card-header h6,
+.container-fluid .card-header h5 {
+  color: var(--white) !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  font-size: 1rem !important;
+}
+
+/* Ensure all buttons in cards are consistent */
+.container-fluid .card-header .btn {
+  background: var(--white) !important;
+  color: var(--primary-blue) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  min-height: 36px !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.container-fluid .card-header .btn:hover {
+  background: var(--gray-100) !important;
+  color: var(--primary-blue-dark) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
 .card-body {
   padding: 1.5rem;
 }
@@ -185,6 +254,67 @@ body {
   background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
   color: var(--white);
   box-shadow: var(--shadow-md);
+}
+
+/* Force consistent button styling across all pages */
+.btn-primary.btn-sm {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%) !important;
+  color: var(--white) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  min-height: 36px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.btn-success.btn-sm {
+  background: linear-gradient(135deg, var(--accent-green) 0%, #059669 100%) !important;
+  color: var(--white) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  min-height: 36px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.btn-warning.btn-sm {
+  background: linear-gradient(135deg, var(--accent-orange) 0%, #d97706 100%) !important;
+  color: var(--white) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  min-height: 36px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.btn-danger.btn-sm {
+  background: linear-gradient(135deg, var(--accent-red) 0%, #dc2626 100%) !important;
+  color: var(--white) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  min-height: 36px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.btn-secondary.btn-sm {
+  background: linear-gradient(135deg, var(--gray-500) 0%, var(--gray-600) 100%) !important;
+  color: var(--white) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  min-height: 36px !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 .btn-primary:hover {
@@ -266,6 +396,28 @@ body {
   padding: 0.75rem 1rem;
   text-align: left;
   vertical-align: middle;
+}
+
+/* Force consistent table styling across all pages */
+.table.table-bordered.table-hover.align-middle thead th {
+  background: var(--gray-100) !important;
+  border: none !important;
+  color: var(--gray-700) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-size: 0.8rem !important;
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+}
+
+.table.table-bordered.table-hover.align-middle tbody td {
+  border: none !important;
+  padding: 0.75rem 1rem !important;
+  vertical-align: middle !important;
+  font-size: 0.875rem !important;
+  color: var(--gray-700) !important;
   white-space: nowrap;
   position: sticky;
   top: 0;
@@ -279,6 +431,8 @@ body {
   border-bottom: 1px solid var(--gray-100);
   text-align: left;
   font-size: 0.9rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .table tbody tr:last-child td {
@@ -308,6 +462,481 @@ body {
   margin: 0;
   background: var(--white);
   max-height: 60vh;
+  width: 100%;
+}
+
+.table-responsive-xxl {
+  border-radius: 8px;
+  overflow: auto;
+  margin: 0;
+  background: var(--white);
+  max-height: 60vh;
+  width: 100%;
+}
+
+/* Enhanced Table Column Management */
+.table {
+  min-width: 100%;
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table th,
+.table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* Specific column width management */
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  width: 150px;
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 150px;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+  width: 100px;
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  width: 300px;
+  min-width: 300px;
+  max-width: 350px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table th:nth-child(6),
+.table td:nth-child(6) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: break-all;
+  padding: 0.75rem 0.5rem;
+}
+
+.table th:nth-child(7),
+.table td:nth-child(7) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table th:nth-child(8),
+.table td:nth-child(8) {
+  width: 150px;
+  min-width: 150px;
+  max-width: 200px;
+}
+
+/* Action column styling */
+.table th:last-child,
+.table td:last-child {
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  text-align: center;
+  overflow: visible !important;
+  white-space: nowrap !important;
+  text-overflow: initial !important;
+  padding: 0.75rem 0.5rem;
+}
+
+/* Prevent any column overflow */
+.table td {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Force hover effects to work */
+.table td.email-field:hover,
+.table td.mobile-field:hover,
+.table td:nth-child(5):hover,
+.table td:nth-child(6):hover {
+  max-width: none !important;
+  overflow: visible !important;
+  white-space: normal !important;
+  text-overflow: initial !important;
+  width: auto !important;
+  min-width: 300px !important;
+  max-width: 400px !important;
+}
+
+/* Specific column width overrides */
+.table td:nth-child(1) { max-width: 80px; }
+.table td:nth-child(2) { max-width: 150px; }
+.table td:nth-child(3) { max-width: 120px; }
+.table td:nth-child(4) { max-width: 100px; }
+.table td:nth-child(5) { max-width: 300px; }
+.table td:nth-child(6) { max-width: 120px !important; width: 120px !important; }
+.table td:nth-child(7) { max-width: 120px; }
+.table td:nth-child(8) { max-width: 150px; }
+.table td:last-child { max-width: 220px !important; width: 220px !important; }
+
+/* Action buttons container */
+.table td:last-child .d-flex {
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem;
+}
+
+/* Button spacing in action column */
+.table td:last-child .btn {
+  margin: 0 0.25rem;
+  min-width: 80px;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: initial;
+  max-width: none;
+  width: auto;
+}
+
+/* Ensure action column buttons are not affected by table constraints */
+.table td:last-child {
+  overflow: visible !important;
+  white-space: nowrap !important;
+  text-overflow: initial !important;
+  max-width: none !important;
+  width: 200px !important;
+}
+
+/* Action column button styling */
+.table td:last-child .btn-success,
+.table td:last-child .btn-danger,
+.table td:last-child .btn-warning,
+.table td:last-child .btn-primary {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  margin: 0 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: 0.375rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Enhanced Email and Mobile Field Styling with Better Hover */
+.table td:nth-child(5),
+.table td:nth-child(6),
+.email-field,
+.mobile-field {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Force all table cells to use ellipsis */
+.table td,
+.table td * {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.table td:nth-child(5):hover,
+.table td:nth-child(6):hover,
+.email-field:hover,
+.mobile-field:hover {
+  border-left-color: var(--primary-blue);
+}
+
+/* Removed eye emoji indicator for cleaner look */
+
+/* Force email column to be wider - High specificity */
+.table.table-bordered.table-hover.align-middle th:nth-child(5),
+.table.table-bordered.table-hover.align-middle td:nth-child(5) {
+  width: 300px !important;
+  min-width: 300px !important;
+  max-width: 350px !important;
+}
+
+/* Force action column to be wider - High specificity */
+.table.table-bordered.table-hover.align-middle td:last-child {
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 220px !important;
+}
+
+/* Staff table specific column widths - 6 columns */
+.table.table-bordered.table-hover.align-middle th:nth-child(1),
+.table.table-bordered.table-hover.align-middle td:nth-child(1) {
+  width: 80px !important;
+  min-width: 80px !important;
+  max-width: 80px !important;
+}
+
+.table.table-bordered.table-hover.align-middle th:nth-child(2),
+.table.table-bordered.table-hover.align-middle td:nth-child(2) {
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
+}
+
+.table.table-bordered.table-hover.align-middle th:nth-child(3),
+.table.table-bordered.table-hover.align-middle td:nth-child(3) {
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
+}
+
+.table.table-bordered.table-hover.align-middle th:nth-child(4),
+.table.table-bordered.table-hover.align-middle td:nth-child(4) {
+  width: 300px !important;
+  min-width: 300px !important;
+  max-width: 350px !important;
+}
+
+.table.table-bordered.table-hover.align-middle th:nth-child(5),
+.table.table-bordered.table-hover.align-middle td:nth-child(5) {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+}
+
+.table.table-bordered.table-hover.align-middle th:nth-child(6),
+.table.table-bordered.table-hover.align-middle td:nth-child(6) {
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 220px !important;
+}
+
+/* Force phone column to stay within bounds */
+.table td:nth-child(6),
+.table td.mobile-field {
+  max-width: 120px !important;
+  width: 120px !important;
+  min-width: 120px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  word-break: break-all !important;
+  padding: 0.75rem 0.5rem !important;
+  box-sizing: border-box !important;
+}
+
+.table td:nth-child(5):hover,
+.table td:nth-child(6):hover,
+.email-field:hover,
+.mobile-field:hover {
+  background-color: var(--gray-50) !important;
+  z-index: 1000 !important;
+  position: relative !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px !important;
+  padding: 0.75rem !important;
+  overflow: visible !important;
+  white-space: normal !important;
+  word-break: break-all !important;
+  max-width: 450px !important;
+  min-width: 350px !important;
+  width: auto !important;
+}
+
+/* Tooltip for email and mobile fields */
+.table td:nth-child(5):hover::before,
+.table td:nth-child(6):hover::before {
+  content: attr(title);
+  position: absolute;
+  background: var(--gray-800);
+  color: var(--white);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1001;
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 200px;
+  text-align: center;
+  opacity: 0.95;
+}
+
+.table td:nth-child(5):hover::after,
+.table td:nth-child(6):hover::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--gray-800);
+  z-index: 1001;
+}
+
+/* Special handling for applications table with many columns */
+.table th:nth-child(9),
+.table td:nth-child(9) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 150px;
+}
+
+.table th:nth-child(10),
+.table td:nth-child(10) {
+  width: 100px;
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.table th:nth-child(11),
+.table td:nth-child(11) {
+  width: 150px;
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.table th:nth-child(12),
+.table td:nth-child(12) {
+  width: 100px;
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.table th:nth-child(13),
+.table td:nth-child(13) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 150px;
+}
+
+.table th:nth-child(14),
+.table td:nth-child(14) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 150px;
+}
+
+.table th:nth-child(15),
+.table td:nth-child(15) {
+  width: 150px;
+  min-width: 150px;
+  max-width: 200px;
+}
+
+/* Mobile field in applications table (column 14) */
+.table th:nth-child(14),
+.table td:nth-child(14) {
+  width: 150px;
+  min-width: 150px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  position: relative;
+}
+
+.table td:nth-child(14):hover {
+  overflow: visible;
+  white-space: normal;
+  word-break: break-all;
+  background-color: var(--gray-50);
+  z-index: 10;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 0.5rem;
+  max-width: 300px;
+}
+
+.table td:nth-child(14):hover::after {
+  content: attr(title);
+  position: absolute;
+  background: var(--gray-800);
+  color: var(--white);
+  padding: 0.5rem;
+  border-radius: 4px;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.875rem;
+}
+
+/* Enhanced Alert Styling */
+.alert {
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.alert-info {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border-left: 4px solid #3b82f6;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border-left: 4px solid #10b981;
+}
+
+.alert-warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border-left: 4px solid #f59e0b;
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border-left: 4px solid #ef4444;
+}
+
+.alert-heading {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.alert .fas {
+  margin-right: 0.5rem;
 }
 
 /* Enhanced Form Styling */
@@ -585,6 +1214,21 @@ body {
   box-shadow: var(--shadow-md);
 }
 
+.pagination .page-item.disabled .page-link {
+  background: var(--gray-100) !important;
+  color: var(--gray-400) !important;
+  border-color: var(--gray-200) !important;
+  cursor: not-allowed;
+}
+
+.pagination .page-item.disabled .page-link:hover {
+  background: var(--gray-100) !important;
+  color: var(--gray-400) !important;
+  border-color: var(--gray-200) !important;
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
 /* Ensure consistent pagination styling across all pages */
 .pagination .page-item .page-link {
   margin: 0 0.25rem;
@@ -742,6 +1386,32 @@ body {
 }
 
 /* Enhanced Responsive Design */
+@media (max-width: 1200px) {
+  .container-fluid {
+    padding: 0 0.5rem;
+  }
+  
+  .card-header h6 {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .d-sm-flex {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  
+  .d-sm-flex .btn-group {
+    margin-top: 1rem;
+    width: 100%;
+  }
+  
+  .d-sm-flex .btn-group .btn {
+    flex: 1;
+  }
+}
+
 @media (max-width: 768px) {
   #content-wrapper {
     margin-left: 0;
@@ -771,6 +1441,24 @@ body {
   
   .table-responsive {
     font-size: 0.875rem;
+  }
+  
+  .form-group.row .col-sm-2,
+  .form-group.row .col-sm-10 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .form-group.row .col-sm-2 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .card-header h6 {
+    font-size: 0.85rem;
   }
 }
 

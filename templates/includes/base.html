@@ -24,7 +24,7 @@
     
     <!-- Custom styles -->
     <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
-    <link href="{% static 'css/custom-styles.css' %}?v=4" rel="stylesheet">
+    <link href="{% static 'css/custom-styles.css' %}?v={{ timestamp|default:'1000' }}" rel="stylesheet">
 
     <style>
       .logo {
@@ -59,6 +59,7 @@
       .table td {
         white-space: nowrap;
         color: #878787;
+        
       }
 
       .table {
@@ -317,6 +318,130 @@
 
     <!-- Custom scripts -->
     <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+    
+    <!-- Enhanced Email and Mobile Field Hover Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add hover effects to email and mobile fields
+        const emailFields = document.querySelectorAll('td:nth-child(5)');
+        const mobileFields = document.querySelectorAll('td:nth-child(6)');
+        
+        function addHoverEffect(fields) {
+            fields.forEach(field => {
+                // Mouse enter event
+                field.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = '#f8f9fa';
+                    this.style.zIndex = '1000';
+                    this.style.position = 'relative';
+                    this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                    this.style.borderRadius = '6px';
+                    this.style.padding = '0.75rem';
+                    this.style.overflow = 'visible';
+                    this.style.whiteSpace = 'normal';
+                    this.style.wordBreak = 'break-all';
+                    this.style.maxWidth = '400px';
+                    this.style.minWidth = '300px';
+                    this.style.width = 'auto';
+                });
+                
+                // Mouse leave event
+                field.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = '';
+                    this.style.zIndex = '';
+                    this.style.position = '';
+                    this.style.boxShadow = '';
+                    this.style.borderRadius = '';
+                    this.style.padding = '';
+                    this.style.overflow = '';
+                    this.style.whiteSpace = '';
+                    this.style.wordBreak = '';
+                    this.style.maxWidth = '';
+                    this.style.minWidth = '';
+                    this.style.width = '';
+                });
+                
+                // Click event as backup
+                field.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const fullText = this.getAttribute('title');
+                    if (fullText && fullText !== this.textContent.trim()) {
+                        // Show full text in a temporary tooltip
+                        const tooltip = document.createElement('div');
+                        tooltip.style.cssText = `
+                            position: fixed;
+                            background: #333;
+                            color: white;
+                            padding: 10px 15px;
+                            border-radius: 6px;
+                            z-index: 10000;
+                            font-size: 14px;
+                            max-width: 300px;
+                            word-wrap: break-word;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        `;
+                        tooltip.textContent = fullText;
+                        document.body.appendChild(tooltip);
+                        
+                        // Position tooltip
+                        const rect = this.getBoundingClientRect();
+                        tooltip.style.left = rect.left + 'px';
+                        tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+                        
+                        // Remove tooltip after 3 seconds
+                        setTimeout(() => {
+                            if (tooltip.parentNode) {
+                                tooltip.parentNode.removeChild(tooltip);
+                            }
+                        }, 3000);
+                    }
+                });
+            });
+        }
+        
+        addHoverEffect(emailFields);
+        addHoverEffect(mobileFields);
+        
+        // Fix any remaining overflow issues
+        function fixTableOverflow() {
+            const tableCells = document.querySelectorAll('.table td');
+            tableCells.forEach(cell => {
+                // Skip action column (last column)
+                if (cell.cellIndex === cell.parentNode.cells.length - 1) {
+                    return;
+                }
+                
+                // Force phone column (6th column) to stay within bounds
+                if (cell.cellIndex === 5) { // 0-based index for 6th column
+                    cell.style.maxWidth = '120px';
+                    cell.style.width = '120px';
+                    cell.style.minWidth = '120px';
+                    cell.style.overflow = 'hidden';
+                    cell.style.textOverflow = 'ellipsis';
+                    cell.style.whiteSpace = 'nowrap';
+                    cell.style.wordBreak = 'break-all';
+                    cell.style.padding = '0.75rem 0.5rem';
+                    cell.style.boxSizing = 'border-box';
+                    return;
+                }
+                
+                // Skip email fields for hover effects
+                if (cell.classList.contains('email-field')) {
+                    return;
+                }
+                
+                if (cell.scrollWidth > cell.clientWidth) {
+                    cell.style.overflow = 'hidden';
+                    cell.style.textOverflow = 'ellipsis';
+                    cell.style.whiteSpace = 'nowrap';
+                }
+            });
+        }
+        
+        // Run on page load and window resize
+        fixTableOverflow();
+        window.addEventListener('resize', fixTableOverflow);
+    });
+    </script>
     <script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
     {% comment %} <script src="{% static 'js/demo/chart-area-demo.js' %}"></script> {% endcomment %}
     <script src="{% static 'js/demo/chart-pie-demo.js' %}"></script>

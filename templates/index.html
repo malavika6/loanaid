@@ -347,8 +347,8 @@
                             <td>{{ staff.phone_no }}</td> <!-- Displaying phone number -->
                             <td>
                               {% if staff.staff_id %}
-                                <a href="{% url 'view_profile' staff.staff_id %}">
-                                  <i class="fa fa-eye" style="color: green"></i>
+                                <a href="{% url 'view_profile' staff.staff_id %}" class="btn btn-success btn-sm">
+                                  View
                                 </a>
                                 <form action="{% url 'delete_staff' staff.staff_id %}" method="post" style="display: inline">
                                   {% csrf_token %}

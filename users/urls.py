@@ -23,4 +23,5 @@ urlpatterns = [
 
     path('franchise/profile-completion/', views.franchise_profile_completion, name='franchise_profile_completion'),
     path('wallet/', views.wallet_manage, name='wallet_manage'),
+    path('wallet/update/', views.wallet_update, name='wallet_update'),
 ]

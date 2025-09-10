@@ -3,56 +3,66 @@
 {% block content %}
 
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card mt-4 shadow-sm" style="border-radius: 10px;">
-                <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between" style="border-top-left-radius: 10px; border-top-right-radius: 10px;">
-                    <h4 class="mb-0">Staff Assignments</h4>
-                    <a href="{% url 'assign_staff' %}" class="btn btn-light btn-sm"><i class="fas fa-user-plus me-1"></i> Assign Staff</a>
-                </div>
-                <div class="card-body">
-                    {% if staff_assignments %}
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover text-center">
-                                <thead class="table-primary">
-                                    <tr>
-                                        <th>Sr. No</th>
-                                        <th>Staff</th>
-                                        <th>Franchise Name</th>
-                                        <th>Assigned By</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for staff, assignments in staff_assignments.items %}
-                                        {% for assignment in assignments %}
-                                        <tr>
-                                            <td>{{ forloop.parentloop.counter }}</td>
-                                            <td>{{ assignment.staff_full_name }}</td>
-                                            <td>
-                                                {% for franchise in assignment.franchise_name.all %}
-                                                    <span class="badge bg-secondary mb-1">{{ franchise.franchise_name }}</span>
-                                                {% empty %}
-                                                    <span class="text-muted">No Franchise</span>
-                                                {% endfor %}
-                                            </td>
-                                            <td>{{ assignment.assigned_by.admin_first_name }} {{ assignment.assigned_by.admin_last_name }}</td>
-                                            <td>
-                                                <a href="{% url 'update_assignment' assignment.assignment_id %}" class="btn btn-sm btn-warning">Edit</a>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted text-center">No staff assignments available.</p>
-                    {% endif %}
-                </div>
-            </div>
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Staff Assignments</h1>
+    <a href="{% url 'assign_staff' %}" class="btn btn-primary btn-sm">
+      <i class="fas fa-user-plus"></i> Assign Staff
+    </a>
+  </div>
+
+  <!-- Content Row -->
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Staff Assignments</h6>
         </div>
+        <div class="card-body">
+          {% if staff_assignments %}
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Sr. No</th>
+                    <th>Staff</th>
+                    <th>Franchise Name</th>
+                    <th>Assigned By</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for staff, assignments in staff_assignments.items %}
+                    {% for assignment in assignments %}
+                    <tr>
+                      <td>{{ forloop.parentloop.counter }}</td>
+                      <td>{{ assignment.staff_full_name }}</td>
+                      <td>
+                        {% for franchise in assignment.franchise_name.all %}
+                          <span class="badge bg-secondary mb-1">{{ franchise.franchise_name }}</span>
+                        {% empty %}
+                          <span class="text-muted">No Franchise</span>
+                        {% endfor %}
+                      </td>
+                      <td>{{ assignment.assigned_by.admin_first_name }} {{ assignment.assigned_by.admin_last_name }}</td>
+                      <td>
+                        <a href="{% url 'update_assignment' assignment.assignment_id %}" class="btn btn-sm btn-warning">
+                          <i class="fas fa-edit"></i> Edit
+                        </a>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted text-center">No staff assignments available.</p>
+          {% endif %}
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
 {% endblock %}

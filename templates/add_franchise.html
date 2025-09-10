@@ -3,24 +3,24 @@
 
 {% block content %}
 
-<!-- Begin Page Content -->
 <div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Franchise Management</h1>
+    <a href="{% url 'list_franchise' %}" class="btn btn-secondary btn-sm">
+      <i class="fas fa-arrow-left"></i> Back to Franchise List
+    </a>
+  </div>
 
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Franchise Management</h1>
-    </div>
-
-    <!-- Content Row -->
-    <div class="row">
-        <!-- Add Franchise Form -->
-        <div class="col-xl-12 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        {% if is_edit %} Edit Franchise {% else %} Add Franchise {% endif %}
-                    </h6>
-                </div>
+  <!-- Content Row -->
+  <div class="row">
+    <div class="col-xl-12 col-lg-7">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">
+            {% if is_edit %} Edit Franchise {% else %} Add Franchise {% endif %}
+          </h6>
+        </div>
                 <div class="card-body">
                     <!-- Info Alert -->
                     <div class="alert alert-info" role="alert">
@@ -74,6 +74,6 @@
             </div>
         </div>
     </div>
-
+  </div>
 </div>
 {% endblock %}
