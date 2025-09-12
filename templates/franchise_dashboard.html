@@ -6,13 +6,13 @@
 <div class="container-fluid">
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+    <h1 class="h3 mb-0 text-gray-800">Franchise Dashboard</h1>
     <div class="btn-group" role="group">
-      <a href="{% url 'form' %}" class="btn btn-primary btn-sm">
-        <i class="fas fa-plus"></i> Add Application
+      <a href="{% url 'all-application' %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-list"></i> My Applications
       </a>
-      <a href="{% url 'add_franchise' %}" class="btn btn-success btn-sm ms-2">
-        <i class="fas fa-building"></i> Add Franchise
+      <a href="{% url 'franchise_list' %}" class="btn btn-success btn-sm">
+        <i class="fas fa-building"></i> My Referrals
       </a>
     </div>
   </div>

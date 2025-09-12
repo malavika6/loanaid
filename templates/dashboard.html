@@ -5,13 +5,19 @@
 <div class="container-fluid">
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+    <h1 class="h3 mb-0 text-gray-800">
+      {% if user_type == 'staff' %}
+        Staff Dashboard
+      {% else %}
+        Dashboard
+      {% endif %}
+    </h1>
     <div class="btn-group" role="group">
-      <a href="{% url 'form' %}" class="btn btn-primary btn-sm">
-        <i class="fas fa-file-signature"></i> New Application
+      <a href="{% url 'all-application' %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-list"></i> View Applications
       </a>
-      <a href="{% url 'all-application' %}" class="btn btn-success btn-sm">
-        <i class="fas fa-list"></i> View All
+      <a href="{% url 'staff_loan_management' %}" class="btn btn-success btn-sm">
+        <i class="fas fa-tasks"></i> Manage Loans
       </a>
     </div>
   </div>

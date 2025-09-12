@@ -41,14 +41,15 @@ def get_sidebar_menu(user_type):
             ],
             'franchise': [
                 {'name': 'Dashboard', 'url': reverse('franchise_dashboard'), 'icon': 'fas fa-tachometer-alt'},
-                {'name': 'Apply Loan', 'url': reverse('form'), 'icon': 'fas fa-file-signature'},
+                {'name': 'Franchise List', 'url': reverse('franchise_list'), 'icon': 'fas fa-building'},
+                {'name': 'Wallet', 'url': reverse('franchise_wallet'), 'icon': 'fas fa-wallet'},
                 {'name': 'Loans', 'url': reverse('all-application'), 'icon': 'fas fa-file-alt'},
                 {'name': 'Logout', 'url': reverse('logout'), 'icon': 'fas fa-sign-out-alt'},
             ],
             'staff': [
                 {'name': 'Dashboard', 'url': reverse('home'), 'icon': 'fas fa-tachometer-alt'},
-                {'name': 'Application', 'url': reverse('form'), 'icon': 'fas fa-file-signature'},
                 {'name': 'Applications', 'url': reverse('all-application'), 'icon': 'fas fa-file-alt'},
+                {'name': 'Manage Loans', 'url': reverse('staff_loan_management'), 'icon': 'fas fa-tasks'},
                 {'name': 'Wallet', 'url': reverse('wallet_manage'), 'icon': 'fas fa-wallet'},
                 {'name': 'Banks', 'url': reverse('addbank'), 'icon': 'fas fa-university'},
                 {'name': 'Franchises', 'url': reverse('list_franchise'), 'icon': 'fas fa-building'},

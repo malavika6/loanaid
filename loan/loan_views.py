@@ -319,7 +319,7 @@ class LoanListView(View):
                 
             elif user_type == 'staff':
                 user = StaffModel.objects.get(staff_id=user_id)
-                username = f"{staff.first_name} {staff.last_name if staff.last_name else ''}"
+                username = f"{user.first_name} {user.last_name if user.last_name else ''}"
                 can_access_all = True
                 
             elif user_type == 'franchise':
@@ -376,8 +376,15 @@ class LoanListView(View):
         
         context = {
             'username': username,
+            'user_type': user_type,
             'loan_applications': page_obj,
             'loan_name_filter': request.GET.get('loan_name', ''),
+            'status_filter': request.GET.get('status', ''),
+            'bank_filter': request.GET.get('bank', ''),
+            'start_date': request.GET.get('start_date', ''),
+            'end_date': request.GET.get('end_date', ''),
+            'min_amount': request.GET.get('min_amount', ''),
+            'max_amount': request.GET.get('max_amount', ''),
             'page_obj': page_obj,
         }
         

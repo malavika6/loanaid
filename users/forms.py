@@ -382,6 +382,62 @@ class FranchiseActivationForm(forms.Form):
         return cleaned_data
 
 
+class FranchiseAddByFranchiseForm(forms.ModelForm):
+    """Form for franchise users to add new franchises (with read-only staff and payment status)"""
+
+    class Meta:
+        model = Franchise
+        fields = [
+            "staff",
+            "franchise_name",
+            "franchise_owner",
+            "franchise_place",
+            "franchise_type",
+            "payment_status",
+            "referred_by",
+            "email",
+            "mobile_no",
+        ]
+        widgets = {
+            "staff": forms.Select(attrs={"class": "form-control", "disabled": "disabled"}),
+            "franchise_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Franchise Name"}),
+            "franchise_owner": forms.TextInput(attrs={"class": "form-control", "placeholder": "Franchise Owner"}),
+            "franchise_place": forms.TextInput(attrs={"class": "form-control", "placeholder": "Franchise Place"}),
+            "franchise_type": forms.Select(attrs={"class": "form-control"}),
+            "payment_status": forms.CheckboxInput(attrs={"class": "form-check-input", "disabled": "disabled"}),
+            "referred_by": forms.TextInput(attrs={"class": "form-control", "readonly": "readonly", "placeholder": "Referral Code"}),
+            "email": forms.EmailInput(attrs={"class": "form-control", "placeholder": "Email Address"}),
+            "mobile_no": forms.TextInput(attrs={"class": "form-control", "placeholder": "Mobile Number"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.referring_franchise = kwargs.pop('referring_franchise', None)
+        super().__init__(*args, **kwargs)
+        
+        # Set up staff field as read-only
+        self.fields['staff'].queryset = StaffModel.objects.all()
+        self.fields['staff'].empty_label = "Will be assigned by admin"
+        self.fields['staff'].help_text = "Staff assignment will be managed by admin"
+        
+        # Set up referred_by field with referring franchise info
+        if self.referring_franchise:
+            self.fields['referred_by'].initial = f"{self.referring_franchise.franchise_name} ({self.referring_franchise.referral_code})"
+            self.fields['referred_by'].help_text = "This franchise will be referred by you"
+        
+        # Set default values for read-only fields
+        self.fields['payment_status'].initial = False
+        self.fields['payment_status'].help_text = "Payment status will be managed by admin"
+
+    def save(self, commit=True):
+        """Save the franchise with the referring franchise set"""
+        franchise = super().save(commit=False)
+        if self.referring_franchise:
+            franchise.referred_by = self.referring_franchise
+        if commit:
+            franchise.save()
+        return franchise
+
+
 # ============================================================================
 # ADMIN FORMS
 # ============================================================================
@@ -603,4 +659,113 @@ class StaffAssignmentForm(forms.ModelForm):
         if commit and hasattr(self, "save_m2m"):
             self.save_m2m()
         return instance
+
+
+class StaffProfileUpdateForm(forms.ModelForm):
+    """Form for staff profile updates - name and profile picture only"""
+    
+    class Meta:
+        model = StaffModel
+        fields = ['first_name', 'last_name', 'profile_picture']
+        widgets = {
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control form-control-user',
+                'placeholder': 'First Name'
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-control form-control-user',
+                'placeholder': 'Last Name'
+            }),
+            'profile_picture': forms.ClearableFileInput(attrs={
+                'class': 'form-control form-control-user',
+                'accept': 'image/*'
+            })
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['profile_picture'].required = False
+        self.fields['profile_picture'].help_text = "Upload a profile picture (JPG, PNG, GIF - Max 5MB)"
+
+    def clean_profile_picture(self):
+        profile_picture = self.cleaned_data.get('profile_picture')
+        
+        if profile_picture:
+            # Check file size (5MB limit)
+            if profile_picture.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("Profile picture size should not exceed 5MB.")
+            
+            # Check file type
+            allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+            if profile_picture.content_type not in allowed_types:
+                raise forms.ValidationError("Only JPG, PNG, and GIF images are allowed.")
+        
+        return profile_picture
+
+
+class StaffPasswordChangeForm(forms.Form):
+    """Form for staff password change"""
+    current_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            "class": "form-control form-control-user",
+            "placeholder": "Current Password"
+        }),
+        required=True
+    )
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            "class": "form-control form-control-user",
+            "placeholder": "New Password"
+        }),
+        required=True
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            "class": "form-control form-control-user",
+            "placeholder": "Confirm New Password"
+        }),
+        required=True
+    )
+
+    def __init__(self, staff_instance, *args, **kwargs):
+        self.staff_instance = staff_instance
+        super().__init__(*args, **kwargs)
+
+    def clean_current_password(self):
+        """Validate current password"""
+        current_password = self.cleaned_data.get("current_password")
+        if not self.staff_instance.check_password(current_password):
+            raise ValidationError("Current password is incorrect.")
+        return current_password
+
+    def clean_new_password(self):
+        """Validate new password strength"""
+        new_password = self.cleaned_data.get("new_password")
+        if len(new_password) < 8:
+            raise ValidationError("Password must be at least 8 characters long.")
+        
+        if not any(c.isupper() for c in new_password):
+            raise ValidationError("Password must contain at least one uppercase letter.")
+        
+        if not any(c.islower() for c in new_password):
+            raise ValidationError("Password must contain at least one lowercase letter.")
+        
+        if not any(c.isdigit() for c in new_password):
+            raise ValidationError("Password must contain at least one number.")
+        
+        if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in new_password):
+            raise ValidationError("Password must contain at least one special character.")
+        
+        return new_password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get("new_password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if new_password and confirm_password:
+            if new_password != confirm_password:
+                raise ValidationError("New passwords don't match.")
+
+        return cleaned_data
 

@@ -1,5 +1,24 @@
 /* Custom Styles for Loan Aid Application */
 
+/* Profile Picture Styles */
+.profile-photo-container {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.profile-photo-container:hover {
+  transform: scale(1.05);
+}
+
+.profile-photo-container img {
+  border: 2px solid #e3e6f0;
+  transition: border-color 0.3s ease;
+}
+
+.profile-photo-container:hover img {
+  border-color: #4e73df;
+}
+
 /* Modern Color Palette */
 :root {
   --primary-blue: #2563eb;

@@ -1,13 +1,14 @@
 from users.utils import get_sidebar_menu, get_user_context
 from users.forms import StaffModelForm, StaffActivationForm, FranchiseActivationForm, FranchiseProfileForm
 from users.forms import WalletUpdateForm
-from users.forms import AdminProfileUpdateForm
+from users.forms import AdminProfileUpdateForm, StaffProfileUpdateForm, StaffPasswordChangeForm
 from users.models import AdminModel, StaffModel, Franchise, Wallet
 from users.jwt_utils import generate_activation_token, verify_activation_token
 from loan.models import LoanApplicationModel, UploadedFile
 from payment.models import Payment
 import uuid
 from django.core.mail import send_mail
+from django.db.models import Q
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
 from django.shortcuts import render, redirect, get_object_or_404
@@ -211,39 +212,60 @@ def home(request):
     user_type = request.session.get('user_type')
     # Debug removed
     if user_type == 'admin':
+        # Get admin user
+        admin = AdminModel.objects.get(admin_id=request.session.get('user_id'))
+        
+        # Get today's follow-up loans
         today = datetime.now().date()
-        all_loans = LoanApplicationModel.objects.filter(followup_date=today)
-        loan_followup = all_loans.filter(
-            assigned_to=request.session.get('user_id'))
-
+        today_followups = LoanApplicationModel.objects.filter(followup_date=today)
+        
+        # Get all statistics
         all_franchises = Franchise.objects.all()
         franchise_count = all_franchises.count()
-
+        active_franchises = all_franchises.filter(is_active=True).count()
+        
         all_staff = StaffModel.objects.all()
         staff_count = all_staff.count()
-
-        loan_app = LoanApplicationModel.objects.all()
-        loan_app_count = loan_app.count()
-        last_loan_app = loan_app.order_by('-form_id')[:10]
-
+        active_staff = all_staff.filter(is_active=True).count()
+        
+        # Loan statistics
+        all_loans = LoanApplicationModel.objects.all()
+        loan_app_count = all_loans.count()
+        pending_loans = all_loans.filter(status_name__status_name='Pending').count()
+        approved_loans = all_loans.filter(status_name__status_name='Approved').count()
+        rejected_loans = all_loans.filter(status_name__status_name='Rejected').count()
+        
+        # Recent activities
+        recent_loans = all_loans.order_by('-form_id')[:10]
+        recent_franchises = all_franchises.order_by('-created_at')[:5]
+        
+        # Wallet statistics
+        from users.models import Wallet
+        total_wallet_amount = sum(wallet.get_total_balance() for wallet in Wallet.objects.all())
+        
         context = {
             'username': username,
-            'forms': last_loan_app,
-            'loans': all_loans,
+            'admin': admin,
+            'user_type': 'admin',
+            'forms': recent_loans,
+            'loans': today_followups,
+            'recent_franchises': recent_franchises,
             'total_franchise_count': franchise_count,
+            'active_franchise_count': active_franchises,
             'total_staff_count': staff_count,
+            'active_staff_count': active_staff,
             'loan_app_count': loan_app_count,
-            'all_franchises': all_franchises,
-            'all_staff': all_staff,
+            'pending_loans': pending_loans,
+            'approved_loans': approved_loans,
+            'rejected_loans': rejected_loans,
+            'total_wallet_amount': total_wallet_amount,
             'sidebar_menu': sidebar_menu,
-            'can_add_loan': True
         }
         return render(request, 'index.html', context)
 
     elif user_type == 'staff':
         staff_id = request.session.get('user_id')
         staff = StaffModel.objects.get(staff_id=staff_id)
-
 
         # Get the franchises assigned to this staff from StaffAssignmentModel
         assigned_franchise_qs = Franchise.objects.filter(
@@ -253,68 +275,107 @@ def home(request):
         # Build detailed list with wallet and loan counts
         from users.models import Wallet
         assigned_franchise_data = []
+        total_wallet_amount = 0
+        
         for franchise in assigned_franchise_qs:
             # Ensure wallet exists
             wallet, _ = Wallet.objects.get_or_create(franchise=franchise)
             # Loan count for this franchise
             loan_count = LoanApplicationModel.objects.filter(franchise=franchise).count()
+            wallet_total = wallet.get_total_balance()
+            total_wallet_amount += wallet_total
+            
             assigned_franchise_data.append({
                 'franchise': franchise,
                 'wallet': wallet,
                 'loan_count': loan_count,
-                'wallet_total': wallet.get_total_balance(),
+                'wallet_total': wallet_total,
             })
 
-        # Counts
-        assigned_franchise_count = len(assigned_franchise_data)
-        staff_loans = LoanApplicationModel.objects.filter(assigned_to=staff_id)
-        loans_from_franchises = LoanApplicationModel.objects.filter(franchise__in=[i['franchise'] for i in assigned_franchise_data])
-        franchise_loan_count = loans_from_franchises.count()
+        # Get loans from assigned franchises
+        loans_from_franchises = LoanApplicationModel.objects.filter(
+            franchise__in=assigned_franchise_qs
+        ).select_related('franchise', 'status_name', 'loan_name')
+        
+        # Loan statistics
+        total_loans = loans_from_franchises.count()
+        pending_loans = loans_from_franchises.filter(status_name__status_name='Pending').count()
+        approved_loans = loans_from_franchises.filter(status_name__status_name='Approved').count()
+        rejected_loans = loans_from_franchises.filter(status_name__status_name='Rejected').count()
+        
+        # Recent loans
+        recent_loans = loans_from_franchises.order_by('-form_id')[:10]
+        
+        # Today's follow-ups
+        today = datetime.now().date()
+        today_followups = loans_from_franchises.filter(followup_date=today)
 
         context = {
             'username': username,
+            'staff': staff,
+            'user_type': 'staff',
             'sidebar_menu': sidebar_menu,
-            'all_loans': loans_from_franchises,
-            'staff_loans': staff_loans,
-            'franchise_loans': franchise_loan_count,
-            'assigned_franchise_count': assigned_franchise_count,
+            'all_loans': recent_loans,
+            'today_followups': today_followups,
+            'total_loans': total_loans,
+            'pending_loans': pending_loans,
+            'approved_loans': approved_loans,
+            'rejected_loans': rejected_loans,
+            'assigned_franchise_count': len(assigned_franchise_data),
             'assigned_franchises': assigned_franchise_data,
+            'total_wallet_amount': total_wallet_amount,
         }
         return render(request, 'dashboard.html', context)
 
 
     elif user_type == 'franchise':
         """
-        Franchise dashboard view - simplified version
+        Franchise dashboard view - shows only franchise's own data
         """
         franchise_id = request.session.get('user_id')
         try:
             franchise = Franchise.objects.get(franchise_id=franchise_id)
             
-            # Get franchise statistics
-            total_loans = LoanApplicationModel.objects.filter(franchise=franchise).count()
-            pending_loans = LoanApplicationModel.objects.filter(
-                franchise=franchise, 
-                status_name__status_name__in=['Pending', 'Under Review']
-            ).count()
-            approved_loans = LoanApplicationModel.objects.filter(
-                franchise=franchise, 
-                status_name__status_name='Approved'
-            ).count()
+            # Get franchise's own loan statistics
+            franchise_loans = LoanApplicationModel.objects.filter(franchise=franchise)
+            total_loans = franchise_loans.count()
+            pending_loans = franchise_loans.filter(status_name__status_name='Pending').count()
+            approved_loans = franchise_loans.filter(status_name__status_name='Approved').count()
+            rejected_loans = franchise_loans.filter(status_name__status_name='Rejected').count()
+            under_review_loans = franchise_loans.filter(status_name__status_name='Under Review').count()
             
-            # Get recent loan applications
-            recent_loans = LoanApplicationModel.objects.filter(
-                franchise=franchise
-            ).order_by('-form_id')[:5]
+            # Get recent loan applications (only their own)
+            recent_loans = franchise_loans.order_by('-form_id')[:5]
+            
+            # Get today's follow-ups
+            today = datetime.now().date()
+            today_followups = franchise_loans.filter(followup_date=today)
+            
+            # Get wallet information
+            from users.models import Wallet
+            wallet, _ = Wallet.objects.get_or_create(franchise=franchise)
+            wallet_total = wallet.get_total_balance()
+            
+            # Get referred franchises (if any)
+            referred_franchises = Franchise.objects.filter(referred_by=franchise)
+            referred_count = referred_franchises.count()
             
             context = {
                 'franchise': franchise,
                 'username': franchise.franchise_name,
+                'user_type': 'franchise',
                 'sidebar_menu': get_sidebar_menu('franchise'),
                 'total_loans': total_loans,
                 'pending_loans': pending_loans,
                 'approved_loans': approved_loans,
+                'rejected_loans': rejected_loans,
+                'under_review_loans': under_review_loans,
                 'recent_loans': recent_loans,
+                'today_followups': today_followups,
+                'wallet': wallet,
+                'wallet_total': wallet_total,
+                'referred_franchises': referred_franchises,
+                'referred_count': referred_count,
             }
             return render(request, 'franchise_dashboard.html', context)
             
@@ -458,23 +519,24 @@ def update_profile(request):
         elif user_type == 'staff':
             staff = StaffModel.objects.get(staff_id=user_id)
             if request.method == 'POST':
-                form = StaffModelForm(request.POST, request.FILES, instance=staff)
+                form = StaffProfileUpdateForm(request.POST, request.FILES, instance=staff)
                 if form.is_valid():
                     form.save()
                     messages.success(request, "Profile updated successfully!")
-                    return redirect('profile')
+                    return redirect('home')
                 else:
                     messages.error(request, "Please correct the errors in the form.")
             else:
-                form = StaffModelForm(instance=staff)
+                form = StaffProfileUpdateForm(instance=staff)
             
             context = {
                 'form': form,
                 'user_profile': staff,
                 'sidebar_menu': get_sidebar_menu(user_type),
-                'username': f"{staff.first_name} {staff.last_name or ''}".strip()
+                'username': f"{staff.first_name} {staff.last_name or ''}".strip(),
+                'user_type': user_type
             }
-            return render(request, 'profile.html', context)
+            return render(request, 'staff_profile_update.html', context)
             
         elif user_type == 'admin':
             admin = AdminModel.objects.get(admin_id=user_id)
@@ -650,15 +712,168 @@ def list_staff(request):
         messages.error(request, "Unauthorized access.")
         return redirect('/login')
 
+    # Get base queryset
     all_staff = StaffModel.objects.all().order_by('-created_at')
+    
+    # Apply filters
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    if search_query:
+        all_staff = all_staff.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(phone_no__icontains=search_query)
+        )
+    
+    if status_filter:
+        if status_filter == 'active':
+            all_staff = all_staff.filter(is_active=True)
+        elif status_filter == 'inactive':
+            all_staff = all_staff.filter(is_active=False)
+    
+    if date_from:
+        all_staff = all_staff.filter(created_at__date__gte=date_from)
+    
+    if date_to:
+        all_staff = all_staff.filter(created_at__date__lte=date_to)
     
     # Get sidebar menu context
     sidebar_menu = get_sidebar_menu(user_type)
     
     return render(request, 'all_staffs.html', {
         'all_staff': all_staff,
-        'sidebar_menu': sidebar_menu
+        'sidebar_menu': sidebar_menu,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'date_from': date_from,
+        'date_to': date_to,
     })
+
+
+def staff_loan_management(request):
+    """
+    Staff loan management view - shows loans from assigned franchises with accept/reject/pending functionality
+    """
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
+
+    if not user_id or user_type != 'staff':
+        messages.error(request, "Unauthorized access.")
+        return redirect('/login')
+
+    try:
+        staff = StaffModel.objects.get(staff_id=user_id)
+        
+        # Get the franchises assigned to this staff
+        assigned_franchises = Franchise.objects.filter(
+            staffassignmentmodel__staff_name=staff
+        ).distinct()
+        
+        # Get loans from assigned franchises
+        loans = LoanApplicationModel.objects.filter(
+            franchise__in=assigned_franchises
+        ).select_related('franchise', 'loan_name', 'status_name', 'bank_name')
+        
+        # Apply filters
+        search_query = request.GET.get('search', '')
+        status_filter = request.GET.get('status', '')
+        franchise_filter = request.GET.get('franchise', '')
+        date_from = request.GET.get('date_from', '')
+        date_to = request.GET.get('date_to', '')
+        
+        if search_query:
+            loans = loans.filter(
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(phone_no__icontains=search_query) |
+                Q(loan_name__loan_name__icontains=search_query)
+            )
+        
+        if status_filter:
+            if status_filter == 'pending':
+                loans = loans.filter(status_name__status_name='Pending')
+            elif status_filter == 'approved':
+                loans = loans.filter(status_name__status_name='Approved')
+            elif status_filter == 'rejected':
+                loans = loans.filter(status_name__status_name='Rejected')
+            elif status_filter == 'under_review':
+                loans = loans.filter(status_name__status_name='Under Review')
+        
+        if franchise_filter:
+            loans = loans.filter(franchise_id=franchise_filter)
+        
+        if date_from:
+            loans = loans.filter(created_at__date__gte=date_from)
+        
+        if date_to:
+            loans = loans.filter(created_at__date__lte=date_to)
+        
+        # Get sidebar menu context
+        sidebar_menu = get_sidebar_menu(user_type)
+        
+        context = {
+            'loans': loans,
+            'assigned_franchises': assigned_franchises,
+            'sidebar_menu': sidebar_menu,
+            'search_query': search_query,
+            'status_filter': status_filter,
+            'franchise_filter': franchise_filter,
+            'date_from': date_from,
+            'date_to': date_to,
+        }
+        
+        return render(request, 'staff_loan_management.html', context)
+        
+    except StaffModel.DoesNotExist:
+        messages.error(request, "Staff member not found.")
+        return redirect('/login')
+
+
+def update_loan_status(request, loan_id):
+    """
+    Update loan status (Accept/Reject/Pending) - Staff only
+    """
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
+
+    if not user_id or user_type != 'staff':
+        messages.error(request, "Unauthorized access.")
+        return redirect('/login')
+
+    try:
+        staff = StaffModel.objects.get(staff_id=user_id)
+        
+        # Get the loan
+        loan = get_object_or_404(LoanApplicationModel, form_id=loan_id)
+        
+        # Check if staff has permission to manage this loan (from assigned franchises)
+        assigned_franchises = Franchise.objects.filter(
+            staffassignmentmodel__staff_name=staff
+        ).distinct()
+        
+        if loan.franchise not in assigned_franchises:
+            messages.error(request, "You don't have permission to manage this loan.")
+            return redirect('staff_loan_management')
+        
+        if request.method == 'POST':
+            new_status = request.POST.get('status')
+            if new_status in ['Accept', 'Reject', 'Pending']:
+                # Update the workstatus field
+                loan.workstatus = new_status
+                loan.save()
+                messages.success(request, f"Loan status updated to {new_status}")
+            else:
+                messages.error(request, "Invalid status selected.")
+        
+        return redirect('staff_loan_management')
+        
+    except StaffModel.DoesNotExist:
+        messages.error(request, "Staff member not found.")
+        return redirect('/login')
 
 
 def delete_staff(request, staff_id):
@@ -849,14 +1064,52 @@ def wallet_manage(request):
         except StaffModel.DoesNotExist:
             franchise_qs = Franchise.objects.none()
 
+    # Apply filters
+    search_query = request.GET.get('search', '')
+    franchise_filter = request.GET.get('franchise', '')
+    min_total = request.GET.get('min_total', '')
+    max_total = request.GET.get('max_total', '')
+    
+    # Filter franchises based on search
+    if search_query:
+        franchise_qs = franchise_qs.filter(
+            Q(franchise_name__icontains=search_query) |
+            Q(franchise_owner__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(referral_code__icontains=search_query)
+        )
+    
+    # Filter by specific franchise
+    if franchise_filter:
+        franchise_qs = franchise_qs.filter(pk=franchise_filter)
+
     # Build wallet rows for list view (for all accessible franchises)
     wallet_rows = []
     for f in franchise_qs:
         wallet_obj, _ = Wallet.objects.get_or_create(franchise=f)
+        total_balance = wallet_obj.get_total_balance()
+        
+        # Apply total amount filters
+        if min_total:
+            try:
+                min_val = float(min_total)
+                if total_balance < min_val:
+                    continue
+            except ValueError:
+                pass
+        
+        if max_total:
+            try:
+                max_val = float(max_total)
+                if total_balance > max_val:
+                    continue
+            except ValueError:
+                pass
+        
         wallet_rows.append({
             'franchise': f,
             'wallet': wallet_obj,
-            'total': wallet_obj.get_total_balance(),
+            'total': total_balance,
         })
 
     if request.method == 'POST':
@@ -899,6 +1152,11 @@ def wallet_manage(request):
         'total': total,
         'franchises': franchise_qs,
         'wallet_rows': wallet_rows,
+        'search_query': search_query,
+        'franchise_filter': franchise_filter,
+        'min_total': min_total,
+        'max_total': max_total,
+        'user_type': user_type,
     })
 
 
