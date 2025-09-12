@@ -1,3 +1,9 @@
+def send_staff_credentials_email(staff, password):
+    """Stub for sending staff credentials email. Replace with actual logic as needed."""
+    pass
+def get_admin_context(request):
+    """Stub for get_admin_context. Replace with actual logic as needed."""
+    return {}
 from django.core.cache import cache
 from .models import AdminModel,Franchise,StaffModel
 import logging

@@ -1,3 +1,13 @@
+from django.shortcuts import get_object_or_404, redirect
+from loan.models import LoanApplicationModel
+
+def delete_loan(request, loan_id):
+    """Delete a loan application by its ID."""
+    loan = get_object_or_404(LoanApplicationModel, pk=loan_id)
+    if request.method == 'POST':
+        loan.delete()
+        return redirect('loan-page', loan_id)
+    return redirect('loan-page', loan_id)
 # Import optimized loan views and utilities
 from .loan_views import (
     LoanApplicationView,

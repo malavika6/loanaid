@@ -466,7 +466,7 @@ def other_user_dashboard(request, user_id):
 
     # Fetch loans related to this staff member
     related_loans = LoanApplicationModel.objects.filter(
-        assigned_to=staff_member)  # Use 'assigned_to' to filter by staff
+        assigned_to=other_user)
     loan_count = related_loans.count()
 
     # Count the number of franchises
