@@ -8,7 +8,7 @@ from django.views import View
 from django.contrib.auth.hashers import check_password
 import logging
 
-from users.models import AdminModel, StaffModel, Franchise, UserModel
+from users.models import AdminModel, StaffModel, Franchise
 from users.decorators import admin_required, staff_required, franchise_required, login_required
 from .models import (
     LoanApplicationModel, LoanModel, StatusModel, BankModel, 
@@ -42,8 +42,8 @@ class LoanApplicationView(View):
                 can_access_all = False
                 
             elif user_type == 'executive':
-                user = UserModel.objects.get(pk=user_id)
-                username = user.name
+                user = StaffModel.objects.get(staff_id=user_id)
+                username = f"{user.first_name} {user.last_name or ''}".strip()
                 can_access_all = False
                 
             else:
@@ -321,7 +321,7 @@ class LoanListView(View):
                 
             elif user_type == 'staff':
                 user = StaffModel.objects.get(staff_id=user_id)
-                username = f"{staff.first_name} {staff.last_name if staff.last_name else ''}"
+                username = f"{user.first_name} {user.last_name or ''}".strip()
                 can_access_all = True
                 
             elif user_type == 'franchise':

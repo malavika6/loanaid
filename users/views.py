@@ -126,60 +126,10 @@ def home(request):
     Dashboard view for admin users - now optimized and delegated to AdminDashboardView
     """
     from .admin_views import AdminDashboardView
-    
     # Use the optimized admin dashboard view
     admin_view = AdminDashboardView()
     return admin_view.get(request)
-
-    elif user_type == 'staff':
-        staff_id = request.session.get('user_id')
-        staff = StaffModel.objects.get(staff_id=staff_id)
-
-
-        # Get the franchises assigned to this staff from StaffAssignmentModel
-        assigned_franchise_qs = Franchise.objects.filter(
-            staffassignmentmodel__staff_name=staff
-        ).distinct()
-
-        # Convert to set
-        assigned_franchises = set()
-        for franchise in assigned_franchise_qs:
-            assigned_franchises.add(franchise)
-
-        # Count of assigned franchises
-        assigned_franchise_count = len(assigned_franchises)
-
-        # Get loans assigned to this staff directly
-        staff_loans = LoanApplicationModel.objects.filter(assigned_to=staff_id)
-
-        # Get loans associated with the assigned franchises
-        loans_from_franchises = LoanApplicationModel.objects.filter(franchise__in=assigned_franchises)
-        franchise_loan_count = loans_from_franchises.count()
-
-        context = {
-            'username': username,
-            'sidebar_menu': sidebar_menu,
-            'all_loans': loans_from_franchises,
-            'staff_loans': staff_loans,
-            'franchise_loans': franchise_loan_count,
-            'assigned_franchise_count': assigned_franchise_count,
-            'assigned_franchises': assigned_franchises,
-        }
-        return render(request, 'dashboard.html', context)
-
-
-    elif user_type == 'franchise':
-        """
-        Franchise dashboard view - now optimized and delegated to franchise_views
-        """
-        from .franchise_views import FranchiseDashboardView
-        
-        # Use the optimized franchise dashboard view
-        franchise_view = FranchiseDashboardView()
-        return franchise_view.get(request)
-    else:
-        # If the user is neither admin nor staff, redirect them to login or another page.
-        return redirect('/login')
+    # ...existing code...
 
 
 def payment_redirect(request):
@@ -253,22 +203,15 @@ def logout_view(request):
 
 def other_user_dashboard(request, user_id):
     try:
-        # This should be correct since you use 'id' for the UserModel
-        other_user = UserModel.objects.get(user_id=user_id)
-        other_user_name = f"{other_user.name} "
-    except UserModel.DoesNotExist:
+        # Use StaffModel for user lookup
+        other_user = StaffModel.objects.get(staff_id=user_id)
+        other_user_name = f"{other_user.first_name} {other_user.last_name or ''}".strip()
+    except StaffModel.DoesNotExist:
         return redirect('/login')
 
-    # Check if 'other_user' is a StaffModel, and get the related staff instance
-    try:
-        # Or use 'user_id' if that's how it's related
-        staff_member = StaffModel.objects.get(email=other_user.email)
-    except StaffModel.DoesNotExist:
-        staff_member = None
-
-    # Fetch loans related to this user (checking the staff member)
+    # Fetch loans related to this staff member
     related_loans = LoanApplicationModel.objects.filter(
-        assigned_to=staff_member)  # Use 'assigned_to' to filter by staff
+        assigned_to=other_user)
     loan_count = related_loans.count()
 
     # Count the number of franchises

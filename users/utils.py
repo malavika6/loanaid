@@ -1,3 +1,9 @@
+def send_staff_credentials_email(staff, password):
+    """Stub for sending staff credentials email. Replace with actual logic as needed."""
+    pass
+def get_admin_context(request):
+    """Stub for get_admin_context. Replace with actual logic as needed."""
+    return {}
 from django.core.cache import cache
 from .models import AdminModel,Franchise,StaffModel
 import logging
@@ -53,12 +59,6 @@ def get_sidebar_menu(user_type):
                 {'name': 'Add Status', 'url': reverse('addstatus')},
                 # {'name': 'Profile Update', 'url': reverse('update_profile')},
             ],
-            # 'executive': [
-            #     {'name': 'Dashboard', 'url': reverse('index', args=[1])},  # Pass a valid user_id (e.g., 1)
-            #     {'name': 'Apply Loan', 'url': reverse('apply-loan')},
-            #     {'name': 'List Loan', 'url': reverse('list-loan')},
-            #     {'name': 'Profile', 'url': reverse('update_profile')},
-            # ],
         }
 
         # Fetch menu for the given user type
@@ -106,9 +106,9 @@ def get_user_context(request):
             return None, None
     elif user_type == 'executive':
         try:
-            executive = UserModel.objects.get(user_id=user_id)
-            username = executive.name
-        except UserModel.DoesNotExist:
+            executive = StaffModel.objects.get(staff_id=user_id)
+            username = f"{executive.first_name} {executive.last_name or ''}".strip()
+        except StaffModel.DoesNotExist:
             logger.error(f"Executive with ID {user_id} does not exist.")
             return None, None
 

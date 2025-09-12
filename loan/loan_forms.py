@@ -694,9 +694,8 @@ class FileUploadForm(forms.ModelForm):
     """Form for file uploads"""
     
     file = forms.FileField(
-        widget=forms.FileInput(attrs={
-            "class": "form-control",
-            "multiple": True
+        widget=forms.ClearableFileInput(attrs={
+            "class": "form-control"
         }),
         help_text="Upload supporting documents (PDF, DOC, DOCX, JPG, PNG)"
     )
