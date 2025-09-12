@@ -1,96 +1,169 @@
 {% extends 'includes/base.html' %}
 {% load static %}
 {% block content %}
-<!-- End of Topbar -->
 
-<!-- Begin Page Content -->
 <div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+      {% if user_type == 'franchise' %}
+        My Loan Applications
+      {% else %}
+        Applications
+      {% endif %}
+    </h1>
+    {% if user_type != 'franchise' %}
+    <a href="{% url 'form' %}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus"></i> Add Application
+    </a>
+    {% endif %}
+  </div>
 
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">All Applications</h1>
-    </div>
-
-    <div class="row">
-
-        <!-- Area Chart -->
-        <div class="col-xl-12 col-lg-7">
-            <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Applications</h6>
-                </div>
-                <!-- Card Body -->
-                <div class="card-body">
-                    <div class="table-responsive-xxl">
-                        <div style="overflow-x: auto; max-width: 100%">
-                            <table class="table table-bordered table-hover all-users">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Sr No</th>
-                                        <th scope="col">First Name</th>
-                                        <th scope="col">Last Name</th>
-                                        <th scope="col">District</th>
-                                        <th scope="col">Place</th>
-                                        <th scope="col">Phone Number</th>
-                                        <th scope="col">Loan Name</th>
-                                        <th scope="col">Amount</th>
-                                        <th scope="col">FollowUp Date</th>
-                                        <th scope="col">Description</th>
-                                        <th scope="col">Status</th>
-                                        <th scope="col">Bank</th>
-                                        <th scope="col">Executive Name</th>
-                                        <th scope="col">Mobile No 1</th>
-                                        <th scope="col">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for form in loan_applications %}
-                                    <tr>
-                                        <th scope="row">{{ forloop.counter }}</th>
-                                        <td>{{ form.first_name }}</td>
-                                        <td>{{ form.last_name }}</td>
-                                        <td>{{ form.district }}</td>
-                                        <td>{{ form.place }}</td>
-                                        <td>{{ form.phone_no }}</td>
-                                        <td>{{ form.loan_name }}</td>
-                                        <td>{{ form.loan_amount }}</td>
-                                        <td>{{ form.followup_date }}</td>
-                                        <td>{{ form.description }}</td>
-                                        <td>{{ form.status_name }}</td>
-                                        <td>{{ form.bank_name }}</td>
-                                        <td>{{ form.executive_name }}</td>
-                                        <td>
-                                            {{ form.mobileno_1 }}<br />
-                                            {% if form.mobileno_2 %} {{ form.mobileno_2 }} {% endif %}
-                                        </td>
-                                        <td>
-                                            <a href="{% url 'loan-page' form.form_id %}">Check this</a>
-                                            <button class="btn btn-danger btn-sm" onclick="confirmDelete({{ form.form_id }})">Delete</button>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            {% if not admin.is_superadmin %}
-                            <!-- Pagination Controls -->
-                            <div class="pagination" style="text-align: right">
-                                <button class="prev btn btn-primary" onclick="changePage(-1)">
-                                    &#10094; Prev
-                                </button>
-                                <span id="page-info"></span>
-                                <button class="next btn btn-primary" onclick="changePage(1)">
-                                    Next &#10095;
-                                </button>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <!-- Filters -->
+  <div class="row mb-4">
+    <div class="col-lg-12">
+      <div class="card shadow filter-card">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
         </div>
-
+        <div class="card-body">
+          <form method="GET" class="row align-items-end">
+            <div class="col-md-3 mb-3">
+              <label for="loan_name" class="form-label">Search</label>
+              <input type="text" class="form-control" id="loan_name" name="loan_name" 
+                     value="{{ loan_name_filter }}" placeholder="Search by name, phone, or loan type">
+            </div>
+            <div class="col-md-2 mb-3">
+              <label for="status" class="form-label">Status</label>
+              <select class="form-control" id="status" name="status">
+                <option value="">All Statuses</option>
+                <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
+                <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+                <option value="Under Review" {% if status_filter == 'Under Review' %}selected{% endif %}>Under Review</option>
+              </select>
+            </div>
+            <div class="col-md-2 mb-3">
+              <label for="bank" class="form-label">Bank</label>
+              <input type="text" class="form-control" id="bank" name="bank" 
+                     value="{{ bank_filter }}" placeholder="Bank name">
+            </div>
+            <div class="col-md-1 mb-3">
+              <label for="start_date" class="form-label">From</label>
+              <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+            </div>
+            <div class="col-md-1 mb-3">
+              <label for="end_date" class="form-label">To</label>
+              <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+            </div>
+            <div class="col-md-1 mb-3">
+              <label for="min_amount" class="form-label">Min ₹</label>
+              <input type="number" class="form-control" id="min_amount" name="min_amount" 
+                     value="{{ min_amount }}" placeholder="Min" step="0.01">
+            </div>
+            <div class="col-md-1 mb-3">
+              <label for="max_amount" class="form-label">Max ₹</label>
+              <input type="number" class="form-control" id="max_amount" name="max_amount" 
+                     value="{{ max_amount }}" placeholder="Max" step="0.01">
+            </div>
+            <div class="col-md-1 mb-3">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Filter
+              </button>
+            </div>
+          </form>
+          <div class="row mt-2">
+            <div class="col-12">
+              <a href="{% url 'all-application' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-refresh"></i> Reset Filters
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Content Row -->
+  <div class="row">
+    <div class="col-xl-12 col-lg-7">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Applications</h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle" style="table-layout: fixed; width: 100%;">
+              <thead>
+                <tr>
+                  <th scope="col">Sr No</th>
+                  <th scope="col">First Name</th>
+                  <th scope="col">Last Name</th>
+                  <th scope="col">District</th>
+                  <th scope="col">Place</th>
+                  <th scope="col">Phone Number</th>
+                  <th scope="col">Loan Name</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">FollowUp Date</th>
+                  <th scope="col">Description</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Bank</th>
+                  {% if user_type != 'franchise' %}
+                  <th scope="col">Executive Name</th>
+                  <th scope="col" style="width: 120px;">Mobile No 1</th>
+                  {% endif %}
+                  <th scope="col" style="width: 220px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for form in loan_applications %}
+                <tr>
+                  <th scope="row">{{ forloop.counter }}</th>
+                  <td>{{ form.first_name }}</td>
+                  <td>{{ form.last_name }}</td>
+                  <td>{{ form.district }}</td>
+                  <td>{{ form.place }}</td>
+                  <td class="mobile-field" title="{{ form.phone_no }}">{{ form.phone_no }}</td>
+                  <td>{{ form.loan_name }}</td>
+                  <td>{{ form.loan_amount }}</td>
+                  <td>{{ form.followup_date }}</td>
+                  <td>{{ form.description }}</td>
+                  <td>{{ form.status_name }}</td>
+                  <td>{{ form.bank_name }}</td>
+                  {% if user_type != 'franchise' %}
+                  <td>{{ form.executive_name }}</td>
+                  <td title="{{ form.mobileno_1 }}{% if form.mobileno_2 %} / {{ form.mobileno_2 }}{% endif %}">
+                    {{ form.mobileno_1 }}<br />
+                    {% if form.mobileno_2 %} {{ form.mobileno_2 }} {% endif %}
+                  </td>
+                  {% endif %}
+                  <td>
+                    <div class="d-flex justify-content-center align-items-center">
+                      <a href="{% url 'loan-page' form.form_id %}" class="btn btn-sm btn-primary">
+                        View
+                      </a>
+                      {% if user_type != 'franchise' %}
+                      <button class="btn btn-danger btn-sm" onclick="confirmDelete({{ form.form_id }})">
+                        <i class="fas fa-trash"></i> Delete
+                      </button>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <!-- Pagination Controls -->
+            <div class="pagination">
+              <button class="prev" onclick="changePage(-1)">&#10094; Prev</button>
+              <span id="files-info"></span>
+              <button class="next" onclick="changePage(1)">Next &#10095;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>

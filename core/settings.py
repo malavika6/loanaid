@@ -16,7 +16,6 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -26,19 +25,19 @@ SECRET_KEY = 'django-insecure-au$#i1-8qzyxra0jcpw-v#7!67^7plc9m#b)r-pdj1%zz7=yp9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file (with error handling)
+try:
+    load_dotenv()
+    # Logging simple ASCII-only message to avoid Unicode issues in some terminals
+    print(".env file loaded successfully")
+except Exception as e:
+    print("Warning: Could not load .env file:", e)
+    print("Using default configuration values")
 
 ALLOWED_HOSTS = ['*']
 
 # In your settings.py
 SECURE_REDIRECT_EXEMPT = ['upi://']
-
-
-
-
-
 
 # Application definition
 
@@ -87,9 +86,7 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = 'core.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -100,7 +97,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -120,7 +116,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -132,7 +127,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -142,6 +136,8 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# Login URL for @login_required decorator
+LOGIN_URL = '/login/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -151,17 +147,37 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# settings.py
+# Session settings
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default session backend
 SESSION_COOKIE_AGE = 3600  # 1 hour session expiry
 SESSION_SAVE_EVERY_REQUEST = True  # Ensures session is refreshed on every request
-  # Ensure the session does not expire when the browser is closed
- 
-EMAIL_BACKEND =os.environ.get('EMAIL_BACKEND')
-EMAIL_HOST =os.environ.get('EMAIL_HOST')
-EMAIL_PORT =os.environ.get('EMAIL_PORT')
-EMAIL_USE_SSL =os.environ.get('EMAIL_USE_SSL')
-EMAIL_HOST_USER =os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD =os.environ.get('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL =os.environ.get('DEFAULT_FROM_EMAIL')
 
+# Email Configuration with fallback values
+# EMAIL_BACKEND =os.environ.get('EMAIL_BACKEND')
+# EMAIL_HOST =os.environ.get('EMAIL_HOST')
+# EMAIL_PORT =os.environ.get('EMAIL_PORT')
+# EMAIL_USE_SSL =os.environ.get('EMAIL_USE_SSL')
+# EMAIL_HOST_USER =os.environ.get('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD =os.environ.get('EMAIL_HOST_PASSWORD')
+# DEFAULT_FROM_EMAIL =os.environ.get('DEFAULT_FROM_EMAIL')
+
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST='smtp.gmail.com'
+EMAIL_PORT=465
+EMAIL_USE_SSL=True
+EMAIL_USE_TLS=False
+EMAIL_HOST_USER='malavika2bcomft@gmail.com'
+EMAIL_HOST_PASSWORD='mfnc xdjg ydpm eqgj'
+DEFAULT_FROM_EMAIL='malavika2bcomft@gmail.com'
+
+# JWT Settings with fallback values
+JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-this-in-production')
+JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
+JWT_EXPIRATION_DELTA = int(os.environ.get('JWT_EXPIRATION_DELTA', '86400'))  # 24 hours in seconds
+
+# CSRF Settings
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript access to CSRF token
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_USE_SESSIONS = False  # Use cookies for CSRF token (default)
+CSRF_COOKIE_SAMESITE = 'Lax'  # Allow cross-site requests

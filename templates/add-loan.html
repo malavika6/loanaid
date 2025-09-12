@@ -1,170 +1,81 @@
 {% extends 'includes/base.html' %}
 {% load static %}
 {% block content %}
-                <!-- End of Topbar -->
 
-                <!-- Begin Page Content -->
-                <div class="container-fluid">
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Loan Type Management</h1>
+  </div>
 
-                    <!-- Page Heading -->
-                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Loan</h1>
-
-                    </div>
-
-                    <!-- Content Row -->
-                    <div class="row">
-
-
-
-                    </div>
-
-                    <!-- Content Row -->
-                    <div class="row">
-
-                        <!-- Area Chart -->
-                        <div class="col-xl-12 col-lg-7">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div
-                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Add Loan</h6>
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body">
-                                    <form id="loan-form" class="p-5 user" method="POST">
-                                        {% csrf_token %}
-                                        <div class="form-group row">
-                                            <label for="loan_name" class="col-sm-2 col-form-label">Loan Name</label>
-                                            <div class="col-sm-10">
-                                                {{ form.loan_name }}
-                                            </div>
-                                        </div>
-                                    
-                                        <button type="submit" class="btn btn-primary btn-user btn-block d-block mx-auto">SUBMIT</button>
-                                    </form>
-                                    
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="row">
-
-                        <!-- Area Chart -->
-                        <div class="col-xl-12 col-lg-7">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div
-                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">All Loans</h6>
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body">
-                                    <div class="table-responsive-xxl">
-                                        <table id="loan-table" class="table table-bordered table-hover all-users">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">Sr. No</th>
-                                                    <th scope="col">Loan Type</th>
-                                                    <th scope="col">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for loan in all_loans %}
-                                                    <tr>
-                                                        <th scope="row">{{ forloop.counter }}</th>
-                                                        <td>{{ loan.loan_name }}</td>
-                                                        <td>
-                                                            <form action="{% url 'delete_loan' loan.loan_id %}" method="post" style="display:inline;">
-                                                                {% csrf_token %}
-                                                                <button type="submit" class="btn" onclick="return confirm('Are you sure?');">
-                                                                    <i class="fa fa-trash-alt" style="color:red;"></i>
-                                                                </button>
-                                                            </form>
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-
-
-
-                    <!-- Content Row -->
-
-
-
-                </div>
-                <!-- /.container-fluid -->
-
-            </div>
-            <!-- End of Main Content -->
-
-            <!-- Footer -->
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Loan Aid 2024</span>
-                    </div>
-                </div>
-            </footer>
-            <!-- End of Footer -->
-
+  <!-- Content Row -->
+  <div class="row">
+    <div class="col-xl-12 col-lg-7">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Add Loan Type</h6>
         </div>
-        <!-- End of Content Wrapper -->
+        <div class="card-body">
+          <form class="p-5 user" method="POST">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+            <div class="form-group row">
+              <label for="loan_name" class="col-sm-2 col-form-label">Loan Name</label>
+              <div class="col-sm-10">
+                {{form.loan_name}}
+              </div>
+            </div>
 
+            <input type="submit" class="btn btn-primary btn-user btn-block d-block mx-auto" value="SUBMIT">
+          </form>
+        </div>
+      </div>
     </div>
-    <!-- End of Page Wrapper -->
+  </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function () {
-        $("#loan-form").submit(function (e) {
-            e.preventDefault();  // Prevent full-page reload
+  <!-- Loan Type List Section -->
+  <div class="row">
+    <div class="col-xl-12 col-lg-7">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">All Loan Types</h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+              <thead>
+                <tr>
+                  <th scope="col">Sr. No</th>
+                  <th scope="col">Loan Type</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for loan in allloan %}
+                <tr>
+                  <th scope="row">{{ forloop.counter }}</th>
+                  <td>{{loan.loan_name}}</td>
+                  <td>
+                    <form action="{% url 'delete_loan' loan.loan_id %}" method="post" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this?');">
+                        <i class="fa fa-trash-alt"></i> Delete
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-            var formData = $(this).serialize();  // Serialize form data
-
-            $.ajax({
-                type: "POST",
-                url: "{% url 'addloan' %}",  // Ensure the correct URL
-                data: formData,
-                dataType: "json",
-                success: function (response) {
-                    if (response.success) {
-                        // Add new loan to table dynamically
-                        $("#loan-table tbody").append(`
-                            <tr>
-                                <th scope="row">${$("#loan-table tbody tr").length + 1}</th>
-                                <td>${response.loan_name}</td>
-                                <td>
-                                    <form action="/delete-loan/${response.loan_id}/" method="post" style="display:inline;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn" onclick="return confirm('Are you sure?');">
-                                            <i class="fa fa-trash-alt" style="color:red;"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        `);
-                        
-                        $("#loan-form")[0].reset();  // Reset form fields
-                    }
-                },
-                error: function (response) {
-                    alert("Error adding loan. Please check the form.");
-                }
-            });
-        });
-    });
-</script>
-
-    {% endblock %}
+{% endblock %}

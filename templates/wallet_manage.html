@@ -1,0 +1,143 @@
+{% extends 'includes/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+      {% if user_type == 'staff' %}
+        Assigned Franchises Wallet Management
+      {% else %}
+        Wallet Management
+      {% endif %}
+    </h1>
+    <a href="{% url 'wallet_update' %}" class="btn btn-primary btn-sm">
+      <i class="fas fa-edit"></i> Update Wallet
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="row mb-4">
+    <div class="col-lg-12">
+      <div class="card shadow filter-card">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+        </div>
+        <div class="card-body">
+          <form method="GET" class="row align-items-end">
+            <div class="col-md-3 mb-3">
+              <label for="search" class="form-label">Search</label>
+              <input type="text" class="form-control" id="search" name="search" 
+                     value="{{ search_query }}" placeholder="Search by franchise name, owner, or email">
+            </div>
+            <div class="col-md-2 mb-3">
+              <label for="franchise" class="form-label">Franchise</label>
+              <select class="form-control" id="franchise" name="franchise">
+                <option value="">All Franchises</option>
+                {% for franchise in franchises %}
+                <option value="{{ franchise.pk }}" {% if franchise_filter == franchise.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ franchise.franchise_name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2 mb-3">
+              <label for="min_total" class="form-label">Min Total</label>
+              <input type="number" class="form-control" id="min_total" name="min_total" 
+                     value="{{ min_total }}" placeholder="Min amount" step="0.01">
+            </div>
+            <div class="col-md-2 mb-3">
+              <label for="max_total" class="form-label">Max Total</label>
+              <input type="number" class="form-control" id="max_total" name="max_total" 
+                     value="{{ max_total }}" placeholder="Max amount" step="0.01">
+            </div>
+            <div class="col-md-3 mb-3">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Filter
+              </button>
+              <a href="{% url 'wallet_manage' %}" class="btn btn-secondary">
+                <i class="fas fa-refresh"></i> Reset
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Row -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">
+            {% if user_type == 'staff' %}
+              Assigned Franchises Wallets
+            {% else %}
+              Wallets
+            {% endif %}
+          </h6>
+          <div class="text-muted">
+            <small>{{ wallet_rows|length }} franchise(s) found</small>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+              <thead>
+                <tr>
+                  <th style="width: 200px;">Franchise</th>
+                  <th style="width: 100px;">Owner</th>
+                  <th style="width: 100px;">Allowance</th>
+                  <th style="width: 100px;">Commission</th>
+                  <th style="width: 100px;">Incentive</th>
+                  <th style="width: 120px;">Total</th>
+                  <th style="width: 150px;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in wallet_rows %}
+                <tr>
+                  <td>
+                    <div>
+                      <strong>{{ row.franchise.franchise_name }}</strong>
+                      <br>
+                      <small class="text-muted">{{ row.franchise.referral_code }}</small>
+                    </div>
+                  </td>
+                  <td>{{ row.franchise.franchise_owner }}</td>
+                  <td>₹{{ row.wallet.allowance|default:'0.00' }}</td>
+                  <td>₹{{ row.wallet.commission|default:'0.00' }}</td>
+                  <td>₹{{ row.wallet.incentive|default:'0.00' }}</td>
+                  <td><strong>₹{{ row.total|default:'0.00' }}</strong></td>
+                  <td>
+                    <a href="{% url 'wallet_update' %}?franchise={{ row.franchise.pk }}" class="btn btn-sm btn-warning">
+                      <i class="fas fa-edit"></i> Manage
+                    </a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center text-muted py-4">
+                    <i class="fas fa-wallet fa-3x mb-3"></i>
+                    <p>
+                      {% if user_type == 'staff' %}
+                        No assigned franchises found.
+                      {% else %}
+                        No franchises available.
+                      {% endif %}
+                    </p>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

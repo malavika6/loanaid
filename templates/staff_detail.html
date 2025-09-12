@@ -2,66 +2,148 @@
 {% load static %}
 
 {% block content %}
-  <div class="container mt-4">
-    <h2 class="text-center mb-4">Staff Details</h2>
+<div class="container-fluid">
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Staff Details</h1>
+    <a href="{% url 'list_staff' %}" class="btn btn-secondary btn-sm">
+      <i class="fas fa-arrow-left"></i> Back to Staff List
+    </a>
+  </div>
 
-    <!-- Staff Details -->
-    <div class="card shadow-sm">
-        <div class="card-header">
-          <h5 class="card-title">{{ staff_member.first_name }} {{ staff_member.last_name }}</h5>
+  <!-- Staff Details Card -->
+  <div class="card shadow-sm">
+    <div class="card-header">
+      <h6 class="m-0 font-weight-bold text-primary">
+        <i class="fas fa-user"></i> {{ staff_member.get_full_name }}
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <!-- Profile Picture -->
+        <div class="col-md-3 text-center mb-4">
+          {% if staff_member.profile_picture %}
+            <img src="{{ staff_member.profile_picture.url }}" alt="Profile Picture" 
+                 class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+          {% else %}
+            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto" 
+                 style="width: 150px; height: 150px;">
+              <i class="fas fa-user fa-4x text-muted"></i>
+            </div>
+          {% endif %}
         </div>
-        <div class="card-body">
-          <ul class="list-group">
-            <li class="list-group-item"><strong>First Name:</strong> {{ staff_member.first_name }}</li>
-            <li class="list-group-item"><strong>Last Name:</strong> {{ staff_member.last_name|default:"N/A" }}</li>
-            <li class="list-group-item"><strong>Email:</strong> {{ staff_member.email }}</li>
-            <li class="list-group-item"><strong>Phone:</strong> {{ staff_member.phone_no }}</li>
-            <li class="list-group-item"><strong>Password:</strong> {{ staff_member.password }}</li>  <!-- Hide actual password -->
-            <li class="list-group-item"><strong>Status:</strong> 
-              {% if staff_member.is_active %} Active {% else %} Inactive {% endif %}
-            </li>
-            <li class="list-group-item"><strong>Created At:</strong> {{ staff_member.created_at|date:"F j, Y, g:i a" }}</li>
-            <li class="list-group-item"><strong>Last Login:</strong> 
-              {% if staff_member.last_login %} {{ staff_member.last_login|date:"F j, Y, g:i a" }} {% else %} N/A {% endif %}
-            </li>
-            <li class="list-group-item"><strong>Aadhaar No:</strong> {{ staff_member.adhaar_no|default:"N/A" }}</li>
-            <li class="list-group-item"><strong>PAN No:</strong> {{ staff_member.pan_no|default:"N/A" }}</li>
-            <li class="list-group-item"><strong>Bank Name:</strong> {{ staff_member.bank_name|default:"N/A" }}</li>
-            <li class="list-group-item"><strong>IFSC Code:</strong> {{ staff_member.ifsc_code|default:"N/A" }}</li>
-            <li class="list-group-item"><strong>Account No:</strong> {{ staff_member.account_no|default:"N/A" }}</li>
-            <li class="list-group-item"><strong>Branch:</strong> {{ staff_member.branch|default:"N/A" }}</li>
-          </ul>
 
-          <!-- Document Images -->
-          <div class="mt-3">
-            {% if staff_member.adhaar_img %}
-              <p><strong>Aadhaar Image:</strong></p>
-              <img src="{{ staff_member.adhaar_img.url }}" alt="Aadhaar Image" class="img-fluid mb-3" style="max-width: 200px;">
-            {% endif %}
+        <!-- Staff Information -->
+        <div class="col-md-9">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label text-muted">Employee ID</label>
+                <p class="form-control-plaintext font-weight-bold">{{ staff_member.employee_id }}</p>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label text-muted">First Name</label>
+                <p class="form-control-plaintext font-weight-bold">{{ staff_member.first_name }}</p>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label text-muted">Last Name</label>
+                <p class="form-control-plaintext font-weight-bold">{{ staff_member.last_name|default:"N/A" }}</p>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label text-muted">Email Address</label>
+                <p class="form-control-plaintext font-weight-bold">{{ staff_member.email }}</p>
+              </div>
+            </div>
             
-            {% if staff_member.pan_img %}
-              <p><strong>PAN Image:</strong></p>
-              <img src="{{ staff_member.pan_img.url }}" alt="PAN Image" class="img-fluid mb-3" style="max-width: 200px;">
-            {% endif %}
-            
-            {% if staff_member.cancelled_check %}
-              <p><strong>Cancelled Check:</strong></p>
-              <img src="{{ staff_member.cancelled_check.url }}" alt="Cancelled Check" class="img-fluid mb-3" style="max-width: 200px;">
-            {% endif %}
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label text-muted">Phone Number</label>
+                <p class="form-control-plaintext font-weight-bold">{{ staff_member.phone_no }}</p>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label text-muted">Account Status</label>
+                <p class="form-control-plaintext">
+                  {% if staff_member.is_active %}
+                    <span class="badge badge-success">Active</span>
+                  {% else %}
+                    <span class="badge badge-warning">Inactive</span>
+                  {% endif %}
+                </p>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label text-muted">Created Date</label>
+                <p class="form-control-plaintext font-weight-bold">{{ staff_member.created_at|date:"F j, Y, g:i a" }}</p>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label text-muted">Last Login</label>
+                <p class="form-control-plaintext font-weight-bold">
+                  {% if staff_member.last_login %}
+                    {{ staff_member.last_login|date:"F j, Y, g:i a" }}
+                  {% else %}
+                    <span class="text-muted">Never logged in</span>
+                  {% endif %}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-    <!-- Action Buttons -->
-    <div class="mt-4 text-center">
-      <form action="{% url 'delete_staff' staff_member.staff_id %}" method="post" style="display: inline">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this staff member?');">Delete</button>
-      </form>
-    </div>
-
-    <div class="mt-4 text-center">
-      <a href="{% url 'home' %}" class="btn btn-secondary btn-sm">Back to Staff List</a>
     </div>
   </div>
+
+  <!-- Action Buttons -->
+  <div class="mt-4 text-center">
+    <div class="btn-group" role="group">
+      <a href="{% url 'list_staff' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to List
+      </a>
+      
+      {% if not staff_member.is_active %}
+        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#activateModal">
+          <i class="fas fa-check"></i> Activate Account
+        </button>
+      {% endif %}
+      
+      <form action="{% url 'delete_staff' staff_member.staff_id %}" method="post" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger" 
+                onclick="return confirm('Are you sure you want to delete this staff member? This action cannot be undone.');">
+          <i class="fas fa-trash"></i> Delete Staff
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Activation Modal -->
+{% if not staff_member.is_active %}
+<div class="modal fade" id="activateModal" tabindex="-1" role="dialog" aria-labelledby="activateModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="activateModalLabel">Activate Staff Account</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to activate the account for <strong>{{ staff_member.get_full_name }}</strong>?</p>
+        <p class="text-muted">This will allow the staff member to log in to the system.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <form action="{% url 'activate_staff' staff_member.staff_id %}" method="post" style="display: inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success">Activate Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% endblock %}

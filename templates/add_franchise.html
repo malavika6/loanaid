@@ -3,65 +3,185 @@
 
 {% block content %}
 
-<!-- Begin Page Content -->
 <div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+      {% if user_type == 'franchise' %}Add New Franchise{% else %}Franchise Management{% endif %}
+    </h1>
+    <a href="{% if user_type == 'franchise' %}{% url 'franchise_list' %}{% else %}{% url 'list_franchise' %}{% endif %}" class="btn btn-secondary btn-sm">
+      <i class="fas fa-arrow-left"></i> Back to Franchise List
+    </a>
+  </div>
 
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Franchise Management</h1>
-    </div>
-
-    <!-- Content Row -->
-    <div class="row">
-        <!-- Add Franchise Form -->
-        <div class="col-xl-12 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        {% if is_edit %} Edit Franchise {% else %} Add Franchise {% endif %}
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <form class="p-5 user" method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        
-                        <!-- Show all errors at the top of the form -->
-                        {% if form.errors %}
-                            <div class="alert alert-danger">
-                                <strong>Please correct the following errors:</strong>
-                                <ul>
-                                    {% for field in form %}
-                                        {% for error in field.errors %}
-                                            <li>{{ error }}</li>
-                                        {% endfor %}
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        {% endif %}
-                        
-                        {% for field in form.visible_fields %}
-                            <div class="form-group row">
-                                <label class="col-sm-2 col-form-label">{{ field.label }}</label>
-                                <div class="col-sm-10">
-                                    {{ field }}
-                                    {% if field.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in field.errors %}
-                                                <p>{{ error }}</p>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                        
-                        <!-- Submit Button -->
-                        <input type="submit" class="btn btn-primary btn-user btn-block d-block mx-auto" value="{% if is_edit %}Update{% else %}Add{% endif %}">
-                    </form>
-                </div>
+  <!-- Content Row -->
+  <div class="row">
+    <div class="col-xl-12 col-lg-7">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">
+            {% if is_edit %} Edit Franchise {% else %} Add Franchise {% endif %}
+          </h6>
+          {% if user_type == 'franchise' and referring_franchise %}
+            <div class="text-muted">
+              <small>Your Referral Code: <strong>{{ referring_franchise.referral_code }}</strong></small>
             </div>
+          {% endif %}
         </div>
+        <div class="card-body">
+          <!-- Info Alert -->
+          <div class="alert alert-info" role="alert">
+            <h5 class="alert-heading"><i class="fas fa-info-circle"></i> Franchise Creation Process</h5>
+            <p>When you create a new franchise:</p>
+            <ul class="mb-0">
+              <li>An activation email will be sent to the franchise with a link to set their password</li>
+              <li>After activation, the franchise must complete their profile before accessing the dashboard</li>
+              {% if user_type == 'franchise' %}
+                <li><strong>Staff assignment and payment status will be managed by admin</strong></li>
+                <li><strong>This franchise will be automatically linked to your referral code</strong></li>
+              {% endif %}
+            </ul>
+          </div>
+          
+          <form class="p-4" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Show all errors at the top of the form -->
+            {% if form.errors %}
+              <div class="alert alert-danger">
+                <strong>Please correct the following errors:</strong>
+                <ul>
+                  {% for field in form %}
+                    {% for error in field.errors %}
+                      <li>{{ error }}</li>
+                    {% endfor %}
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+            
+            <div class="row">
+              {% for field in form.visible_fields %}
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                  </label>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                  {% endif %}
+                  {% if field.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in field.errors %}
+                        <p>{{ error }}</p>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-primary btn-lg px-5">
+                <i class="fas fa-plus"></i> Add
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-
+  </div>
 </div>
+
+<style>
+.form-label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.form-control {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.75rem;
+  font-size: 14px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+  border-color: #007bff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-control:disabled {
+  background-color: #f8f9fa;
+  opacity: 1;
+  color: #6c757d;
+}
+
+.form-check-input:disabled {
+  background-color: #f8f9fa;
+  opacity: 1;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-muted {
+  color: #6c757d !important;
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+  border-radius: 4px;
+  padding: 0.75rem 2rem;
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.alert-info {
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+  color: #0c5460;
+  border-radius: 4px;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+  border-radius: 4px;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  border-radius: 8px;
+}
+
+.card-header {
+  background-color: #f8f9fc;
+  border-bottom: 1px solid #e3e6f0;
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+</style>
 {% endblock %}

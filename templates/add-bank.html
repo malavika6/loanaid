@@ -2,158 +2,80 @@
 {% load static %}
 {% block content %}
 
-                <!-- Begin Page Content -->
-                <div class="container-fluid">
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Bank Management</h1>
+  </div>
 
-                    <!-- Page Heading -->
-                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Status</h1>
-
-                    </div>
-
-                    <!-- Content Row -->
-                    <div class="row">
-
-
-
-                    </div>
-
-                    <!-- Content Row -->
-                    <div class="row">
-
-                        <!-- Area Chart -->
-                        <div class="col-xl-12 col-lg-7">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div
-                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Add Bank</h6>
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body">
-                                    <form class="p-5 user" method="POST">
-                                        {% csrf_token %}
-                                        {% if form.non_field_errors %}
-                                            <div class="alert alert-danger">
-                                                {{ form.non_field_errors }}
-                                            </div>
-                                        {% endif %}
-                                        <div class="form-group row">
-                                            <label for="bank_name" class="col-sm-2 col-form-label">Bank Name</label>
-                                            <div class="col-sm-10">
-                                                {{ form.bank_name }}
-                                                {% if form.bank_name.errors %}
-                                                    <div class="text-danger">
-                                                        {{ form.bank_name.errors }}
-                                                    </div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    
-                                        <input type="submit" class="btn btn-primary btn-user btn-block d-block mx-auto" value="SUBMIT">
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                  <div class="row">
-
-                        <!-- Area Chart -->
-                        <div class="col-xl-12 col-lg-7">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div
-                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">All Banks</h6>
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body">
-                                    <div class="table-responsive-xxl">
-                                        <table class="table table-bordered table-hover all-users">
-                                            <thead>
-                                                <tr>
-                                                  <th scope="col">Sr. No</th>
-                                                  <th scope="col">Bank</th>
-                                                  <th scope="col">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                            {% for bank in allbank %}
-                                                    <tr>
-                                                    <th scope="row">{{ forloop.counter }}</th>
-                                                    <td>{{bank.bank_name}}</td>
-                                                    <td>
-                                                        <form action="{% url 'delete_bank' bank.bank_id %}" method="post" style="display:inline;">
-                                                            {% csrf_token %}
-                                                            <button type="submit" class="btn"  onclick="return confirm('Are you sure you want to delete this?');">
-                                                                <i class="fa fa-trash-alt" style="color:red;"></i>
-                                                            </button>
-                                                        </form>
-                                                    </td>
-                                            {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-
-
-
-                    <!-- Content Row -->
-
-
-
-                </div>
-                <!-- /.container-fluid -->
-
-            </div>
-            <!-- End of Main Content -->
-
-            <!-- Footer -->
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Loan Aid 2024</span>
-                    </div>
-                </div>
-            </footer>
-            <!-- End of Footer -->
-
+  <!-- Content Row -->
+  <div class="row">
+    <div class="col-xl-12 col-lg-7">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Add Bank</h6>
         </div>
-        <!-- End of Content Wrapper -->
-
-    </div>
-    <!-- End of Page Wrapper -->
-
-    <!-- Scroll to Top Button-->
-    <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
-
-    <!-- Logout Modal-->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="{% url  'login' %}">Logout</a>
-                </div>
+        <div class="card-body">
+          <form class="p-5 user" method="POST">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+            <div class="form-group row">
+              <label for="bank_name" class="col-sm-2 col-form-label">Bank Name</label>
+              <div class="col-sm-10">
+                {{form.bank_name}}
+              </div>
             </div>
-        </div>
-    </div>
 
-    {% endblock %}
+            <input type="submit" class="btn btn-primary btn-user btn-block d-block mx-auto" value="SUBMIT">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank List Section -->
+  <div class="row">
+    <div class="col-xl-12 col-lg-7">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">All Banks</h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+              <thead>
+                <tr>
+                  <th scope="col">Sr. No</th>
+                  <th scope="col">Bank</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for bank in allbank %}
+                <tr>
+                  <th scope="row">{{ forloop.counter }}</th>
+                  <td>{{bank.bank_name}}</td>
+                  <td>
+                    <form action="{% url 'delete_bank' bank.bank_id %}" method="post" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this?');">
+                        <i class="fa fa-trash-alt"></i> Delete
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

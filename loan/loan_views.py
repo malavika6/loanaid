@@ -42,9 +42,9 @@ class LoanApplicationView(View):
                 can_access_all = False
                 
             elif user_type == 'executive':
-                user = StaffModel.objects.get(staff_id=user_id)
-                username = f"{user.first_name} {user.last_name or ''}".strip()
-                can_access_all = False
+                # Executive functionality removed - UserModel was deleted
+                # For now, return None to redirect to login
+                return None, None, None
                 
             else:
                 return None, None, None
@@ -85,11 +85,9 @@ class LoanApplicationView(View):
             ).prefetch_related('uploaded_files')
             
         elif user_type == 'executive':
-            return LoanApplicationModel.objects.filter(
-                executive=user
-            ).select_related(
-                'franchise', 'loan_name', 'status_name', 'bank_name'
-            ).prefetch_related('uploaded_files')
+            # Executive functionality removed - UserModel was deleted
+            # For now, return empty queryset
+            return LoanApplicationModel.objects.none()
             
         return LoanApplicationModel.objects.none()
     
@@ -321,7 +319,7 @@ class LoanListView(View):
                 
             elif user_type == 'staff':
                 user = StaffModel.objects.get(staff_id=user_id)
-                username = f"{user.first_name} {user.last_name or ''}".strip()
+                username = f"{user.first_name} {user.last_name if user.last_name else ''}"
                 can_access_all = True
                 
             elif user_type == 'franchise':
@@ -378,8 +376,15 @@ class LoanListView(View):
         
         context = {
             'username': username,
+            'user_type': user_type,
             'loan_applications': page_obj,
             'loan_name_filter': request.GET.get('loan_name', ''),
+            'status_filter': request.GET.get('status', ''),
+            'bank_filter': request.GET.get('bank', ''),
+            'start_date': request.GET.get('start_date', ''),
+            'end_date': request.GET.get('end_date', ''),
+            'min_amount': request.GET.get('min_amount', ''),
+            'max_amount': request.GET.get('max_amount', ''),
             'page_obj': page_obj,
         }
         

@@ -15,6 +15,15 @@ urlpatterns = [
     path('create-user/', views.create_staff, name='create_staff'),
     path('list_staff/',views.list_staff,name='list_staff'),
     path('delete_staff/<int:staff_id>/', views.delete_staff, name='delete_staff'),
+    path('activate_staff/<int:staff_id>/', views.activate_staff, name='activate_staff'),
     path('delete-file/<int:id>/', views.delete_files, name='delete_file'),
     path('profile/', views.update_profile, name='profile'),
+    path('staff/activate/<str:token>/', views.staff_activation, name='staff_activation'),
+    path('franchise/activate/<str:token>/', views.franchise_activation, name='franchise_activation'),
+
+    path('franchise/profile-completion/', views.franchise_profile_completion, name='franchise_profile_completion'),
+    path('wallet/', views.wallet_manage, name='wallet_manage'),
+    path('wallet/update/', views.wallet_update, name='wallet_update'),
+    path('staff/loan-management/', views.staff_loan_management, name='staff_loan_management'),
+    path('staff/update-loan-status/<int:loan_id>/', views.update_loan_status, name='update_loan_status'),
 ]

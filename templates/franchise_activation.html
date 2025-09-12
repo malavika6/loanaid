@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>Loan Aid - Login</title>
+    <title>Loan Aid - Franchise Activation</title>
     <link rel="icon" type="image/png" href="{% static 'img/Loan Aid.png' %}" />
     <!-- Custom fonts for this template-->
     <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css" />
@@ -50,28 +50,59 @@
                     </div>
                     <hr />
                     <div class="text-center">
-                      <h1 class="h4 text-white mb-4">Welcome Back!</h1>
+                      <h1 class="h4 text-white mb-4">Franchise Account Activation</h1>
                     </div>
-                    <form class="user" method="POST">
-                      {% csrf_token %}
-                      {% if error %}
-                        <div class="alert alert-danger">{{ error }}</div>
-                      {% endif %}
 
-                      <div class="form-group">
-                        <input type="text" class="form-control form-control-user" name="identifier" placeholder="Enter Username" required />
+                    {% if error %}
+                      <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+                    
+                    {% if not error %}
+                      <div class="text-center mb-4">
+                        <h5 class="text-white">Welcome, {{ franchise.franchise_owner }}!</h5>
+                        <p class="text-white-50">Please set your password to activate your franchise account.</p>
                       </div>
-                      <div class="form-group" style="position: relative;">
-                        <input type="password" class="form-control form-control-user" id="passwordInput" name="password" placeholder="Password" required />
-                        <span id="togglePassword" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d;">
-                          <i class="fas fa-eye"></i>
-                        </span>
-                      </div>
-                      <button type="submit" class="btn btn-primary btn-user btn-block">Login</button>
-                    </form>
+                      
+                      <form class="user" method="POST">
+                        {% csrf_token %}
+                        
+                        <!-- Password -->
+                        <div class="form-group">
+                          {{ form.password }}
+                          {% if form.password.errors %}
+                            <div class="text-warning small mt-1">
+                              {% for error in form.password.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                              {% endfor %}
+                            </div>
+                          {% endif %}
+                          {% if form.password.help_text %}
+                            <small class="form-text text-white-50">{{ form.password.help_text }}</small>
+                          {% endif %}
+                        </div>
+                        
+                        <!-- Confirm Password -->
+                        <div class="form-group">
+                          {{ form.confirm_password }}
+                          {% if form.confirm_password.errors %}
+                            <div class="text-warning small mt-1">
+                              {% for error in form.confirm_password.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                              {% endfor %}
+                            </div>
+                          {% endif %}
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary btn-user btn-block">
+                          <i class="fas fa-key"></i> Activate Account
+                        </button>
+                      </form>
+                    {% endif %}
+                    
                     <hr />
                     <div class="text-center">
-                      {% comment %} <a class="small" href="{% url 'register' %}">Create an Account!</a> {% endcomment %}
+                      <a class="small" href="{% url 'login' %}">Already have an account? Login</a>
                     </div>
                   </div>
                 </div>
@@ -88,22 +119,5 @@
     <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
     <!-- Custom scripts for all pages-->
     <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
-    <script>
-      (function() {
-        var input = document.getElementById('passwordInput');
-        var toggle = document.getElementById('togglePassword');
-        if (input && toggle) {
-          toggle.addEventListener('click', function() {
-            var isPassword = input.getAttribute('type') === 'password';
-            input.setAttribute('type', isPassword ? 'text' : 'password');
-            var icon = toggle.querySelector('i');
-            if (icon) {
-              if (isPassword) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
-              else { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
-            }
-          });
-        }
-      })();
-    </script>
   </body>
 </html>

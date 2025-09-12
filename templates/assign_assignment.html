@@ -1,59 +1,87 @@
 {% extends 'includes/base.html' %}
 {% load static %}
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4">
-        {% if assignment %} Update Assignment {% else %} Assign Staff to Franchise {% endif %}
-    </h2>
-
-    <!-- Form-wide errors -->
-    {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-            {% for error in form.non_field_errors %}
-                <div>{{ error }}</div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <form method="post" novalidate>
-        {% csrf_token %}
-
-        <!-- Staff Name Field -->
-        <div class="mb-3">
-            <label for="staff_name" class="form-label">Staff Name</label>
-            {{ form.staff_name }}
-            {% if form.staff_name.errors %}
-                <div class="text-danger mt-1">
-                    {% for error in form.staff_name.errors %}
-                        <small>{{ error }}</small><br>
-                    {% endfor %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card mt-4 shadow-sm" style="border-radius: 10px;">
+                <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between" style="border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                    <h5 class="mb-0">
+                        {% if assignment %} Update Assignment {% else %} Assign Staff to Franchise {% endif %}
+                    </h5>
+                    <a href="{% url 'staff_assignments' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-list me-1"></i> View Assignments
+                    </a>
                 </div>
-            {% endif %}
-        </div>
+                <div class="card-body">
+                    <!-- Form-wide errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
 
-        <!-- Franchise Selection (Checkboxes) -->
-        <div class="mb-3">
-            <label class="form-label">Franchise(s)</label>
-            {% for checkbox in form.franchise_name %}
-                <div class="form-check mb-2">
-                    {{ checkbox.tag }}
-                    <label class="form-check-label">{{ checkbox.choice_label }}</label>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+                            <!-- Staff Name Field -->
+                            <div class="col-12 col-md-6">
+                                <label for="staff_name" class="form-label">Staff</label>
+                                <select name="staff_name" class="form-select">
+                                    <option value="">Select Staff</option>
+                                    {% for value,label in form.fields.staff_name.choices %}
+                                        {% if value %}
+                                            <option value="{{ value }}" {% if form.data.staff_name == value or form.initial.staff_name == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                {% if form.staff_name.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.staff_name.errors %}
+                                            <small>{{ error }}</small><br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Franchise Selection (Checkboxes) -->
+                            <div class="col-12">
+                                <label class="form-label">Franchises</label>
+                                <div class="row">
+                                    {% for checkbox in form.franchise_name %}
+                                        <div class="col-md-6 col-lg-4 mb-2">
+                                            <div class="form-check">
+                                                {{ checkbox.tag }}
+                                                <label class="form-check-label">{{ checkbox.choice_label }}</label>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                {% if form.franchise_name.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.franchise_name.errors %}
+                                            <small>{{ error }}</small><br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-check me-1"></i>
+                                {% if assignment %} Update Assignment {% else %} Assign Staff {% endif %}
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            {% endfor %}
-
-            {% if form.franchise_name.errors %}
-                <div class="text-danger mt-1">
-                    {% for error in form.franchise_name.errors %}
-                        <small>{{ error }}</small><br>
-                    {% endfor %}
-                </div>
-            {% endif %}
+            </div>
         </div>
-
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary">
-            {% if assignment %} Update {% else %} Assign {% endif %}
-        </button>
-    </form>
+    </div>
 </div>
 {% endblock %}

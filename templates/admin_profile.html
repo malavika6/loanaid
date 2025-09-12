@@ -1,0 +1,138 @@
+{% extends 'includes/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Admin Profile</h1>
+  </div>
+
+  <!-- Content Row -->
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Profile Information</h6>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label">Email (read-only)</label>
+              <input class="form-control" value="{{ user_profile.admin_email }}" readonly>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">First Name</label>
+                {{ form.admin_first_name }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Last Name</label>
+                {{ form.admin_last_name }}
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Profile Picture</label>
+              {% if user_profile.profile_picture %}
+                <div class="mb-2">
+                  <img src="{{ user_profile.profile_picture.url }}" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;" alt="Admin">
+                </div>
+              {% endif %}
+              {{ form.profile_picture }}
+              <small class="text-muted d-block mt-1">Upload a new profile picture (JPG, PNG, GIF - Max 5MB)</small>
+            </div>
+
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary">Update Profile</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Image Cropper CSS and JavaScript -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+<!-- Image Cropper Modal -->
+<div class="modal fade" id="imageCropperModalAdmin" tabindex="-1" aria-labelledby="imageCropperModalAdminLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imageCropperModalAdminLabel">Crop Profile Picture</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="img-container">
+          <img id="adminCropperImage" src="" alt="Image to crop" style="max-width: 100%; height: auto;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="adminCropButton">Crop & Save</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+<style>
+.img-container { max-height: 400px; overflow: hidden; }
+.img-container img { max-width: 100%; height: auto; }
+.cropper-container { max-height: 400px; }
+.cropper-view-box, .cropper-face { border-radius: 50%; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var input = document.getElementById('id_profile_picture');
+  var cropper;
+  if (!input) return;
+
+  input.addEventListener('change', function(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('Please select an image file.'); return; }
+    if (file.size > 5 * 1024 * 1024) { alert('File size must be less than 5MB.'); return; }
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = document.getElementById('adminCropperImage');
+      img.src = ev.target.result;
+      var modalEl = document.getElementById('imageCropperModalAdmin');
+      var modal = new bootstrap.Modal(modalEl);
+      modal.show();
+      modalEl.addEventListener('shown.bs.modal', function() {
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(img, {
+          aspectRatio: 1,
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 1,
+          cropBoxMovable: true,
+          cropBoxResizable: true,
+        });
+      }, { once: true });
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('adminCropButton').addEventListener('click', function() {
+    if (!cropper) return;
+    var canvas = cropper.getCroppedCanvas({ width: 300, height: 300, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' });
+    canvas.toBlob(function(blob) {
+      var file = new File([blob], 'admin_profile.jpg', { type: 'image/jpeg' });
+      var dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      var modal = bootstrap.Modal.getInstance(document.getElementById('imageCropperModalAdmin'));
+      modal.hide();
+    }, 'image/jpeg', 0.9);
+  });
+});
+</script>
+{% endblock %}
+
+

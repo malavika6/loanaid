@@ -99,6 +99,27 @@ def delete_bank(request, bank_id):
         return redirect('addbank')
     return redirect('addbank')
 
+def delete_loan(request, loan_id):
+    """Delete loan type"""
+    from django.shortcuts import get_object_or_404, redirect
+    from .models import LoanModel
+    from users.models import AdminModel
+    
+    user_id = request.session.get('user_id', None)
+    if user_id is None:
+        return redirect('/login')
+
+    admin = AdminModel.objects.get(admin_id=user_id)
+
+    if not admin.is_superadmin:
+        return redirect('/')
+
+    loan = get_object_or_404(LoanModel, pk=loan_id)
+    if request.method == 'POST':
+        loan.delete()
+        return redirect('addloan')
+    return redirect('addloan')
+
 def delete_loanpage(request, form_id):
     """Delete loan application"""
     from django.shortcuts import get_object_or_404, redirect

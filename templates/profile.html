@@ -1,3 +1,6 @@
+{% extends 'includes/base.html' %}
+
+{% block content %}
 <div class="container-fluid">
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -15,8 +18,63 @@
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
+
+
+
+
                     <form class="p-5 user" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
+
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Profile Picture:</label>
+                            <div class="col-sm-10">
+                                <!-- Current Profile Picture Display -->
+                                {% if user_profile.profile_picture %}
+                                    <div class="mb-3">
+                                        <img src="{{ user_profile.profile_picture.url }}" alt="Current Profile Picture" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                                        <p class="text-muted small mt-2">Current Profile Picture</p>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- File Upload Field -->
+                                <div class="mb-3">
+                                    <input type="file" name="profile_picture" id="profile_picture" class="form-control form-control-user" accept="image/*">
+                                    <small class="form-text text-muted">Upload a new profile picture (JPG, PNG, GIF - Max 5MB)</small>
+                                </div>
+                                
+                                <!-- Image Cropper Modal -->
+                                <div class="modal fade" id="imageCropperModal" tabindex="-1" aria-labelledby="imageCropperModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="imageCropperModalLabel">Crop Profile Picture</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="img-container">
+                                                    <img id="cropperImage" src="" alt="Image to crop" style="max-width: 100%; height: auto;">
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="button" class="btn btn-primary" id="cropButton">Crop & Save</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hidden input for cropped image -->
+                                <input type="hidden" name="cropped_image_data" id="cropped_image_data">
+                                
+                                {% if form.profile_picture.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.profile_picture.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
 
                         <div class="form-group row">
                             <label class="col-sm-2 col-form-label">Franchise Name:</label>
@@ -68,9 +126,9 @@
                         </div>
 
                         <div class="form-group row">
-                            <label class="col-sm-2 col-form-label">Bank Name:</label>
+                            <label class="col-sm-2 col-form-label">Franchise Type:</label>
                             <div class="col-sm-10">
-                                {{ form.bank_name }}
+                                <input type="text" class="form-control form-control-user" value="{{ user_profile.get_franchise_type_display|default:'Not Specified' }}" readonly>
                             </div>
                         </div>
 
@@ -89,9 +147,9 @@
                         </div>
 
                         <div class="form-group row">
-                            <label class="col-sm-2 col-form-label">Wallet Balance:</label>
+                            <label class="col-sm-2 col-form-label">Referral Code:</label>
                             <div class="col-sm-10">
-                                {{ form.wallet_balance }}
+                                <input type="text" class="form-control form-control-user" value="{{ user_profile.referral_code|default:'Not Generated' }}" readonly>
                             </div>
                         </div>
 
@@ -99,6 +157,42 @@
                             <label class="col-sm-2 col-form-label">GST Number:</label>
                             <div class="col-sm-10">
                                 {{ form.GST }}
+                            </div>
+                        </div>
+
+                        <!-- Additional Fields -->
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Assigned Staff:</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control form-control-user" value="{% if user_profile.staff %}{{ user_profile.staff.first_name }} {{ user_profile.staff.last_name }}{% else %}Not Assigned{% endif %}" readonly>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Staff Contact:</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control form-control-user" value="{% if user_profile.staff %}{{ user_profile.staff.phone_no }}{% else %}Not Available{% endif %}" readonly>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Franchise Type:</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control form-control-user" value="{{ user_profile.get_franchise_type_display|default:'Standard Plan' }}" readonly>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Location:</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control form-control-user" value="{{ user_profile.franchise_place|default:'Not Specified' }}" readonly>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Joining Date:</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control form-control-user" value="{{ user_profile.created_at|date:'F d, Y'|default:'Not Available' }}" readonly>
                             </div>
                         </div>
 
@@ -133,3 +227,131 @@
         </div>
     </div>
 </div>
+
+<!-- Image Cropper CSS and JavaScript -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+<style>
+.img-container {
+    max-height: 400px;
+    overflow: hidden;
+}
+
+.img-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+.cropper-container {
+    max-height: 400px;
+}
+
+.cropper-view-box,
+.cropper-face {
+    border-radius: 50%;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let cropper;
+    
+    // Handle file input change
+    document.getElementById('profile_picture').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file.');
+                return;
+            }
+            
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB.');
+                return;
+            }
+            
+                            // Show image in cropper modal
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('cropperImage').src = e.target.result;
+                    
+                    // Show modal using Bootstrap 5
+                    const modal = new bootstrap.Modal(document.getElementById('imageCropperModal'));
+                    modal.show();
+                    
+                    // Initialize cropper after modal is shown
+                    document.getElementById('imageCropperModal').addEventListener('shown.bs.modal', function() {
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+                        
+                        cropper = new Cropper(document.getElementById('cropperImage'), {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                            dragMode: 'move',
+                            autoCropArea: 1,
+                            restore: false,
+                            guides: true,
+                            center: true,
+                            highlight: false,
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            toggleDragModeOnDblclick: false,
+                        });
+                    }, { once: true });
+                };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Handle crop button click
+    document.getElementById('cropButton').addEventListener('click', function() {
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas({
+                width: 300,
+                height: 300,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+            
+            // Convert canvas to blob
+            canvas.toBlob(function(blob) {
+                // Create a new file input with the cropped image
+                const croppedFile = new File([blob], 'cropped_profile.jpg', { type: 'image/jpeg' });
+                
+                // Create a new FileList-like object
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                
+                // Update the file input
+                document.getElementById('profile_picture').files = dataTransfer.files;
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('imageCropperModal'));
+                modal.hide();
+                
+                // Show preview of cropped image
+                const preview = document.createElement('div');
+                preview.className = 'mb-3';
+                preview.innerHTML = `
+                    <img src="${canvas.toDataURL()}" alt="Cropped Preview" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                    <p class="text-success small mt-2">Cropped Image Preview</p>
+                `;
+                
+                // Remove any existing preview
+                const existingPreview = document.querySelector('.cropped-preview');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+                
+                preview.className = 'mb-3 cropped-preview';
+                document.getElementById('profile_picture').parentNode.appendChild(preview);
+            }, 'image/jpeg', 0.9);
+        }
+    });
+});
+</script>
+{% endblock %}

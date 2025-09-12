@@ -1,0 +1,226 @@
+{% extends 'includes/base.html' %}
+{% load static %}
+
+{% block title %}Complete Your Profile - Loan Aid{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Complete Your Profile</h1>
+    </div>
+
+    <!-- Profile Completion Alert -->
+    <div class="alert alert-info" role="alert">
+        <h4 class="alert-heading">Profile Completion Required!</h4>
+        <p>Welcome, {{ franchise.franchise_owner }}! To access your dashboard, please complete your profile information below.</p>
+        <hr>
+        <p class="mb-0">Your profile is currently <strong>{{ franchise.get_profile_completion_percentage|floatformat:0 }}%</strong> complete.</p>
+    </div>
+
+    <!-- Profile Completion Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Complete Profile Information</h6>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.aadhar.id_for_label }}">Aadhar Number *</label>
+                                    {{ form.aadhar }}
+                                    {% if form.aadhar.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.aadhar.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.pan.id_for_label }}">PAN Number *</label>
+                                    {{ form.pan }}
+                                    {% if form.pan.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.pan.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.GST.id_for_label }}">GST Number (Optional)</label>
+                                    {{ form.GST }}
+                                    {% if form.GST.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.GST.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.ac_no.id_for_label }}">Account Number *</label>
+                                    {{ form.ac_no }}
+                                    {% if form.ac_no.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.ac_no.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.ifsc_code.id_for_label }}">IFSC Code *</label>
+                                    {{ form.ifsc_code }}
+                                    {% if form.ifsc_code.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.ifsc_code.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.screenshot.id_for_label }}">Payment Screenshot</label>
+                                    {{ form.screenshot }}
+                                    {% if form.screenshot.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.screenshot.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Complete Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Progress Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Profile Progress</h6>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ franchise.get_profile_completion_percentage }}%"
+                             aria-valuenow="{{ franchise.get_profile_completion_percentage }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                            {{ franchise.get_profile_completion_percentage|floatformat:0 }}%
+                        </div>
+                    </div>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            {% if franchise.aadhar %}
+                                <i class="fas fa-check text-success"></i>
+                            {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                            {% endif %}
+                            Aadhar Number
+                        </li>
+                        <li class="mb-2">
+                            {% if franchise.pan %}
+                                <i class="fas fa-check text-success"></i>
+                            {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                            {% endif %}
+                            PAN Number
+                        </li>
+                        <li class="mb-2">
+                            {% if franchise.GST %}
+                                <i class="fas fa-check text-success"></i>
+                            {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                            {% endif %}
+                            GST Number
+                        </li>
+                        <li class="mb-2">
+                            {% if franchise.ac_no %}
+                                <i class="fas fa-check text-success"></i>
+                            {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                            {% endif %}
+                            Account Number
+                        </li>
+                        <li class="mb-2">
+                            {% if franchise.ifsc_code %}
+                                <i class="fas fa-check text-success"></i>
+                            {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                            {% endif %}
+                            IFSC Code
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Franchise Info Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Franchise Information</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ franchise.franchise_name }}</p>
+                    <p><strong>Owner:</strong> {{ franchise.franchise_owner }}</p>
+                    <p><strong>Email:</strong> {{ franchise.email }}</p>
+                    <p><strong>Referral Code:</strong> {{ franchise.referral_code }}</p>
+                    <p><strong>Type:</strong> {{ franchise.get_franchise_type_display }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
