@@ -471,5 +471,85 @@
         }
       })();
     </script>
+    
+    <!-- Fix edit button and modal backdrop issues -->
+    <script>
+    // Immediate cleanup function - runs right away
+    function cleanupModalBackdrops() {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
+    
+    // Run cleanup immediately
+    cleanupModalBackdrops();
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Clean up any stuck modal backdrops
+        cleanupModalBackdrops();
+        
+        // Fix edit button clicks
+        const editButtons = document.querySelectorAll('a[href*="edit_franchise"]');
+        editButtons.forEach(button => {
+            // Remove any existing event listeners
+            button.removeEventListener('click', handleEditClick);
+            button.addEventListener('click', handleEditClick);
+        });
+        
+        function handleEditClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            cleanupModalBackdrops();
+            
+            // Get the href and navigate manually
+            const href = this.getAttribute('href');
+            if (href) {
+                window.location.href = href;
+            }
+        }
+        
+        // Clean up backdrops when clicking anywhere on the page
+        document.addEventListener('click', function(e) {
+            // If clicking outside of modal content, clean up backdrops
+            if (!e.target.closest('.modal-content')) {
+                cleanupModalBackdrops();
+            }
+        });
+        
+        // Prevent Bootstrap from automatically adding backdrops
+        if (typeof $ !== 'undefined') {
+            $(document).off('click.bs.modal.data-api');
+            $(document).off('show.bs.modal');
+            $(document).off('hide.bs.modal');
+        }
+        
+        // Override Bootstrap modal functions
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const originalModal = bootstrap.Modal;
+            bootstrap.Modal = function(element, config) {
+                const modal = new originalModal(element, config);
+                const originalShow = modal.show;
+                const originalHide = modal.hide;
+                
+                modal.show = function() {
+                    cleanupModalBackdrops();
+                    return originalShow.call(this);
+                };
+                
+                modal.hide = function() {
+                    cleanupModalBackdrops();
+                    return originalHide.call(this);
+                };
+                
+                return modal;
+            };
+        }
+    });
+    
+    // Also run cleanup on window load
+    window.addEventListener('load', cleanupModalBackdrops);
+    </script>
 </body>
 </html>

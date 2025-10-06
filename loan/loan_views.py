@@ -370,19 +370,31 @@ class LoanListView(View):
         loan_app = get_loan_filters(request, loan_app)
         
         # Pagination
-        paginator = Paginator(loan_app, 20)  # 20 items per page
+        paginator = Paginator(loan_app, 10)  # 10 items per page
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
+        
+        # Get all franchises for dropdown
+        all_franchises = Franchise.objects.all().order_by('franchise_name')
         
         context = {
             'username': username,
             'user_type': user_type,
             'loan_applications': page_obj,
-            'loan_name_filter': request.GET.get('loan_name', ''),
+            'all_franchises': all_franchises,
+            # Filter values
+            'first_name_filter': request.GET.get('first_name', ''),
+            'last_name_filter': request.GET.get('last_name', ''),
+            'district_filter': request.GET.get('district', ''),
+            'place_filter': request.GET.get('place', ''),
+            'loan_type_filter': request.GET.get('loan_type', ''),
             'status_filter': request.GET.get('status', ''),
             'bank_filter': request.GET.get('bank', ''),
-            'start_date': request.GET.get('start_date', ''),
-            'end_date': request.GET.get('end_date', ''),
+            'executive_filter': request.GET.get('executive', ''),
+            'followup_from': request.GET.get('followup_from', ''),
+            'followup_to': request.GET.get('followup_to', ''),
+            'loan_name_filter': request.GET.get('loan_name', ''),
+            'franchise_filter': request.GET.get('franchise', ''),
             'min_amount': request.GET.get('min_amount', ''),
             'max_amount': request.GET.get('max_amount', ''),
             'page_obj': page_obj,

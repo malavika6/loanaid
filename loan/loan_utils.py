@@ -146,14 +146,30 @@ def get_empty_stats():
 def get_loan_filters(request, queryset):
     """Apply filters to loan queryset"""
     try:
-        # Filter by loan name
-        loan_name_filter = request.GET.get('loan_name', '')
-        if loan_name_filter:
-            queryset = queryset.filter(
-                Q(loan_name__loan_name__icontains=loan_name_filter) |
-                Q(first_name__icontains=loan_name_filter) |
-                Q(last_name__icontains=loan_name_filter)
-            )
+        # Filter by first name
+        first_name_filter = request.GET.get('first_name', '')
+        if first_name_filter:
+            queryset = queryset.filter(first_name__icontains=first_name_filter)
+        
+        # Filter by last name
+        last_name_filter = request.GET.get('last_name', '')
+        if last_name_filter:
+            queryset = queryset.filter(last_name__icontains=last_name_filter)
+        
+        # Filter by district
+        district_filter = request.GET.get('district', '')
+        if district_filter:
+            queryset = queryset.filter(district__icontains=district_filter)
+        
+        # Filter by place
+        place_filter = request.GET.get('place', '')
+        if place_filter:
+            queryset = queryset.filter(place__icontains=place_filter)
+        
+        # Filter by loan type
+        loan_type_filter = request.GET.get('loan_type', '')
+        if loan_type_filter:
+            queryset = queryset.filter(loan_name__loan_name__icontains=loan_type_filter)
         
         # Filter by status
         status_filter = request.GET.get('status', '')
@@ -163,25 +179,45 @@ def get_loan_filters(request, queryset):
         # Filter by bank
         bank_filter = request.GET.get('bank', '')
         if bank_filter:
-            queryset = queryset.filter(bank_name__bank_name=bank_filter)
+            queryset = queryset.filter(bank_name__bank_name__icontains=bank_filter)
         
-        # Filter by date range
-        start_date = request.GET.get('start_date', '')
-        end_date = request.GET.get('end_date', '')
+        # Filter by executive name
+        executive_filter = request.GET.get('executive', '')
+        if executive_filter:
+            queryset = queryset.filter(executive_name__icontains=executive_filter)
         
-        if start_date:
+        # Filter by followup date range
+        followup_from = request.GET.get('followup_from', '')
+        followup_to = request.GET.get('followup_to', '')
+        
+        if followup_from:
             try:
-                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-                queryset = queryset.filter(created_at__date__gte=start_date)
+                followup_from_date = datetime.strptime(followup_from, '%Y-%m-%d').date()
+                queryset = queryset.filter(followup_date__gte=followup_from_date)
             except ValueError:
                 pass
         
-        if end_date:
+        if followup_to:
             try:
-                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-                queryset = queryset.filter(created_at__date__lte=end_date)
+                followup_to_date = datetime.strptime(followup_to, '%Y-%m-%d').date()
+                queryset = queryset.filter(followup_date__lte=followup_to_date)
             except ValueError:
                 pass
+        
+        # Legacy filter by loan name (for general search)
+        loan_name_filter = request.GET.get('loan_name', '')
+        if loan_name_filter:
+            queryset = queryset.filter(
+                Q(loan_name__loan_name__icontains=loan_name_filter) |
+                Q(first_name__icontains=loan_name_filter) |
+                Q(last_name__icontains=loan_name_filter) |
+                Q(phone_no__icontains=loan_name_filter)
+            )
+        
+        # Filter by franchise
+        franchise_filter = request.GET.get('franchise', '')
+        if franchise_filter:
+            queryset = queryset.filter(franchise_id=franchise_filter)
         
         # Filter by amount range
         min_amount = request.GET.get('min_amount', '')

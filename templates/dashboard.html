@@ -2,6 +2,26 @@
 {% load static %}
 {% block content %}
 
+<!-- Immediate backdrop cleanup script -->
+<script>
+// Run immediately when this script loads
+(function() {
+    try {
+        // Remove any modal backdrops
+        var backdrops = document.querySelectorAll('.modal-backdrop');
+        for (var i = 0; i < backdrops.length; i++) {
+            backdrops[i].remove();
+        }
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        console.log('Backdrop cleanup executed on page load');
+    } catch(e) {
+        console.log('Error in backdrop cleanup:', e);
+    }
+})();
+</script>
+
 <div class="container-fluid">
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -152,7 +172,21 @@
                           <td>
                               <div class="d-flex justify-content-center">
                                   <!-- Update Button -->
-                                  <a href="{% url 'edit_franchise' item.franchise.franchise_id %}" class="btn btn-sm btn-warning mx-1">
+                                  <a href="{% url 'edit_franchise' item.franchise.franchise_id %}" class="btn btn-sm btn-warning mx-1 edit-btn" 
+                                     onclick="
+                                       try {
+                                         document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+                                         document.body.classList.remove('modal-open');
+                                         document.body.style.overflow = '';
+                                         document.body.style.paddingRight = '';
+                                         console.log('Edit button clicked, navigating to:', this.href);
+                                         window.location.href = this.href;
+                                       } catch(e) {
+                                         console.log('Error in edit button:', e);
+                                         window.location.href = this.href;
+                                       }
+                                       return false;
+                                     ">
                                       <i class="fas fa-edit"></i> Edit
                                   </a>
                                   <!-- Delete Button -->

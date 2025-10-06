@@ -15,23 +15,49 @@
   <div class="row">
     <div class="col-md-12">
       <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-          <h6 class="m-0 font-weight-bold text-primary">Staff Assignments</h6>
-        </div>
         <div class="card-body">
-          {% if staff_assignments %}
-            <div class="table-responsive">
-              <table class="table table-bordered table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th>Sr. No</th>
-                    <th>Staff</th>
-                    <th>Franchise Name</th>
-                    <th>Assigned By</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
+          <!-- Simple Filter Form -->
+          <form method="GET" class="mb-3">
+            <div class="row g-2">
+              <div class="col-md-3">
+                <input type="text" class="form-control" name="staff_search" 
+                       value="{{ staff_search }}" placeholder="🔍 Staff name">
+              </div>
+              <div class="col-md-3">
+                <input type="text" class="form-control" name="franchise_search" 
+                       value="{{ franchise_search }}" placeholder="🔍 Franchise name">
+              </div>
+              <div class="col-md-3">
+                <input type="text" class="form-control" name="assigned_by_search" 
+                       value="{{ assigned_by_search }}" placeholder="🔍 Assigned by">
+              </div>
+              <div class="col-md-3">
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-search"></i> Filter
+                  </button>
+                  <a href="{% url 'staff_assignments' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-redo"></i> Clear
+                  </a>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <!-- Simple Table -->
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+              <thead class="table-dark">
+                <tr>
+                  <th>Sr. No</th>
+                  <th>Staff</th>
+                  <th>Franchise Name</th>
+                  <th>Assigned By</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if staff_assignments %}
                   {% for staff, assignments in staff_assignments.items %}
                     {% for assignment in assignments %}
                     <tr>
@@ -46,19 +72,24 @@
                       </td>
                       <td>{{ assignment.assigned_by.admin_first_name }} {{ assignment.assigned_by.admin_last_name }}</td>
                       <td>
-                        <a href="{% url 'update_assignment' assignment.assignment_id %}" class="btn btn-sm btn-warning">
+                        <a href="{% url 'update_assignment' assignment.assignment_id %}" class="btn btn-warning btn-sm">
                           <i class="fas fa-edit"></i> Edit
                         </a>
                       </td>
                     </tr>
                     {% endfor %}
                   {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          {% else %}
-            <p class="text-muted text-center">No staff assignments available.</p>
-          {% endif %}
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                      <i class="fas fa-users fa-2x mb-2"></i><br>
+                      No staff assignments found
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

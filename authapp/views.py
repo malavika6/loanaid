@@ -366,10 +366,33 @@ def all_staff_assignments(request):
 
     admin = get_object_or_404(AdminModel, admin_id=user_id)
 
-    staff_assignments = defaultdict(list)
+    # Get filter parameters
+    staff_search = request.GET.get('staff_search', '')
+    franchise_search = request.GET.get('franchise_search', '')
+    assigned_by_search = request.GET.get('assigned_by_search', '')
+
+    # Get all assignments with filters
     all_assignments = StaffAssignmentModel.objects.select_related('staff_name', 'assigned_by').prefetch_related('franchise_name')
 
+    # Apply filters
+    if staff_search:
+        all_assignments = all_assignments.filter(
+            Q(staff_name__first_name__icontains=staff_search) |
+            Q(staff_name__last_name__icontains=staff_search)
+        )
+    
+    if franchise_search:
+        all_assignments = all_assignments.filter(
+            franchise_name__franchise_name__icontains=franchise_search
+        )
+    
+    if assigned_by_search:
+        all_assignments = all_assignments.filter(
+            Q(assigned_by__admin_first_name__icontains=assigned_by_search) |
+            Q(assigned_by__admin_last_name__icontains=assigned_by_search)
+        )
 
+    staff_assignments = defaultdict(list)
     for assignment in all_assignments:
         staff_assignments[assignment.staff_name].append(assignment)
 
@@ -377,6 +400,9 @@ def all_staff_assignments(request):
         "staff_assignments": dict(staff_assignments),
         "admin": admin,
         "username": f"{admin.admin_first_name} {admin.admin_last_name or ''}",
+        "staff_search": staff_search,
+        "franchise_search": franchise_search,
+        "assigned_by_search": assigned_by_search,
     })
 
 
@@ -386,13 +412,13 @@ def all_staff_assignments(request):
 def update_assignment(request, assignment_id):
     assignment = get_object_or_404(StaffAssignmentModel, assignment_id=assignment_id)
     if request.method == "POST":
-        form = StaffAssignmentForm(request.POST, instance=assignment, user=request.user)
+        form = StaffAssignmentForm(request.POST, instance=assignment)
         if form.is_valid():
             form.save()
             messages.success(request, "Staff assignment updated successfully.")
             return redirect("staff_assignments")
     else:
-        form = StaffAssignmentForm(instance=assignment, user=request.user)
+        form = StaffAssignmentForm(instance=assignment)
     return render(request, "assign_assignment.html", {"form": form, "assignment": assignment})
 
 

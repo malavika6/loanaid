@@ -12,65 +12,122 @@
   </div>
 
   <!-- Filters -->
-  <div class="row mb-4">
-    <div class="col-lg-12">
-      <div class="card shadow filter-card">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
-        </div>
-        <div class="card-body">
-          <form method="GET" class="row align-items-end">
-            <div class="col-md-3 mb-3">
-              <label for="search" class="form-label">Search</label>
-              <input type="text" class="form-control" id="search" name="search" 
-                     value="{{ search_query }}" placeholder="Search by name, phone, or loan type">
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="status" class="form-label">Status</label>
-              <select class="form-control" id="status" name="status">
-                <option value="">All Statuses</option>
-                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
-                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
-                <option value="under_review" {% if status_filter == 'under_review' %}selected{% endif %}>Under Review</option>
-              </select>
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="franchise" class="form-label">Franchise</label>
-              <select class="form-control" id="franchise" name="franchise">
-                <option value="">All Franchises</option>
-                {% for franchise in assigned_franchises %}
-                <option value="{{ franchise.franchise_id }}" {% if franchise_filter == franchise.franchise_id|stringformat:"s" %}selected{% endif %}>
-                  {{ franchise.franchise_name }}
-                </option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="date_from" class="form-label">From Date</label>
-              <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="date_to" class="form-label">To Date</label>
-              <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
-            </div>
-            <div class="col-md-1 mb-3">
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-filter"></i> Filter
-              </button>
-            </div>
-          </form>
-          <div class="row mt-2">
-            <div class="col-12">
-              <a href="{% url 'staff_loan_management' %}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-refresh"></i> Reset Filters
-              </a>
-            </div>
+  <div class="filter-section mb-4">
+    <div class="filter-toggle-header" onclick="toggleFilters()">
+      <div class="filter-toggle-content">
+        <i class="fas fa-filter"></i>
+        <span>Filters</span>
+        <span class="filter-badge" id="activeFilterCount" style="display: none;">0</span>
+      </div>
+      <i class="fas fa-chevron-down filter-toggle-icon" id="filterToggleIcon"></i>
+    </div>
+    <div class="filter-body" id="filterBody">
+      <form method="GET" id="filterForm">
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label for="search" class="filter-label">
+              <i class="fas fa-search"></i> Search
+            </label>
+            <input type="text" class="form-control filter-input" id="search" name="search" 
+                   value="{{ search_query }}" placeholder="Name, phone, or loan type...">
+          </div>
+          <div class="filter-group">
+            <label for="status" class="filter-label">
+              <i class="fas fa-info-circle"></i> Status
+            </label>
+            <select class="form-control filter-input" id="status" name="status">
+              <option value="">All Statuses</option>
+              <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+              <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+              <option value="under_review" {% if status_filter == 'under_review' %}selected{% endif %}>Under Review</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="franchise" class="filter-label">
+              <i class="fas fa-building"></i> Franchise
+            </label>
+            <select class="form-control filter-input" id="franchise" name="franchise">
+              <option value="">All Franchises</option>
+              {% for franchise in assigned_franchises %}
+              <option value="{{ franchise.franchise_id }}" {% if franchise_filter == franchise.franchise_id|stringformat:"s" %}selected{% endif %}>
+                {{ franchise.franchise_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="date_from" class="filter-label">
+              <i class="fas fa-calendar"></i> From Date
+            </label>
+            <input type="date" class="form-control filter-input" id="date_from" name="date_from" value="{{ date_from }}">
+          </div>
+          <div class="filter-group">
+            <label for="date_to" class="filter-label">
+              <i class="fas fa-calendar"></i> To Date
+            </label>
+            <input type="date" class="form-control filter-input" id="date_to" name="date_to" value="{{ date_to }}">
           </div>
         </div>
-      </div>
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-primary btn-sm filter-apply-btn">
+            <i class="fas fa-check"></i> Apply Filters
+          </button>
+          <a href="{% url 'staff_loan_management' %}" class="btn btn-secondary btn-sm filter-reset-btn">
+            <i class="fas fa-undo"></i> Reset
+          </a>
+        </div>
+      </form>
     </div>
   </div>
+
+  <script>
+    function toggleFilters() {
+        const filterBody = document.getElementById('filterBody');
+        const toggleIcon = document.getElementById('filterToggleIcon');
+        
+        if (filterBody.style.maxHeight && filterBody.style.maxHeight !== '0px') {
+            filterBody.style.maxHeight = '0px';
+            toggleIcon.classList.remove('rotated');
+        } else {
+            filterBody.style.maxHeight = filterBody.scrollHeight + 'px';
+            toggleIcon.classList.add('rotated');
+        }
+    }
+
+    function updateFilterCount() {
+        const form = document.getElementById('filterForm');
+        const inputs = form.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], select');
+        let count = 0;
+
+        inputs.forEach(input => {
+            if (input.value && input.value !== '') {
+                count++;
+            }
+        });
+
+        const badge = document.getElementById('activeFilterCount');
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateFilterCount();
+        
+        const activeFilterCount = document.getElementById('activeFilterCount');
+        if (activeFilterCount.style.display !== 'none') {
+            toggleFilters();
+        }
+
+        const form = document.getElementById('filterForm');
+        form.addEventListener('input', updateFilterCount);
+        form.addEventListener('change', updateFilterCount);
+    });
+  </script>
 
   <!-- Content Row -->
   <div class="row">

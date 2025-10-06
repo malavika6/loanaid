@@ -8,6 +8,7 @@ from loan.models import LoanApplicationModel, UploadedFile
 from payment.models import Payment
 import uuid
 from django.core.mail import send_mail
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
@@ -716,11 +717,22 @@ def list_staff(request):
     all_staff = StaffModel.objects.all().order_by('-created_at')
     
     # Apply filters
+    first_name_filter = request.GET.get('first_name', '')
+    last_name_filter = request.GET.get('last_name', '')
     search_query = request.GET.get('search', '')
     status_filter = request.GET.get('status', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     
+    # Filter by first name
+    if first_name_filter:
+        all_staff = all_staff.filter(first_name__icontains=first_name_filter)
+    
+    # Filter by last name
+    if last_name_filter:
+        all_staff = all_staff.filter(last_name__icontains=last_name_filter)
+    
+    # General search filter
     if search_query:
         all_staff = all_staff.filter(
             Q(first_name__icontains=search_query) |
@@ -729,24 +741,34 @@ def list_staff(request):
             Q(phone_no__icontains=search_query)
         )
     
+    # Filter by status
     if status_filter:
         if status_filter == 'active':
             all_staff = all_staff.filter(is_active=True)
         elif status_filter == 'inactive':
             all_staff = all_staff.filter(is_active=False)
     
+    # Filter by date range
     if date_from:
         all_staff = all_staff.filter(created_at__date__gte=date_from)
     
     if date_to:
         all_staff = all_staff.filter(created_at__date__lte=date_to)
     
+    # Pagination - 10 records per page
+    paginator = Paginator(all_staff, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     # Get sidebar menu context
     sidebar_menu = get_sidebar_menu(user_type)
     
     return render(request, 'all_staffs.html', {
-        'all_staff': all_staff,
+        'all_staff': page_obj,
+        'page_obj': page_obj,
         'sidebar_menu': sidebar_menu,
+        'first_name_filter': first_name_filter,
+        'last_name_filter': last_name_filter,
         'search_query': search_query,
         'status_filter': status_filter,
         'date_from': date_from,

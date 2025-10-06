@@ -2,6 +2,26 @@
 {% load static %}
 
 {% block content %}
+
+<!-- Immediate backdrop cleanup script -->
+<script>
+// Run immediately when this script loads
+(function() {
+    try {
+        // Remove any modal backdrops
+        var backdrops = document.querySelectorAll('.modal-backdrop');
+        for (var i = 0; i < backdrops.length; i++) {
+            backdrops[i].remove();
+        }
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        console.log('Backdrop cleanup executed on page load');
+    } catch(e) {
+        console.log('Error in backdrop cleanup:', e);
+    }
+})();
+</script>
 <div class="container-fluid">
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -12,69 +32,128 @@
   </div>
 
   <!-- Filters -->
-  <div class="row mb-4">
-    <div class="col-lg-12">
-      <div class="card shadow filter-card">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
-        </div>
-        <div class="card-body">
-          <form method="GET" class="row align-items-end">
-            <div class="col-md-3 mb-3">
-              <label for="search" class="form-label">Search</label>
-              <input type="text" class="form-control" id="search" name="search" 
-                     value="{{ search_query }}" placeholder="Search by name, email, or referral code">
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="franchise_type" class="form-label">Franchise Type</label>
-              <select class="form-control" id="franchise_type" name="franchise_type">
-                <option value="">All Types</option>
-                <option value="business_associate" {% if franchise_type_filter == 'business_associate' %}selected{% endif %}>Business Associate</option>
-                <option value="premium_franchise" {% if franchise_type_filter == 'premium_franchise' %}selected{% endif %}>Premium Franchise</option>
-                <option value="virtual_franchise" {% if franchise_type_filter == 'virtual_franchise' %}selected{% endif %}>Virtual Franchise</option>
-              </select>
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="status" class="form-label">Status</label>
-              <select class="form-control" id="status" name="status">
-                <option value="">All</option>
-                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-              </select>
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="payment_status" class="form-label">Payment</label>
-              <select class="form-control" id="payment_status" name="payment_status">
-                <option value="">All</option>
-                <option value="paid" {% if payment_status_filter == 'paid' %}selected{% endif %}>Paid</option>
-                <option value="unpaid" {% if payment_status_filter == 'unpaid' %}selected{% endif %}>Unpaid</option>
-              </select>
-            </div>
-            <div class="col-md-1 mb-3">
-              <label for="date_from" class="form-label">From</label>
-              <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
-            </div>
-            <div class="col-md-1 mb-3">
-              <label for="date_to" class="form-label">To</label>
-              <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
-            </div>
-            <div class="col-md-1 mb-3">
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-filter"></i> Filter
-              </button>
-            </div>
-          </form>
-          <div class="row mt-2">
-            <div class="col-12">
-              <a href="{% url 'list_franchise' %}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-refresh"></i> Reset Filters
-              </a>
-            </div>
+  <div class="filter-section mb-4">
+    <div class="filter-toggle-header" onclick="toggleFilters()">
+      <div class="filter-toggle-content">
+        <i class="fas fa-filter"></i>
+        <span>Filters</span>
+        <span class="filter-badge" id="activeFilterCount" style="display: none;">0</span>
+      </div>
+      <i class="fas fa-chevron-down filter-toggle-icon" id="filterToggleIcon"></i>
+    </div>
+    <div class="filter-body" id="filterBody">
+      <form method="GET" id="filterForm">
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label for="search" class="filter-label">
+              <i class="fas fa-search"></i> Search
+            </label>
+            <input type="text" class="form-control filter-input" id="search" name="search" 
+                   value="{{ search_query }}" placeholder="Name, email, or referral code...">
+          </div>
+          <div class="filter-group">
+            <label for="franchise_type" class="filter-label">
+              <i class="fas fa-building"></i> Franchise Type
+            </label>
+            <select class="form-control filter-input" id="franchise_type" name="franchise_type">
+              <option value="">All Types</option>
+              <option value="business_associate" {% if franchise_type_filter == 'business_associate' %}selected{% endif %}>Business Associate</option>
+              <option value="premium_franchise" {% if franchise_type_filter == 'premium_franchise' %}selected{% endif %}>Premium Franchise</option>
+              <option value="virtual_franchise" {% if franchise_type_filter == 'virtual_franchise' %}selected{% endif %}>Virtual Franchise</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="status" class="filter-label">
+              <i class="fas fa-toggle-on"></i> Status
+            </label>
+            <select class="form-control filter-input" id="status" name="status">
+              <option value="">All</option>
+              <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+              <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="payment_status" class="filter-label">
+              <i class="fas fa-credit-card"></i> Payment
+            </label>
+            <select class="form-control filter-input" id="payment_status" name="payment_status">
+              <option value="">All</option>
+              <option value="paid" {% if payment_status_filter == 'paid' %}selected{% endif %}>Paid</option>
+              <option value="unpaid" {% if payment_status_filter == 'unpaid' %}selected{% endif %}>Unpaid</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="date_from" class="filter-label">
+              <i class="fas fa-calendar"></i> From
+            </label>
+            <input type="date" class="form-control filter-input" id="date_from" name="date_from" value="{{ date_from }}">
+          </div>
+          <div class="filter-group">
+            <label for="date_to" class="filter-label">
+              <i class="fas fa-calendar"></i> To
+            </label>
+            <input type="date" class="form-control filter-input" id="date_to" name="date_to" value="{{ date_to }}">
           </div>
         </div>
-      </div>
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-primary btn-sm filter-apply-btn">
+            <i class="fas fa-check"></i> Apply Filters
+          </button>
+          <a href="{% url 'list_franchise' %}" class="btn btn-secondary btn-sm filter-reset-btn">
+            <i class="fas fa-undo"></i> Reset
+          </a>
+        </div>
+      </form>
     </div>
   </div>
+
+  <script>
+    function toggleFilters() {
+        const filterBody = document.getElementById('filterBody');
+        const toggleIcon = document.getElementById('filterToggleIcon');
+        
+        if (filterBody.style.maxHeight && filterBody.style.maxHeight !== '0px') {
+            filterBody.style.maxHeight = '0px';
+            toggleIcon.classList.remove('rotated');
+        } else {
+            filterBody.style.maxHeight = filterBody.scrollHeight + 'px';
+            toggleIcon.classList.add('rotated');
+        }
+    }
+
+    function updateFilterCount() {
+        const form = document.getElementById('filterForm');
+        const inputs = form.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], select');
+        let count = 0;
+
+        inputs.forEach(input => {
+            if (input.value && input.value !== '') {
+                count++;
+            }
+        });
+
+        const badge = document.getElementById('activeFilterCount');
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateFilterCount();
+        
+        const activeFilterCount = document.getElementById('activeFilterCount');
+        if (activeFilterCount.style.display !== 'none') {
+            toggleFilters();
+        }
+
+        const form = document.getElementById('filterForm');
+        form.addEventListener('input', updateFilterCount);
+        form.addEventListener('change', updateFilterCount);
+    });
+  </script>
 
   <!-- Content Row -->
   <div class="row">
@@ -116,8 +195,22 @@
                   <td>₹{{ franchise.wallet_balance }}</td>
                   <td>
                     <div class="d-flex justify-content-center align-items-center">
-                      <a href="{% url 'edit_franchise' franchise.franchise_id %}" class="btn btn-sm btn-warning">
-                        Edit
+                      <a href="{% url 'edit_franchise' franchise.franchise_id %}" class="btn btn-sm btn-warning edit-btn" 
+                         onclick="
+                           try {
+                             document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+                             document.body.classList.remove('modal-open');
+                             document.body.style.overflow = '';
+                             document.body.style.paddingRight = '';
+                             console.log('Edit button clicked, navigating to:', this.href);
+                             window.location.href = this.href;
+                           } catch(e) {
+                             console.log('Error in edit button:', e);
+                             window.location.href = this.href;
+                           }
+                           return false;
+                         ">
+                        <i class="fas fa-edit"></i> Edit
                       </a>
                       <a href="{% url 'delete_franchise' franchise.franchise_id %}" class="btn btn-sm btn-danger" 
                          onclick="return confirm('Are you sure you want to delete this franchise?');">

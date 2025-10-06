@@ -11,63 +11,6 @@
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="row mb-4">
-    <div class="col-lg-12">
-      <div class="card shadow filter-card">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
-        </div>
-        <div class="card-body">
-          <form method="GET" class="row align-items-end">
-            <div class="col-md-3 mb-3">
-              <label for="search" class="form-label">Search</label>
-              <input type="text" class="form-control" id="search" name="search" 
-                     value="{{ search_query }}" placeholder="Search by name, email, or referral code">
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="franchise_type" class="form-label">Franchise Type</label>
-              <select class="form-control" id="franchise_type" name="franchise_type">
-                <option value="">All Types</option>
-                <option value="business_associate" {% if franchise_type_filter == 'business_associate' %}selected{% endif %}>Business Associate</option>
-                <option value="premium_franchise" {% if franchise_type_filter == 'premium_franchise' %}selected{% endif %}>Premium Franchise</option>
-                <option value="virtual_franchise" {% if franchise_type_filter == 'virtual_franchise' %}selected{% endif %}>Virtual Franchise</option>
-              </select>
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="status" class="form-label">Status</label>
-              <select class="form-control" id="status" name="status">
-                <option value="">All</option>
-                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-              </select>
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="date_from" class="form-label">From Date</label>
-              <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="date_to" class="form-label">To Date</label>
-              <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
-            </div>
-            <div class="col-md-1 mb-3">
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-filter"></i> Filter
-              </button>
-            </div>
-          </form>
-          <div class="row mt-2">
-            <div class="col-12">
-              <a href="{% url 'franchise_list' %}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-refresh"></i> Reset Filters
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Content Row -->
   <div class="row">
     <div class="col-lg-12 mb-4">
@@ -77,17 +20,42 @@
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle" style="table-layout: fixed; width: 100%;">
-              <thead>
-                <tr>
-                  <th scope="col">Sr. No</th>
-                  <th scope="col">Franchise Name</th>
-                  <th scope="col">Referral Code</th>
-                  <th scope="col" style="width: 120px;">Contact Number</th>
-                  <th scope="col" style="width: 100px;">Loan Count</th>
-                  <th scope="col" style="width: 120px;">Wallet Amount</th>
-                </tr>
-              </thead>
+            <form method="GET" id="filterForm">
+              <table class="table table-bordered table-hover align-middle" style="table-layout: fixed; width: 100%;">
+                <thead>
+                  <!-- Column Headers -->
+                  <tr>
+                    <th scope="col">Sr. No</th>
+                    <th scope="col">Franchise Name</th>
+                    <th scope="col">Referral Code</th>
+                    <th scope="col" style="width: 120px;">Contact Number</th>
+                    <th scope="col" style="width: 100px;">Loan Count</th>
+                    <th scope="col" style="width: 120px;">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <span>Wallet Amount</span>
+                        <a href="{% url 'franchise_list' %}" class="btn btn-sm btn-outline-secondary column-filter-clear" title="Clear All Filters">
+                          <i class="fas fa-redo"></i>
+                        </a>
+                      </div>
+                    </th>
+                  </tr>
+                  <!-- Filter Row Under Headers -->
+                  <tr class="column-filter-row">
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="search" 
+                             value="{{ search_query }}" placeholder="Search...">
+                    </th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell text-center">
+                      <button type="submit" class="btn btn-primary btn-sm column-filter-apply">
+                        <i class="fas fa-search"></i> Filter
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
               <tbody>
                 {% for item in franchises %}
                 <tr>
@@ -116,7 +84,8 @@
                 </tr>
                 {% endfor %}
               </tbody>
-            </table>
+              </table>
+            </form>
           </div>
         </div>
       </div>

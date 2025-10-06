@@ -19,71 +19,6 @@
     {% endif %}
   </div>
 
-  <!-- Filters -->
-  <div class="row mb-4">
-    <div class="col-lg-12">
-      <div class="card shadow filter-card">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
-        </div>
-        <div class="card-body">
-          <form method="GET" class="row align-items-end">
-            <div class="col-md-3 mb-3">
-              <label for="loan_name" class="form-label">Search</label>
-              <input type="text" class="form-control" id="loan_name" name="loan_name" 
-                     value="{{ loan_name_filter }}" placeholder="Search by name, phone, or loan type">
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="status" class="form-label">Status</label>
-              <select class="form-control" id="status" name="status">
-                <option value="">All Statuses</option>
-                <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
-                <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
-                <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
-                <option value="Under Review" {% if status_filter == 'Under Review' %}selected{% endif %}>Under Review</option>
-              </select>
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="bank" class="form-label">Bank</label>
-              <input type="text" class="form-control" id="bank" name="bank" 
-                     value="{{ bank_filter }}" placeholder="Bank name">
-            </div>
-            <div class="col-md-1 mb-3">
-              <label for="start_date" class="form-label">From</label>
-              <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
-            </div>
-            <div class="col-md-1 mb-3">
-              <label for="end_date" class="form-label">To</label>
-              <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
-            </div>
-            <div class="col-md-1 mb-3">
-              <label for="min_amount" class="form-label">Min ₹</label>
-              <input type="number" class="form-control" id="min_amount" name="min_amount" 
-                     value="{{ min_amount }}" placeholder="Min" step="0.01">
-            </div>
-            <div class="col-md-1 mb-3">
-              <label for="max_amount" class="form-label">Max ₹</label>
-              <input type="number" class="form-control" id="max_amount" name="max_amount" 
-                     value="{{ max_amount }}" placeholder="Max" step="0.01">
-            </div>
-            <div class="col-md-1 mb-3">
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-filter"></i> Filter
-              </button>
-            </div>
-          </form>
-          <div class="row mt-2">
-            <div class="col-12">
-              <a href="{% url 'all-application' %}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-refresh"></i> Reset Filters
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Content Row -->
   <div class="row">
     <div class="col-xl-12 col-lg-7">
@@ -93,8 +28,10 @@
         </div>
         <div class="card-body">
           <div class="table-responsive">
+            <form method="GET" id="filterForm">
             <table class="table table-bordered table-hover align-middle" style="table-layout: fixed; width: 100%;">
               <thead>
+                  <!-- Column Headers -->
                 <tr>
                   <th scope="col">Sr No</th>
                   <th scope="col">First Name</th>
@@ -109,16 +46,95 @@
                   <th scope="col">Status</th>
                   <th scope="col">Bank</th>
                   {% if user_type != 'franchise' %}
+                  <th scope="col">Franchise</th>
                   <th scope="col">Executive Name</th>
                   <th scope="col" style="width: 120px;">Mobile No 1</th>
                   {% endif %}
-                  <th scope="col" style="width: 220px;">Actions</th>
+                    <th scope="col" style="width: 220px;">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <span>Actions</span>
+                        <a href="{% url 'all-application' %}" class="btn btn-sm btn-outline-secondary column-filter-clear" title="Clear All Filters">
+                          <i class="fas fa-redo"></i>
+                        </a>
+                      </div>
+                    </th>
+                  </tr>
+                  <!-- Filter Row Under Headers -->
+                  <tr class="column-filter-row">
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="first_name" 
+                             value="{{ first_name_filter }}" placeholder="🔍 First name">
+                    </th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="last_name" 
+                             value="{{ last_name_filter }}" placeholder="🔍 Last name">
+                    </th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="district" 
+                             value="{{ district_filter }}" placeholder="🔍 District">
+                    </th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="place" 
+                             value="{{ place_filter }}" placeholder="🔍 Place">
+                    </th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="loan_type" 
+                             value="{{ loan_type_filter }}" placeholder="🔍 Loan type">
+                    </th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell">
+                      <div class="date-filter-group">
+                        <input type="date" class="column-filter-input date-input-small" name="followup_from" 
+                               value="{{ followup_from }}" placeholder="From">
+                        <input type="date" class="column-filter-input date-input-small" name="followup_to" 
+                               value="{{ followup_to }}" placeholder="To">
+                      </div>
+                    </th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell">
+                      <select class="column-filter-select" name="status">
+                        <option value="">All Status</option>
+                        <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
+                        <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="Under Review" {% if status_filter == 'Under Review' %}selected{% endif %}>Under Review</option>
+                      </select>
+                    </th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="bank" 
+                             value="{{ bank_filter }}" placeholder="🏦 Bank">
+                    </th>
+                    {% if user_type != 'franchise' %}
+                    <th class="column-filter-cell">
+                      <select class="column-filter-select" name="franchise">
+                        <option value="">All Franchises</option>
+                        {% for franchise in all_franchises %}
+                        <option value="{{ franchise.franchise_id }}" {% if franchise_filter == franchise.franchise_id|stringformat:"s" %}selected{% endif %}>
+                          {{ franchise.franchise_name }}
+                        </option>
+                        {% endfor %}
+                      </select>
+                    </th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="executive" 
+                             value="{{ executive_filter }}" placeholder="👤 Executive">
+                    </th>
+                    <th class="column-filter-cell"></th>
+                    {% endif %}
+                    <th class="column-filter-cell text-center">
+                      <button type="submit" class="btn btn-primary btn-sm column-filter-apply">
+                        <i class="fas fa-search"></i> Filter
+                      </button>
+                    </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody class="table-body-fixed">
+                {% if loan_applications %}
                 {% for form in loan_applications %}
                 <tr>
-                  <th scope="row">{{ forloop.counter }}</th>
+                    <th scope="row">{{ page_obj.start_index|add:forloop.counter0 }}</th>
                   <td>{{ form.first_name }}</td>
                   <td>{{ form.last_name }}</td>
                   <td>{{ form.district }}</td>
@@ -131,6 +147,7 @@
                   <td>{{ form.status_name }}</td>
                   <td>{{ form.bank_name }}</td>
                   {% if user_type != 'franchise' %}
+                  <td>{{ form.franchise.franchise_name }}</td>
                   <td>{{ form.executive_name }}</td>
                   <td title="{{ form.mobileno_1 }}{% if form.mobileno_2 %} / {{ form.mobileno_2 }}{% endif %}">
                     {{ form.mobileno_1 }}<br />
@@ -151,14 +168,75 @@
                   </td>
                 </tr>
                 {% endfor %}
+                  
+                  <!-- Fill empty rows to maintain 10 row height -->
+                  {% for i in "0123456789" %}
+                    {% if forloop.counter > loan_applications|length %}
+                    <tr class="empty-row">
+                      <td colspan="{% if user_type != 'franchise' %}16{% else %}13{% endif %}" class="text-center empty-cell">
+                        &nbsp;
+                      </td>
+                    </tr>
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  <!-- No records message -->
+                  <tr class="no-records-row">
+                    <td colspan="{% if user_type != 'franchise' %}16{% else %}13{% endif %}" class="text-center no-records-cell">
+                      <div class="no-records-message">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Records Found</h5>
+                        <p class="text-muted mb-0">No loan applications match your filter criteria.</p>
+                      </div>
+                    </td>
+                  </tr>
+                  <!-- Fill remaining rows -->
+                  {% for i in "012345678" %}
+                  <tr class="empty-row">
+                    <td colspan="{% if user_type != 'franchise' %}15{% else %}13{% endif %}" class="empty-cell">&nbsp;</td>
+                  </tr>
+                  {% endfor %}
+                {% endif %}
               </tbody>
             </table>
+            </form>
             <!-- Pagination Controls -->
+            {% if page_obj.paginator.num_pages > 1 %}
+            <div class="pagination-container">
+              <div class="pagination-info">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
+              </div>
             <div class="pagination">
-              <button class="prev" onclick="changePage(-1)">&#10094; Prev</button>
-              <span id="files-info"></span>
-              <button class="next" onclick="changePage(1)">Next &#10095;</button>
+                {% if page_obj.has_previous %}
+                  <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                    <i class="fas fa-angle-double-left"></i> First
+                  </a>
+                  <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                    <i class="fas fa-angle-left"></i> Prev
+                  </a>
+                {% else %}
+                  <span class="page-link disabled"><i class="fas fa-angle-double-left"></i> First</span>
+                  <span class="page-link disabled"><i class="fas fa-angle-left"></i> Prev</span>
+                {% endif %}
+
+                <span class="page-current">
+                  Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                  <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                    Next <i class="fas fa-angle-right"></i>
+                  </a>
+                  <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                    Last <i class="fas fa-angle-double-right"></i>
+                  </a>
+                {% else %}
+                  <span class="page-link disabled">Next <i class="fas fa-angle-right"></i></span>
+                  <span class="page-link disabled">Last <i class="fas fa-angle-double-right"></i></span>
+                {% endif %}
+              </div>
             </div>
+            {% endif %}
           </div>
         </div>
       </div>

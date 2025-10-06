@@ -11,50 +11,6 @@
     </a>
   </div>
 
-  <!-- Filters -->
-  <div class="row mb-4">
-    <div class="col-lg-12">
-      <div class="card shadow filter-card">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
-        </div>
-        <div class="card-body">
-          <form method="GET" class="row align-items-end">
-            <div class="col-md-3 mb-3">
-              <label for="search" class="form-label">Search</label>
-              <input type="text" class="form-control" id="search" name="search" 
-                     value="{{ search_query }}" placeholder="Search by name, email, or phone">
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="status" class="form-label">Status</label>
-              <select class="form-control" id="status" name="status">
-                <option value="">All</option>
-                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-              </select>
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="date_from" class="form-label">From Date</label>
-              <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="date_to" class="form-label">To Date</label>
-              <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
-            </div>
-            <div class="col-md-3 mb-3">
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-filter"></i> Filter
-              </button>
-              <a href="{% url 'list_staff' %}" class="btn btn-secondary">
-                <i class="fas fa-refresh"></i> Reset
-              </a>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Content Row -->
   <div class="row">
     <div class="col-lg-12 mb-4">
@@ -64,58 +20,161 @@
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle" style="table-layout: fixed; width: 100%;">
-              <thead>
-                <tr>
-                  <th scope="col" style="width: 80px;">Sr. No</th>
-                  <th scope="col" style="width: 150px;">First Name</th>
-                  <th scope="col" style="width: 150px;">Last Name</th>
-                  <th scope="col" style="width: 300px;">Email</th>
-                  <th scope="col" style="width: 120px;">Phone</th>
-                  <th scope="col" style="width: 220px;">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for staff in all_staff %}
-                <tr>
-                  <td>{{ forloop.counter }}</td>
-                  <td>{{ staff.first_name }}</td>
-                  <td>{{ staff.last_name }}</td>
-                  <td class="email-field" title="{{ staff.email }}">{{ staff.email }}</td>
-                  <td class="mobile-field" title="{{ staff.phone_no }}">
-                    {% if staff.phone_no|length > 10 %}
-                      {{ staff.phone_no|slice:":10" }}...
-                    {% else %}
-                      {{ staff.phone_no }}
-                    {% endif %}
-                  </td>
-                  <td>
-                    <div class="d-flex justify-content-center align-items-center">
-                      {% if staff.staff_id %}
-                        <a href="{% url 'view_profile' staff.staff_id %}" class="btn btn-sm btn-success">
-                          View
+            <form method="GET" id="filterForm">
+              <table class="table table-bordered table-hover align-middle" style="table-layout: fixed; width: 100%;">
+                <thead>
+                  <!-- Column Headers -->
+                  <tr>
+                    <th scope="col" style="width: 80px;">Sr. No</th>
+                    <th scope="col" style="width: 150px;">First Name</th>
+                    <th scope="col" style="width: 150px;">Last Name</th>
+                    <th scope="col" style="width: 250px;">Email</th>
+                    <th scope="col" style="width: 120px;">Phone</th>
+                    <th scope="col" style="width: 100px;">Status</th>
+                    <th scope="col" style="width: 220px;">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <span>Action</span>
+                        <a href="{% url 'list_staff' %}" class="btn btn-sm btn-outline-secondary column-filter-clear" title="Clear All Filters">
+                          <i class="fas fa-redo"></i>
                         </a>
-                        <form action="{% url 'delete_staff' staff.staff_id %}" method="post" style="display: inline">
-                          {% csrf_token %}
-                          <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this staff member?');">
-                            <i class="fa fa-trash-alt"></i> Delete
-                          </button>
-                        </form>
+                      </div>
+                    </th>
+                  </tr>
+                  <!-- Filter Row Under Headers -->
+                  <tr class="column-filter-row">
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="first_name" 
+                             value="{{ first_name_filter }}" placeholder="🔍 First name">
+                    </th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="last_name" 
+                             value="{{ last_name_filter }}" placeholder="🔍 Last name">
+                    </th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell">
+                      <select class="column-filter-select" name="status">
+                        <option value="">All</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                      </select>
+                    </th>
+                    <th class="column-filter-cell text-center">
+                      <button type="submit" class="btn btn-primary btn-sm column-filter-apply">
+                        <i class="fas fa-search"></i> Filter
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+              <tbody class="table-body-fixed">
+                {% if all_staff %}
+                  {% for staff in all_staff %}
+                  <tr>
+                    <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                    <td>{{ staff.first_name }}</td>
+                    <td>{{ staff.last_name }}</td>
+                    <td class="email-field" title="{{ staff.email }}">{{ staff.email }}</td>
+                    <td class="mobile-field" title="{{ staff.phone_no }}">
+                      {% if staff.phone_no|length > 10 %}
+                        {{ staff.phone_no|slice:":10" }}...
                       {% else %}
-                        <span class="text-muted">Missing ID</span>
+                        {{ staff.phone_no }}
                       {% endif %}
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
+                    </td>
+                    <td>
+                      {% if staff.is_active %}
+                        <span class="badge badge-success">Active</span>
+                      {% else %}
+                        <span class="badge badge-secondary">Inactive</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="d-flex justify-content-center align-items-center">
+                        {% if staff.staff_id %}
+                          <a href="{% url 'view_profile' staff.staff_id %}" class="btn btn-sm btn-success">
+                            View
+                          </a>
+                          <form action="{% url 'delete_staff' staff.staff_id %}" method="post" style="display: inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this staff member?');">
+                              <i class="fa fa-trash-alt"></i> Delete
+                            </button>
+                          </form>
+                        {% else %}
+                          <span class="text-muted">Missing ID</span>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  
+                  <!-- Fill empty rows to maintain 10 row height -->
+                  {% for i in "0123456789" %}
+                    {% if forloop.counter > all_staff|length %}
+                    <tr class="empty-row">
+                      <td colspan="7" class="empty-cell">&nbsp;</td>
+                    </tr>
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  <!-- No records message -->
+                  <tr class="no-records-row">
+                    <td colspan="7" class="no-records-cell">
+                      <div class="no-records-message">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Staff Members Found</h5>
+                        <p class="text-muted mb-0">No staff members match your filter criteria.</p>
+                      </div>
+                    </td>
+                  </tr>
+                  <!-- Fill remaining rows -->
+                  {% for i in "012345678" %}
+                  <tr class="empty-row">
+                    <td colspan="7" class="empty-cell">&nbsp;</td>
+                  </tr>
+                  {% endfor %}
+                {% endif %}
               </tbody>
-            </table>
+              </table>
+            </form>
             <!-- Pagination Controls -->
-            <div class="pagination">
-              <button class="prev" onclick="changePage(-1)">&#10094; Prev</button>
-              <span id="staff-info"></span>
-              <button class="next" onclick="changePage(1)">Next &#10095;</button>
+            {% if page_obj.paginator.num_pages > 1 %}
+            <div class="pagination-container">
+              <div class="pagination-info">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
+              </div>
+              <div class="pagination">
+                {% if page_obj.has_previous %}
+                  <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                    <i class="fas fa-angle-double-left"></i> First
+                  </a>
+                  <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                    <i class="fas fa-angle-left"></i> Prev
+                  </a>
+                {% else %}
+                  <span class="page-link disabled"><i class="fas fa-angle-double-left"></i> First</span>
+                  <span class="page-link disabled"><i class="fas fa-angle-left"></i> Prev</span>
+                {% endif %}
+
+                <span class="page-current">
+                  Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                  <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                    Next <i class="fas fa-angle-right"></i>
+                  </a>
+                  <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                    Last <i class="fas fa-angle-double-right"></i>
+                  </a>
+                {% else %}
+                  <span class="page-link disabled">Next <i class="fas fa-angle-right"></i></span>
+                  <span class="page-link disabled">Last <i class="fas fa-angle-double-right"></i></span>
+                {% endif %}
+              </div>
             </div>
+            {% endif %}
           </div>
         </div>
       </div>

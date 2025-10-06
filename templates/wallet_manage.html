@@ -16,55 +16,6 @@
     </a>
   </div>
 
-  <!-- Filters -->
-  <div class="row mb-4">
-    <div class="col-lg-12">
-      <div class="card shadow filter-card">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
-        </div>
-        <div class="card-body">
-          <form method="GET" class="row align-items-end">
-            <div class="col-md-3 mb-3">
-              <label for="search" class="form-label">Search</label>
-              <input type="text" class="form-control" id="search" name="search" 
-                     value="{{ search_query }}" placeholder="Search by franchise name, owner, or email">
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="franchise" class="form-label">Franchise</label>
-              <select class="form-control" id="franchise" name="franchise">
-                <option value="">All Franchises</option>
-                {% for franchise in franchises %}
-                <option value="{{ franchise.pk }}" {% if franchise_filter == franchise.pk|stringformat:"s" %}selected{% endif %}>
-                  {{ franchise.franchise_name }}
-                </option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="min_total" class="form-label">Min Total</label>
-              <input type="number" class="form-control" id="min_total" name="min_total" 
-                     value="{{ min_total }}" placeholder="Min amount" step="0.01">
-            </div>
-            <div class="col-md-2 mb-3">
-              <label for="max_total" class="form-label">Max Total</label>
-              <input type="number" class="form-control" id="max_total" name="max_total" 
-                     value="{{ max_total }}" placeholder="Max amount" step="0.01">
-            </div>
-            <div class="col-md-3 mb-3">
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-filter"></i> Filter
-              </button>
-              <a href="{% url 'wallet_manage' %}" class="btn btn-secondary">
-                <i class="fas fa-refresh"></i> Reset
-              </a>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Content Row -->
   <div class="row">
     <div class="col-12">
@@ -83,18 +34,51 @@
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle">
-              <thead>
-                <tr>
-                  <th style="width: 200px;">Franchise</th>
-                  <th style="width: 100px;">Owner</th>
-                  <th style="width: 100px;">Allowance</th>
-                  <th style="width: 100px;">Commission</th>
-                  <th style="width: 100px;">Incentive</th>
-                  <th style="width: 120px;">Total</th>
-                  <th style="width: 150px;">Action</th>
-                </tr>
-              </thead>
+            <form method="GET" id="filterForm">
+              <table class="table table-bordered table-hover align-middle">
+                <thead>
+                  <!-- Column Headers -->
+                  <tr>
+                    <th style="width: 200px;">Franchise</th>
+                    <th style="width: 100px;">Owner</th>
+                    <th style="width: 100px;">Allowance</th>
+                    <th style="width: 100px;">Commission</th>
+                    <th style="width: 100px;">Incentive</th>
+                    <th style="width: 120px;">Total</th>
+                    <th style="width: 150px;">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <span>Action</span>
+                        <a href="{% url 'wallet_manage' %}" class="btn btn-sm btn-outline-secondary column-filter-clear" title="Clear Filters">
+                          <i class="fas fa-redo"></i>
+                        </a>
+                      </div>
+                    </th>
+                  </tr>
+                  <!-- Filter Row Under Headers -->
+                  <tr class="column-filter-row">
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="search" 
+                             value="{{ search_query }}" placeholder="🔍 Search franchise...">
+                    </th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell">
+                      <div class="d-flex gap-1">
+                        <input type="number" class="column-filter-input" name="min_total" 
+                               value="{{ min_total }}" placeholder="Min" step="0.01" style="flex: 1;">
+                        <input type="number" class="column-filter-input" name="max_total" 
+                               value="{{ max_total }}" placeholder="Max" step="0.01" style="flex: 1;">
+                      </div>
+                    </th>
+                    <th class="column-filter-cell text-center">
+                      <button type="submit" class="btn btn-primary btn-sm column-filter-apply">
+                        <i class="fas fa-search"></i> Filter
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
               <tbody>
                 {% for row in wallet_rows %}
                 <tr>
@@ -131,7 +115,8 @@
                 </tr>
                 {% endfor %}
               </tbody>
-            </table>
+              </table>
+            </form>
           </div>
         </div>
       </div>
