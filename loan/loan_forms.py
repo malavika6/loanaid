@@ -14,24 +14,7 @@ from .models import (
 class LoanApplicationForm(forms.ModelForm):
     """Enhanced loan application form with improved validation"""
     
-    # Custom fields with enhanced validation
-    franchise_mobile_no = forms.CharField(
-        widget=forms.TextInput(attrs={
-            "class": "form-control", 
-            "placeholder": "Franchise Mobile No.", 
-            "disabled": "disabled"
-        }),
-        required=False
-    )
-    
-    franchise_place = forms.CharField(
-        widget=forms.TextInput(attrs={
-            "class": "form-control", 
-            "placeholder": "Franchise Place", 
-            "disabled": "disabled"
-        }),
-        required=False
-    )
+    # Custom fields with enhanced validation (removed non-existent model fields)
     
     # Enhanced choice fields with better validation
     cibil_issue = forms.ChoiceField(
@@ -40,14 +23,29 @@ class LoanApplicationForm(forms.ModelForm):
             ('No', 'No'), 
             ("Don't Know", "Don't Know")
         ],
+        initial='No',
+        required=False,
         widget=forms.Select(attrs={"class": "form-select form-control"}),
         help_text="Indicates if there are any CIBIL issues"
     )
     
     it_payable = forms.ChoiceField(
         choices=[('Yes', 'Yes'), ('No', 'No')],
+        initial='No',
+        required=False,
         widget=forms.Select(attrs={"class": "form-select form-control"}),
         help_text="Indicates if IT returns are payable"
+    )
+    
+    years = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(attrs={
+            "class": "form-control form-control-user",
+            "placeholder": "Years of Experience",
+            "min": "0",
+            "max": "50"
+        }),
+        help_text="Years of work experience"
     )
     
     guaranter_cibil_issue = forms.ChoiceField(
@@ -138,17 +136,7 @@ class LoanApplicationForm(forms.ModelForm):
         help_text="Minimum loan amount is ₹1,000"
     )
     
-    # Enhanced date validation
-    followup_date = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={
-            "class": "form-control form-control-user", 
-            "placeholder": "Follow-up Date", 
-            "type": "date",
-            "min": "today"
-        }),
-        help_text="Follow-up date should be today or in the future"
-    )
+    # Follow-up date is now auto-calculated based on status - removed from form
     
     # Enhanced text fields
     first_name = forms.CharField(
@@ -246,52 +234,41 @@ class LoanApplicationForm(forms.ModelForm):
         ]
     )
     
-    mobileno_1 = forms.CharField(
-        max_length=15,
+    reference_no_1 = forms.CharField(
+        max_length=50,
         required=False,
         widget=forms.TextInput(attrs={
             "class": "form-control form-control-user", 
-            "placeholder": "Mobile Number 1",
-            "pattern": r"[0-9]{10,15}"
+            "placeholder": "Reference Number 1"
         }),
-        validators=[
-            RegexValidator(
-                regex=r'^[0-9]{10,15}$',
-                message='Mobile number must be 10-15 digits'
-            )
-        ]
+        help_text="Enter reference number 1"
     )
     
-    mobileno_2 = forms.CharField(
-        max_length=15,
+    reference_no_2 = forms.CharField(
+        max_length=50,
         required=False,
         widget=forms.TextInput(attrs={
             "class": "form-control form-control-user", 
-            "placeholder": "Mobile Number 2",
-            "pattern": r"[0-9]{10,15}"
+            "placeholder": "Reference Number 2"
         }),
-        validators=[
-            RegexValidator(
-                regex=r'^[0-9]{10,15}$',
-                message='Mobile number must be 10-15 digits'
-            )
-        ]
+        help_text="Enter reference number 2"
     )
     
-    description = forms.CharField(
+    address = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
             "class": "form-control form-control-user", 
-            "placeholder": "Description", 
+            "placeholder": "Complete Address", 
             "rows": 3
-        })
+        }),
+        help_text="Enter complete address of the applicant"
     )
     
     document_description = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
             "class": "form-control form-control-user", 
-            "placeholder": "Document Description", 
+            "placeholder": "Please mention the names of all documents you are submitting (e.g., Aadhaar Card, PAN Card, Salary Certificate, Bank Statement, etc.)", 
             "rows": 3
         })
     )
@@ -338,13 +315,12 @@ class LoanApplicationForm(forms.ModelForm):
         model = LoanApplicationModel
         fields = [
             "franchise",
-            "franchise_mobile_no",
-            "franchise_place",
             "first_name",
             "last_name",
             "district",
             "place",
             "phone_no",
+            "address",
             "guaranter_name",
             "guaranter_phoneno",
             "guaranter_job",
@@ -355,15 +331,14 @@ class LoanApplicationForm(forms.ModelForm):
             "cibil_score",
             "cibil_issue",
             "it_payable",
+            "years",
             'loan_name',
             "loan_amount",
-            "followup_date",
-            "description",
             "status_name",
             "bank_name",
             "executive_name",
-            "mobileno_1",
-            "mobileno_2",
+            "reference_no_1",
+            "reference_no_2",
             "document_description",
             "assigned_to",
         ]
@@ -421,12 +396,7 @@ class LoanApplicationForm(forms.ModelForm):
         if loan_amount and loan_amount < 1000:
             raise ValidationError("Loan amount must be at least ₹1,000")
         
-        # Validate follow-up date
-        followup_date = cleaned_data.get('followup_date')
-        if followup_date:
-            from django.utils import timezone
-            if followup_date < timezone.now().date():
-                raise ValidationError("Follow-up date cannot be in the past")
+        # Follow-up date is now auto-calculated, no validation needed
         
         return cleaned_data
     

@@ -236,8 +236,21 @@ def home(request):
         approved_loans = all_loans.filter(status_name__status_name='Approved').count()
         rejected_loans = all_loans.filter(status_name__status_name='Rejected').count()
         
+        # Pagination for loans - show 5 per page
+        from django.core.paginator import Paginator
+        
+        # Get all loans ordered by form_id (newest first)
+        loans_query = all_loans.order_by('-form_id')
+        paginator = Paginator(loans_query, 5)  # Show 5 loans per page
+        
+        # Get current page from request
+        page_number = request.GET.get('page', 1)
+        try:
+            forms = paginator.page(page_number)
+        except:
+            forms = paginator.page(1)
+        
         # Recent activities
-        recent_loans = all_loans.order_by('-form_id')[:10]
         recent_franchises = all_franchises.order_by('-created_at')[:5]
         
         # Wallet statistics
@@ -248,7 +261,7 @@ def home(request):
             'username': username,
             'admin': admin,
             'user_type': 'admin',
-            'forms': recent_loans,
+            'forms': forms,  # This is now the paginated loan data
             'loans': today_followups,
             'recent_franchises': recent_franchises,
             'total_franchise_count': franchise_count,

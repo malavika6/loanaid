@@ -4,14 +4,7 @@
 
 <div class="container-fluid">
   <!-- Page Heading -->
-  <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">
-      {% if user_type == 'franchise' %}
-        My Loan Applications
-      {% else %}
-        Applications
-      {% endif %}
-    </h1>
+  <div class="d-sm-flex align-items-center justify-content-end mb-4">
     {% if user_type != 'franchise' %}
     <a href="{% url 'form' %}" class="btn btn-primary btn-sm">
       <i class="fas fa-plus"></i> Add Application
@@ -39,16 +32,16 @@
                   <th scope="col">District</th>
                   <th scope="col">Place</th>
                   <th scope="col">Phone Number</th>
+                  <th scope="col">Address</th>
                   <th scope="col">Loan Name</th>
                   <th scope="col">Amount</th>
                   <th scope="col">FollowUp Date</th>
-                  <th scope="col">Description</th>
                   <th scope="col">Status</th>
                   <th scope="col">Bank</th>
                   {% if user_type != 'franchise' %}
                   <th scope="col">Franchise</th>
                   <th scope="col">Executive Name</th>
-                  <th scope="col" style="width: 120px;">Mobile No 1</th>
+                  <th scope="col" style="width: 120px;">Reference No 1</th>
                   {% endif %}
                     <th scope="col" style="width: 220px;">
                       <div class="d-flex align-items-center justify-content-between">
@@ -80,10 +73,27 @@
                     </th>
                     <th class="column-filter-cell"></th>
                     <th class="column-filter-cell">
-                      <input type="text" class="column-filter-input" name="loan_type" 
-                             value="{{ loan_type_filter }}" placeholder="🔍 Loan type">
+                      <input type="text" class="column-filter-input" name="address" 
+                             value="{{ address_filter }}" placeholder="🔍 Address">
                     </th>
-                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell">
+                      <select class="column-filter-select" name="loan_type">
+                        <option value="">All Loan Types</option>
+                        {% for loan_type in all_loan_types %}
+                        <option value="{{ loan_type.loan_name }}" {% if loan_type_filter == loan_type.loan_name %}selected{% endif %}>
+                          {{ loan_type.loan_name }}
+                        </option>
+                        {% endfor %}
+                      </select>
+                    </th>
+                    <th class="column-filter-cell">
+                      <div class="amount-filter-group">
+                        <input type="number" class="column-filter-input amount-input-small" name="min_amount" 
+                               value="{{ min_amount }}" placeholder="Min" step="0.01">
+                        <input type="number" class="column-filter-input amount-input-small" name="max_amount" 
+                               value="{{ max_amount }}" placeholder="Max" step="0.01">
+                      </div>
+                    </th>
                     <th class="column-filter-cell">
                       <div class="date-filter-group">
                         <input type="date" class="column-filter-input date-input-small" name="followup_from" 
@@ -92,19 +102,25 @@
                                value="{{ followup_to }}" placeholder="To">
                       </div>
                     </th>
-                    <th class="column-filter-cell"></th>
                     <th class="column-filter-cell">
                       <select class="column-filter-select" name="status">
-                        <option value="">All Status</option>
-                        <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
-                        <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
-                        <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
-                        <option value="Under Review" {% if status_filter == 'Under Review' %}selected{% endif %}>Under Review</option>
+                        <option value="">All Statuses</option>
+                        {% for status in all_statuses %}
+                        <option value="{{ status.status_name }}" {% if status_filter == status.status_name %}selected{% endif %}>
+                          {{ status.status_name }}
+                        </option>
+                        {% endfor %}
                       </select>
                     </th>
                     <th class="column-filter-cell">
-                      <input type="text" class="column-filter-input" name="bank" 
-                             value="{{ bank_filter }}" placeholder="🏦 Bank">
+                      <select class="column-filter-select" name="bank">
+                        <option value="">All Banks</option>
+                        {% for bank in all_banks %}
+                        <option value="{{ bank.bank_name }}" {% if bank_filter == bank.bank_name %}selected{% endif %}>
+                          {{ bank.bank_name }}
+                        </option>
+                        {% endfor %}
+                      </select>
                     </th>
                     {% if user_type != 'franchise' %}
                     <th class="column-filter-cell">
@@ -121,7 +137,10 @@
                       <input type="text" class="column-filter-input" name="executive" 
                              value="{{ executive_filter }}" placeholder="👤 Executive">
                     </th>
-                    <th class="column-filter-cell"></th>
+                    <th class="column-filter-cell">
+                      <input type="text" class="column-filter-input" name="reference_no_1" 
+                             value="{{ reference_no_1_filter }}" placeholder="🔍 Reference No 1">
+                    </th>
                     {% endif %}
                     <th class="column-filter-cell text-center">
                       <button type="submit" class="btn btn-primary btn-sm column-filter-apply">
@@ -140,18 +159,18 @@
                   <td>{{ form.district }}</td>
                   <td>{{ form.place }}</td>
                   <td class="mobile-field" title="{{ form.phone_no }}">{{ form.phone_no }}</td>
+                  <td title="{{ form.address }}">{{ form.address|truncatechars:30 }}</td>
                   <td>{{ form.loan_name }}</td>
                   <td>{{ form.loan_amount }}</td>
                   <td>{{ form.followup_date }}</td>
-                  <td>{{ form.description }}</td>
                   <td>{{ form.status_name }}</td>
                   <td>{{ form.bank_name }}</td>
                   {% if user_type != 'franchise' %}
                   <td>{{ form.franchise.franchise_name }}</td>
                   <td>{{ form.executive_name }}</td>
-                  <td title="{{ form.mobileno_1 }}{% if form.mobileno_2 %} / {{ form.mobileno_2 }}{% endif %}">
-                    {{ form.mobileno_1 }}<br />
-                    {% if form.mobileno_2 %} {{ form.mobileno_2 }} {% endif %}
+                  <td title="{{ form.reference_no_1 }}{% if form.reference_no_2 %} / {{ form.reference_no_2 }}{% endif %}">
+                    {{ form.reference_no_1 }}<br />
+                    {% if form.reference_no_2 %} {{ form.reference_no_2 }} {% endif %}
                   </td>
                   {% endif %}
                   <td>
@@ -272,4 +291,86 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let isScrolled = false;
+    let scrollTimeout;
+    let lastScrollY = 0;
+    let isHandlingScroll = false;
+
+    // Simple, reliable scroll handler - ONLY affects filter row
+    function handleScroll() {
+        if (isHandlingScroll) return;
+        isHandlingScroll = true;
+        
+        requestAnimationFrame(function() {
+            try {
+                const currentScrollY = window.scrollY;
+                const documentHeight = document.documentElement.scrollHeight;
+                const windowHeight = window.innerHeight;
+                const scrollBottom = documentHeight - windowHeight - currentScrollY;
+                
+                // Clear existing timeout
+                clearTimeout(scrollTimeout);
+                
+                // Check if we're at the bottom (with some tolerance)
+                const isAtBottom = scrollBottom < 50;
+                
+                // Only affect filter row, never headings
+                const filterRow = document.querySelector('.column-filter-row');
+                
+                // Always show filters when near top or at bottom
+                if (currentScrollY < 150 || isAtBottom) {
+                    if (isScrolled) {
+                        document.body.classList.remove('scrolled');
+                        isScrolled = false;
+                        // Explicitly show filter row
+                        if (filterRow) {
+                            filterRow.style.display = 'table-row';
+                            filterRow.style.visibility = 'visible';
+                            filterRow.style.opacity = '1';
+                        }
+                    }
+                } else if (currentScrollY > lastScrollY && currentScrollY > 250) {
+                    // Only hide filter row when scrolling down significantly and not at bottom
+                    scrollTimeout = setTimeout(function() {
+                        if (!isScrolled && !isAtBottom) {
+                            document.body.classList.add('scrolled');
+                            isScrolled = true;
+                            // Explicitly hide only filter row
+                            if (filterRow) {
+                                filterRow.style.display = 'none';
+                            }
+                        }
+                    }, 200);
+                }
+                
+                lastScrollY = currentScrollY;
+            } catch (error) {
+                console.error('Scroll handler error:', error);
+            } finally {
+                isHandlingScroll = false;
+            }
+        });
+    }
+
+    // Add scroll event listener to window only
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Show filter row when hovering over the header area
+    const thead = document.querySelector('thead');
+    if (thead) {
+        thead.addEventListener('mouseenter', function() {
+            clearTimeout(scrollTimeout);
+            document.body.classList.remove('scrolled');
+            isScrolled = false;
+        });
+    }
+
+    // Ensure headers are always visible on page load
+    document.body.classList.remove('scrolled');
+    isScrolled = false;
+});
+</script>
 {% endblock %}

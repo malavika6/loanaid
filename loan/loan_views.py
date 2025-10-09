@@ -17,7 +17,7 @@ from .models import (
 from .forms import LoanApplicationForm, LoanForm, StatusForm, BankForm
 from .loan_utils import get_loan_context, get_loan_stats, get_loan_filters
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('loan')
 
 
 class LoanApplicationView(View):
@@ -116,7 +116,7 @@ class LoanApplicationView(View):
         # Define hidden fields for franchise users
         hide_fields = []
         if user_type == 'franchise':
-            hide_fields = ['followup_date', 'status_name', 'executive_name', 'mobileno_1', 'mobileno_2']
+            hide_fields = ['status_name', 'executive_name', 'reference_no_1', 'reference_no_2']
         
         form = LoanApplicationForm(user_type=user_type)
         if user_type == 'franchise':
@@ -132,55 +132,78 @@ class LoanApplicationView(View):
         user_id = request.session.get('user_id')
         user_type = request.session.get('user_type')
         
+        logger.info(f"POST request received - User ID: {user_id}, User Type: {user_type}")
+        
         if not user_id or not user_type:
+            logger.warning("No user_id or user_type in session, redirecting to login")
             return redirect('/login')
         
         user, username, can_access_all = self.get_user_context(user_id, user_type)
         if not user:
+            logger.warning("User not found, redirecting to login")
             return redirect('/login')
         
         files = request.FILES.getlist('files')
+        logger.info(f"Files uploaded: {len(files)}")
+        logger.info(f"POST data keys: {list(request.POST.keys())}")
+        
         form = LoanApplicationForm(request.POST, request.FILES, user_type=user_type)
         
         # Hide fields for franchise users
         if user_type == 'franchise':
-            hide_fields = ['followup_date', 'status_name', 'executive_name', 'mobileno_1', 'mobileno_2']
+            hide_fields = ['status_name', 'executive_name', 'reference_no_1', 'reference_no_2']
             for field in hide_fields:
                 if field in form.fields:
                     form.fields.pop(field)
         
+        logger.info(f"Form is_valid: {form.is_valid()}")
+        
         if form.is_valid():
-            loan_form = form.save(commit=False)
-            
-            # Assign franchise based on user type
-            if user_type == 'admin' and not can_access_all:
-                loan_form.franchise = user
-            elif user_type == 'staff':
-                assignment = StaffAssignmentModel.objects.filter(staff_name=user).first()
-                if assignment:
-                    franchise = assignment.franchise_name.first()
-                    loan_form.franchise = franchise
-            elif user_type == 'franchise':
-                loan_form.franchise = user
-            elif user_type == 'executive':
-                loan_form.executive = user
-            
-            loan_form.save()
-            
-            # Handle file uploads
-            for file in files:
-                UploadedFile.objects.create(
-                    file=file, 
-                    loan_application=loan_form
-                )
-            
-            messages.success(request, "Loan application submitted successfully!")
-            return redirect('all-application')
+            try:
+                logger.info("Form is valid, attempting to save...")
+                loan_form = form.save(commit=False)
+                
+                # Assign franchise based on user type
+                if user_type == 'admin' and not can_access_all:
+                    loan_form.franchise = user
+                    logger.info(f"Assigned franchise (admin): {user}")
+                elif user_type == 'staff':
+                    assignment = StaffAssignmentModel.objects.filter(staff_name=user).first()
+                    if assignment:
+                        franchise = assignment.franchise_name.first()
+                        loan_form.franchise = franchise
+                        logger.info(f"Assigned franchise (staff): {franchise}")
+                elif user_type == 'franchise':
+                    loan_form.franchise = user
+                    logger.info(f"Assigned franchise (franchise): {user}")
+                elif user_type == 'executive':
+                    loan_form.executive = user
+                    logger.info(f"Assigned executive: {user}")
+                
+                loan_form.save()
+                logger.info(f"Loan application saved successfully with ID: {loan_form.form_id}")
+                
+                # Handle file uploads
+                for file in files:
+                    UploadedFile.objects.create(
+                        file=file, 
+                        loan_application=loan_form
+                    )
+                logger.info(f"Uploaded {len(files)} files")
+                
+                messages.success(request, "Loan application submitted successfully!")
+                return redirect('all-application')
+            except Exception as e:
+                logger.error(f"Error saving application: {str(e)}", exc_info=True)
+                messages.error(request, f"Error saving application: {str(e)}")
+        else:
+            logger.error(f"Form validation errors: {form.errors.as_json()}")
+            messages.error(request, "Please correct the errors below.")
         
         # If form is invalid, re-render with errors
         status = StatusModel.objects.all()
         bank = BankModel.objects.all()
-        hide_fields = ['followup_date', 'status_name', 'executive_name', 'mobileno_1', 'mobileno_2'] if user_type == 'franchise' else []
+        hide_fields = ['status_name', 'executive_name', 'reference_no_1', 'reference_no_2'] if user_type == 'franchise' else []
         
         context = get_loan_context(username, None, status, bank, form, hide_fields)
         return render(request, 'loan-form.html', context)
@@ -274,9 +297,12 @@ class LoanDetailView(View):
     def update_loan_fields(self, request, form_instance):
         """Update loan application fields from POST data"""
         fields_to_update = [
-            'first_name', 'last_name', 'district', 'place', 'phone_no',
-            'loan_amount', 'executive_name', 'mobileno_1', 'mobileno_2',
-            'followup_date', 'description', 'application_description'
+            'first_name', 'last_name', 'district', 'place', 'phone_no', 'address',
+            'loan_amount', 'executive_name', 'reference_no_1', 'reference_no_2',
+            'document_description', 'guaranter_name', 'guaranter_phoneno', 
+            'guaranter_job', 'guaranter_cibil_score', 'guaranter_cibil_issue',
+            'guaranter_it_payable', 'job', 'cibil_score', 'cibil_issue', 
+            'it_payable', 'years'
         ]
         
         for field in fields_to_update:
@@ -377,20 +403,34 @@ class LoanListView(View):
         # Get all franchises for dropdown
         all_franchises = Franchise.objects.all().order_by('franchise_name')
         
+        # Get all statuses for dropdown
+        all_statuses = StatusModel.objects.all().order_by('status_name')
+        
+        # Get all banks for dropdown
+        all_banks = BankModel.objects.all().order_by('bank_name')
+        
+        # Get all loan types for dropdown
+        all_loan_types = LoanModel.objects.all().order_by('loan_name')
+        
         context = {
             'username': username,
             'user_type': user_type,
             'loan_applications': page_obj,
             'all_franchises': all_franchises,
+            'all_statuses': all_statuses,
+            'all_banks': all_banks,
+            'all_loan_types': all_loan_types,
             # Filter values
             'first_name_filter': request.GET.get('first_name', ''),
             'last_name_filter': request.GET.get('last_name', ''),
             'district_filter': request.GET.get('district', ''),
             'place_filter': request.GET.get('place', ''),
+            'address_filter': request.GET.get('address', ''),
             'loan_type_filter': request.GET.get('loan_type', ''),
             'status_filter': request.GET.get('status', ''),
             'bank_filter': request.GET.get('bank', ''),
             'executive_filter': request.GET.get('executive', ''),
+            'reference_no_1_filter': request.GET.get('reference_no_1', ''),
             'followup_from': request.GET.get('followup_from', ''),
             'followup_to': request.GET.get('followup_to', ''),
             'loan_name_filter': request.GET.get('loan_name', ''),

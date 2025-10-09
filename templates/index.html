@@ -11,9 +11,8 @@
           <div class="container-fluid">
             <!-- Page Heading -->
             <div
-              class="d-sm-flex align-items-center justify-content-between mb-4"
+              class="d-sm-flex align-items-center justify-content-end mb-4"
             >
-              <h1 class="h3 mb-0 text-gray-800">Admin Dashboard</h1>
               <div class="btn-group" role="group">
                 <a href="{% url 'create_staff' %}" class="btn btn-primary btn-sm">
                   <i class="fas fa-user-plus"></i> Add Staff
@@ -226,157 +225,155 @@
                     <h6 class="m-0 font-weight-bold text-primary">Loans</h6>
                   </div>
                   <div class="card-body">
-                    <div class="table-responsive-xxl">
-                      <div style="overflow-x: auto; max-width: 100%">
-                        <table
-                          class="table table-bordered table-hover all-users"
-                        >
-                          <thead>
-                            <tr>
-                              <th scope="col">Sr No</th>
-                              <th scope="col">First Name</th>
-                              <th scope="col">Last Name</th>
-                              <th scope="col">District</th>
-                              <th scope="col">Place</th>
-                              <th scope="col">Phone Number</th>
-                              <th scope="col">Loan Name</th>
-                              <th scope="col">Amount</th>
-                              <th scope="col">FollowUp Date</th>
-                              <th scope="col">Description</th>
-                              <th scope="col">Status</th>
-                              <th scope="col">Bank</th>
-
-                              <th scope="col">Executive Name</th>
-                              <th scope="col">Mobile No 1</th>
-                              <th scope="col">Actions</th>
-                              
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for form in forms %}
-                            <tr>
-                              <th scope="row">{{ forloop.counter }}</th>
-                              <td>{{form.first_name}}</td>
-                              <td>{{form.last_name}}</td>
-                              <td>{{form.district}}</td>
-                              <td>{{form.place}}</td>
-                              <td>{{form.phone_no}}</td>
-                              <td>{{form.loan_name}}</td>
-                              <td>{{form.loan_amount}}</td>
-                              <td>{{form.followup_date}}</td>
-                              <td>{{form.description}}</td>
-
-                              <td>{{form.status_name}}</td>
-                              <td>{{form.bank_name}}</td>
-                              <td>{{form.executive_name}}</td>
-                              <td>
-                                {{form.mobileno_1}}<br />
-                                {% if form.mobileno_2 %} {{form.mobileno_2}} 
-                                {% endif %}
-                              </td>
-
-                            
-
-                              <td>
-                                <a href="{% url 'loan-page' form.form_id %}"
-                                  >Check this</a
-                                >
-                              </td>
-                              
-                              
-                            </tr>
-                            {% endfor %}
-                          </tbody>
-                        </table>
-                        {% if not admin.is_superadmin %}
-                        <!-- Pagination Controls -->
-                        <div class="pagination" style="text-align: right">
-                          <button
-                            class="prev btn btn-primary"
-                            onclick="changePage(-1)"
-                          >
-                            &#10094; Prev
-                          </button>
-                          <span id="page-info"></span>
-                          <button
-                            class="next btn btn-primary"
-                            onclick="changePage(1)"
-                          >
-                            Next &#10095;
-                          </button>
-                        </div>
-                        {% endif %}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {% if admin.is_superadmin %}
-<!-- Content Row -->
-            <div class="row">
-              <!-- Content Column -->
-              <div class="col-lg-12 mb-4">
-                <!-- Project Card Example -->
-                <div class="card shadow mb-4">
-                  <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Staff</h6>
-                  </div>
-                  <div class="card-body">
-                    <div class="table-responsive-xxl">
-                      <table class="table table-bordered table-hover all-staff">
+                    <div class="table-responsive">
+                      <table class="table table-bordered table-hover all-users" style="table-layout: fixed; width: 100%; font-size: 0.85rem;">
                         <thead>
                           <tr>
-                            <th scope="col">Sr. No</th>
-                            <th scope="col">Employee ID</th>
-                            <th scope="col">First Name</th>
-                            <th scope="col">Last Name</th>
-                            <th scope="col">Email</th>
-                            <th scope="col">Phone</th> <!-- Added phone column for staff -->
-                            <th scope="col">Action</th>
+                            <th scope="col" style="width: 60px;">Sr No</th>
+                            <th scope="col" style="width: 100px;">Name</th>
+                            <th scope="col" style="width: 80px;">District</th>
+                            <th scope="col" style="width: 100px;">Place</th>
+                            <th scope="col" style="width: 100px;">Phone</th>
+                            <th scope="col" style="width: 120px;">Loan</th>
+                            <th scope="col" style="width: 100px;">Amount</th>
+                            <th scope="col" style="width: 100px;">Follow Up</th>
+                            <th scope="col" style="width: 80px;">Status</th>
+                            <th scope="col" style="width: 80px;">Bank</th>
+                            <th scope="col" style="width: 100px;">Executive</th>
+                            <th scope="col" style="width: 120px;">Actions</th>
                           </tr>
                         </thead>
-                        <tbody>
-                          {% for staff in all_staff %}
-                          <tr>
-                            <td>{{ forloop.counter }}</td> 
-                            <td>{{ staff.employee_id }}</td> 
-                            <td>{{ staff.first_name }}</td>
-                            <td>{{ staff.last_name }}</td>
-                            <td>{{ staff.email }}</td>
-                            <td>{{ staff.phone_no }}</td> <!-- Displaying phone number -->
-                            <td>
-                              {% if staff.staff_id %}
-                                <a href="{% url 'view_profile' staff.staff_id %}" class="btn btn-success btn-sm">
-                                  View
-                                </a>
-                                <form action="{% url 'delete_staff' staff.staff_id %}" method="post" style="display: inline">
-                                  {% csrf_token %}
-                                  <button type="submit" class="btn" onclick="return confirm('Are you sure you want to delete this staff member?');">
-                                    <i class="fa fa-trash-alt" style="color: red"></i>
-                                  </button>
-                                </form>
-                              {% else %}
-                                <span>Missing ID</span>
+                        <tbody class="table-body-fixed">
+                          {% if forms %}
+                            {% for form in forms %}
+                            <tr>
+                              <td style="text-align: center;">{{ forloop.counter }}</td>
+                              <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{form.first_name}} {{form.last_name}}">{{form.first_name}} {{form.last_name}}</td>
+                              <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{form.district}}">{{form.district}}</td>
+                              <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{form.place}}">{{form.place}}</td>
+                              <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{form.phone_no}}">{{form.phone_no}}</td>
+                              <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{form.loan_name}}">{{form.loan_name}}</td>
+                              <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{form.loan_amount}}">₹{{form.loan_amount}}</td>
+                              <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{form.followup_date}}">{{form.followup_date}}</td>
+                              <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{form.status_name}}">{{form.status_name}}</td>
+                              <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{form.bank_name}}">{{form.bank_name}}</td>
+                              <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{form.executive_name}}">{{form.executive_name}}</td>
+                              <td style="text-align: center;">
+                                <a href="{% url 'loan-page' form.form_id %}" class="btn btn-sm btn-primary">View</a>
+                              </td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <!-- Add empty rows to maintain 5-row structure -->
+                            {% for i in "12345" %}
+                              {% if forloop.counter > forms|length %}
+                                <tr class="empty-row">
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                  <td class="empty-cell">&nbsp;</td>
+                                </tr>
                               {% endif %}
-                            </td>
-                          </tr>
-                          {% endfor %}
+                            {% endfor %}
+                          {% else %}
+                            <!-- No records row -->
+                            <tr class="no-records-row">
+                              <td colspan="12" class="no-records-cell">
+                                <div class="no-records-message">
+                                  <i class="fas fa-inbox fa-3x"></i>
+                                  <h5>No Records Found</h5>
+                                  <p>There are no loan applications to display at the moment.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            
+                            <!-- Add 4 more empty rows -->
+                            {% for i in "1234" %}
+                              <tr class="empty-row">
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                                <td class="empty-cell">&nbsp;</td>
+                              </tr>
+                            {% endfor %}
+                          {% endif %}
                         </tbody>
-                      </table>
-
-                      <!-- Pagination Controls -->
-                      <div class="pagination">
-                        <button class="prev" onclick="changePage(-1)">&#10094; Prev</button>
-                        <span id="staff-info"></span>
-                        <button class="next" onclick="changePage(1)">Next &#10095;</button>
+                        </table>
+                        <!-- Pagination Controls -->
+                        <div class="pagination-container">
+                          <div class="pagination-info">
+                            {% if forms %}
+                              Showing {{ forms.start_index }} to {{ forms.end_index }} of {{ forms.paginator.count }} entries
+                            {% else %}
+                              Showing 0 entries
+                            {% endif %}
+                          </div>
+                          <div class="pagination">
+                            {% if forms.has_previous %}
+                              <a href="?page=1" class="page-link">
+                                <i class="fas fa-angle-double-left"></i>
+                                <span>First</span>
+                              </a>
+                              <a href="?page={{ forms.previous_page_number }}" class="page-link">
+                                <i class="fas fa-angle-left"></i>
+                                <span>Prev</span>
+                              </a>
+                            {% else %}
+                              <span class="page-link disabled">
+                                <i class="fas fa-angle-double-left"></i>
+                                <span>First</span>
+                              </span>
+                              <span class="page-link disabled">
+                                <i class="fas fa-angle-left"></i>
+                                <span>Prev</span>
+                              </span>
+                            {% endif %}
+                            
+                            <span class="page-current">{{ forms.number }}</span>
+                            
+                            {% if forms.has_next %}
+                              <a href="?page={{ forms.next_page_number }}" class="page-link">
+                                <span>Next</span>
+                                <i class="fas fa-angle-right"></i>
+                              </a>
+                              <a href="?page={{ forms.paginator.num_pages }}" class="page-link">
+                                <span>Last</span>
+                                <i class="fas fa-angle-double-right"></i>
+                              </a>
+                            {% else %}
+                              <span class="page-link disabled">
+                                <span>Next</span>
+                                <i class="fas fa-angle-right"></i>
+                              </span>
+                              <span class="page-link disabled">
+                                <span>Last</span>
+                                <i class="fas fa-angle-double-right"></i>
+                              </span>
+                            {% endif %}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            {% endif %}
 
 
           </div>
@@ -426,4 +423,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<!-- Area Chart Script -->
+<script src="{% static 'js/demo/chart-area-demo.js' %}"></script>
+
 {% endblock %}

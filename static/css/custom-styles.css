@@ -415,6 +415,10 @@ body {
   padding: 0.75rem 1rem;
   text-align: left;
   vertical-align: middle;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Force consistent table styling across all pages */
@@ -429,6 +433,10 @@ body {
   padding: 0.75rem 1rem !important;
   text-align: left !important;
   vertical-align: middle !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .table.table-bordered.table-hover.align-middle tbody td {

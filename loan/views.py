@@ -50,11 +50,16 @@ def update_status(request, form_id):
         return redirect('/')
 
     if request.method == 'POST':
-        status = request.POST.get('status')
-        if status in ['Accept', 'Reject']:
-            loan_form.workstatus = status
-            loan_form.save()
-            messages.success(request, f"Status updated to {status}")
+        status_id = request.POST.get('status')
+        if status_id:
+            from .models import StatusModel
+            try:
+                status_obj = StatusModel.objects.get(status_id=status_id)
+                loan_form.status_name = status_obj
+                loan_form.save()  # This will trigger auto-update of follow-up date
+                messages.success(request, f"Status updated to {status_obj.status_name}")
+            except StatusModel.DoesNotExist:
+                messages.error(request, "Invalid status selected")
     return redirect('/')
 
 def delete_status(request, status_id):
@@ -155,7 +160,7 @@ def delete_files(request, id):
 
 def delete_application(request, form_id):
     """Delete loan application"""
-    from django.shortcuts import get_object_or_404, redirect
+    from django.shortcuts import get_object_or_404, redirect, render
     from .models import LoanApplicationModel
     from users.models import AdminModel, StaffModel, Franchise
     

@@ -166,10 +166,15 @@ def get_loan_filters(request, queryset):
         if place_filter:
             queryset = queryset.filter(place__icontains=place_filter)
         
+        # Filter by address
+        address_filter = request.GET.get('address', '')
+        if address_filter:
+            queryset = queryset.filter(address__icontains=address_filter)
+        
         # Filter by loan type
         loan_type_filter = request.GET.get('loan_type', '')
         if loan_type_filter:
-            queryset = queryset.filter(loan_name__loan_name__icontains=loan_type_filter)
+            queryset = queryset.filter(loan_name__loan_name=loan_type_filter)
         
         # Filter by status
         status_filter = request.GET.get('status', '')
@@ -179,12 +184,17 @@ def get_loan_filters(request, queryset):
         # Filter by bank
         bank_filter = request.GET.get('bank', '')
         if bank_filter:
-            queryset = queryset.filter(bank_name__bank_name__icontains=bank_filter)
+            queryset = queryset.filter(bank_name__bank_name=bank_filter)
         
         # Filter by executive name
         executive_filter = request.GET.get('executive', '')
         if executive_filter:
             queryset = queryset.filter(executive_name__icontains=executive_filter)
+        
+        # Filter by reference number 1
+        reference_no_1_filter = request.GET.get('reference_no_1', '')
+        if reference_no_1_filter:
+            queryset = queryset.filter(reference_no_1__icontains=reference_no_1_filter)
         
         # Filter by followup date range
         followup_from = request.GET.get('followup_from', '')

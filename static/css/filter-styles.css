@@ -210,9 +210,116 @@
   }
 }
 
-/* Fixed Table Height - Always show 10 rows */
+/* Fixed Table Height - Always show 5 rows */
 .table-body-fixed {
-  min-height: 520px;
+  min-height: 260px;
+}
+
+/* Sticky header for admin dashboard table */
+.table.table-bordered.table-hover.all-users thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: #f8f9fc !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Sticky header for applications page table */
+.table.table-bordered.table-hover.align-middle thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: #f8f9fc !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Sticky header for all table headers in applications - ALWAYS visible */
+.table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: #f8f9fc !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Ensure headers never disappear regardless of scroll state */
+body.scrolled .table thead th,
+.table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: #f8f9fc !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  display: table-cell !important;
+}
+
+/* Hide filter row when scrolling - initially visible */
+.column-filter-row {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform: translateY(0);
+  opacity: 1;
+  position: relative;
+  z-index: 5;
+}
+
+.column-filter-row th {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Hide filter row when scrolling down */
+.table-container.scrolled .column-filter-row,
+body.scrolled .column-filter-row {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Alternative approach - hide on body scroll */
+body.scrolled .column-filter-row {
+  position: absolute;
+  top: -100%;
+  opacity: 0;
+}
+
+/* Force hide with display none as fallback - ONLY filter row */
+body.scrolled .column-filter-row {
+  display: none !important;
+}
+
+/* Show when not scrolled - ONLY filter row */
+body:not(.scrolled) .column-filter-row {
+  display: table-row !important;
+}
+
+/* Ensure card header and page heading NEVER disappear */
+.card-header,
+.h3,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  position: relative !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Prevent any heading from being affected by scroll state */
+body.scrolled .card-header,
+body.scrolled .h3,
+body.scrolled h1,
+body.scrolled h2,
+body.scrolled h3,
+body.scrolled h4,
+body.scrolled h5,
+body.scrolled h6 {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
 }
 
 .empty-row {
@@ -229,7 +336,7 @@
 
 /* No Records Message */
 .no-records-row {
-  height: 520px !important;
+  height: 260px !important;
 }
 
 .no-records-cell {
@@ -327,6 +434,10 @@
   border-top: none;
   padding: 0.75rem 0.5rem;
   font-size: 0.85rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .table td {

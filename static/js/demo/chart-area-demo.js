@@ -32,6 +32,7 @@ fetch('/loan-data/')
   .then(response => response.json())
   .then(data => {
     var ctx = document.getElementById("myAreaChart");
+    if (ctx) {
     var myLineChart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -118,4 +119,5 @@ fetch('/loan-data/')
         }
       }
     });
+    }
   });
