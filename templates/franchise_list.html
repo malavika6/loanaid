@@ -6,8 +6,13 @@
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">My Referred Franchises</h1>
-    <div class="text-muted">
-      <small>Your Referral Code: <strong>{{ current_franchise.referral_code }}</strong></small>
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-muted">
+        <small>Your Referral Code: <strong>{{ current_franchise.referral_code }}</strong></small>
+      </div>
+      <a href="{% url 'add_franchise' %}" class="btn btn-primary btn-sm shadow-sm">
+        <i class="fas fa-plus"></i> Add Franchise
+      </a>
     </div>
   </div>
 
@@ -17,27 +22,26 @@
       <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
           <h6 class="m-0 font-weight-bold text-primary">Franchises Referred by You</h6>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge badge-info">{{ franchises|length }} franchises</span>
+            <a href="{% url 'franchise_list' %}" class="btn btn-sm btn-outline-secondary shadow-sm" title="Clear All Filters">
+              <i class="fas fa-redo"></i> Reset
+            </a>
+          </div>
         </div>
         <div class="card-body">
           <div class="table-responsive">
             <form method="GET" id="filterForm">
-              <table class="table table-bordered table-hover align-middle" style="table-layout: fixed; width: 100%;">
+              <table class="table table-bordered table-hover align-middle" style="table-layout: fixed; width: 100%; font-size: 0.85rem;">
                 <thead>
                   <!-- Column Headers -->
                   <tr>
-                    <th scope="col">Sr. No</th>
-                    <th scope="col">Franchise Name</th>
-                    <th scope="col">Referral Code</th>
-                    <th scope="col" style="width: 120px;">Contact Number</th>
-                    <th scope="col" style="width: 100px;">Loan Count</th>
-                    <th scope="col" style="width: 120px;">
-                      <div class="d-flex align-items-center justify-content-between">
-                        <span>Wallet Amount</span>
-                        <a href="{% url 'franchise_list' %}" class="btn btn-sm btn-outline-secondary column-filter-clear" title="Clear All Filters">
-                          <i class="fas fa-redo"></i>
-                        </a>
-                      </div>
-                    </th>
+                    <th scope="col" style="width: 80px; text-align: left;">Sr. No</th>
+                    <th scope="col" style="width: 200px; text-align: left;">Franchise Name</th>
+                    <th scope="col" style="width: 150px; text-align: left;">Referral Code</th>
+                    <th scope="col" style="width: 120px; text-align: left;">Contact Number</th>
+                    <th scope="col" style="width: 100px; text-align: center;">Loan Count</th>
+                    <th scope="col" style="width: 120px; text-align: right;">Wallet Amount</th>
                   </tr>
                   <!-- Filter Row Under Headers -->
                   <tr class="column-filter-row">
@@ -50,7 +54,7 @@
                     <th class="column-filter-cell"></th>
                     <th class="column-filter-cell"></th>
                     <th class="column-filter-cell text-center">
-                      <button type="submit" class="btn btn-primary btn-sm column-filter-apply">
+                      <button type="submit" class="btn btn-primary btn-sm column-filter-apply shadow-sm">
                         <i class="fas fa-search"></i> Filter
                       </button>
                     </th>

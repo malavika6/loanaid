@@ -25,5 +25,6 @@ urlpatterns = [
     path('list_franchise/', views.list_franchise, name='list_franchise'),
     path('franchise_list/', views.franchise_list, name='franchise_list'),
     path('franchise_wallet/', views.franchise_wallet, name='franchise_wallet'),
+    path('franchise_change_password/', views.franchise_change_password, name='franchise_change_password'),
     path('franchise_logout/', views.franchise_logout, name='franchise_logout'),
 ]

@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-au$#i1-8qzyxra0jcpw-v#7!67^7plc9m#b)r-pdj1%zz7=yp9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # Load environment variables from .env file (with error handling)
 try:
@@ -153,22 +153,22 @@ SESSION_COOKIE_AGE = 3600  # 1 hour session expiry
 SESSION_SAVE_EVERY_REQUEST = True  # Ensures session is refreshed on every request
 
 
-# EMAIL_BACKEND =os.environ.get('EMAIL_BACKEND')
-# EMAIL_HOST =os.environ.get('EMAIL_HOST')
-# EMAIL_PORT =os.environ.get('EMAIL_PORT')
-# EMAIL_USE_SSL =os.environ.get('EMAIL_USE_SSL')
-# EMAIL_HOST_USER =os.environ.get('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD =os.environ.get('EMAIL_HOST_PASSWORD')
-# DEFAULT_FROM_EMAIL =os.environ.get('DEFAULT_FROM_EMAIL')
+EMAIL_BACKEND =os.environ.get('EMAIL_BACKEND')
+EMAIL_HOST =os.environ.get('EMAIL_HOST')
+EMAIL_PORT =os.environ.get('EMAIL_PORT')
+EMAIL_USE_SSL =os.environ.get('EMAIL_USE_SSL')
+EMAIL_HOST_USER =os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD =os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL =os.environ.get('DEFAULT_FROM_EMAIL')
 
-EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST='smtp.gmail.com'
-EMAIL_PORT=465
-EMAIL_USE_SSL=True
-EMAIL_USE_TLS=False
-EMAIL_HOST_USER='malavika2bcomft@gmail.com'
-EMAIL_HOST_PASSWORD='mfnc xdjg ydpm eqgj'
-DEFAULT_FROM_EMAIL='malavika2bcomft@gmail.com'
+# EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST='smtp.gmail.com'
+# EMAIL_PORT=465
+# EMAIL_USE_SSL=True
+# EMAIL_USE_TLS=False
+# EMAIL_HOST_USER='malavika2bcomft@gmail.com'
+# EMAIL_HOST_PASSWORD='mfnc xdjg ydpm eqgj'
+# DEFAULT_FROM_EMAIL='malavika2bcomft@gmail.com'
 
 # JWT Settings with fallback values
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-this-in-production')

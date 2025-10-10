@@ -42,8 +42,8 @@
                 {% endif %}
 
               </div>
-              <h5 class="mt-2 font-weight-bold text-white">{{ franchise.franchise_name }}</h5>
-              <p class="text-white small mb-0">{{ franchise.franchise_owner }}</p>
+              <h5 class="mt-2 font-weight-bold text-white">{{ franchise.franchise_owner }}</h5>
+              <p class="text-white small mb-0">Franchise Owner</p>
             </div>
             
             <!-- Profile Details - Compact Layout -->
@@ -92,6 +92,17 @@
                 </div>
               </div>
             </div>
+            
+            <!-- Password Change Button -->
+            <div class="row mt-3">
+              <div class="col-12">
+                <div class="d-flex justify-content-center">
+                  <a href="{% url 'franchise_change_password' %}" class="btn btn-outline-primary btn-sm shadow-sm">
+                    <i class="fas fa-key"></i> Change Password
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -101,20 +112,45 @@
     <div class="col-lg-6 col-md-12">
       <div class="row g-3">
         <!-- Wallet Card -->
-        <div class="col-md-6">
-          <div class="card border-left-primary shadow h-100 border-0">
+        <div class="col-md-12 mb-3">
+          <div class="card border-left-primary shadow border-0">
             <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
                   <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                    Wallet Balance
+                    <i class="fas fa-wallet"></i> Total Earnings
                   </div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">
-                    ₹{{ franchise.wallet_balance|default:"0" }}
+                  <div class="h4 mb-0 font-weight-bold text-success">
+                    ₹{{ wallet_total|default:"0.00" }}
+                  </div>
+                  <div class="text-xs text-muted mt-1">
+                    <i class="fas fa-calendar-alt"></i> Since {{ franchise.created_at|date:"M d, Y" }}
                   </div>
                 </div>
-                <div class="col-auto">
-                  <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                <div>
+                  <a href="{% url 'franchise_wallet' %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-arrow-right"></i> View Details
+                  </a>
+                </div>
+              </div>
+              <div class="row text-center">
+                <div class="col-4">
+                  <div class="border-end">
+                    <small class="text-muted d-block">Allowance</small>
+                    <strong class="text-info">₹{{ wallet.allowance|default:"0.00" }}</strong>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="border-end">
+                    <small class="text-muted d-block">Commission</small>
+                    <strong class="text-warning">₹{{ wallet.commission|default:"0.00" }}</strong>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div>
+                    <small class="text-muted d-block">Incentive</small>
+                    <strong class="text-primary">₹{{ wallet.incentive|default:"0.00" }}</strong>
+                  </div>
                 </div>
               </div>
             </div>
@@ -265,6 +301,23 @@
 
 <!-- Custom CSS for Profile Section -->
 <style>
+/* Wallet Card Styling */
+.border-left-primary {
+  border-left: 4px solid #4e73df !important;
+}
+
+.border-end {
+  border-right: 1px solid #e9ecef;
+  padding-right: 0.5rem;
+}
+
+.wallet-breakdown {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
 .profile-field {
   margin-bottom: 1rem;
 }

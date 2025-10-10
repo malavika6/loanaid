@@ -9,7 +9,7 @@ from django.contrib.auth.hashers import check_password
 import logging
 
 from users.models import AdminModel, StaffModel, Franchise
-from users.decorators import admin_required, staff_required, franchise_required, login_required
+from users.decorators import admin_required, staff_required, franchise_required, login_required, franchise_profile_complete
 from .models import (
     LoanApplicationModel, LoanModel, StatusModel, BankModel, 
     UploadedFile, StaffAssignmentModel
@@ -20,6 +20,7 @@ from .loan_utils import get_loan_context, get_loan_stats, get_loan_filters
 logger = logging.getLogger('loan')
 
 
+@method_decorator(franchise_profile_complete, name='dispatch')
 class LoanApplicationView(View):
     """Optimized loan application form view with role-based access control"""
     
@@ -60,7 +61,7 @@ class LoanApplicationView(View):
         if can_access_all:
             return LoanApplicationModel.objects.select_related(
                 'franchise', 'loan_name', 'status_name', 'bank_name'
-            ).prefetch_related('uploaded_files')
+            ).prefetch_related('uploaded_files').order_by('-created_at', '-form_id')
         
         elif user_type == 'staff':
             # Get franchises assigned to staff
@@ -74,7 +75,7 @@ class LoanApplicationView(View):
                     franchise__in=franchises
                 ).select_related(
                     'franchise', 'loan_name', 'status_name', 'bank_name'
-                ).prefetch_related('uploaded_files')
+                ).prefetch_related('uploaded_files').order_by('-created_at', '-form_id')
             return LoanApplicationModel.objects.none()
             
         elif user_type == 'franchise':
@@ -82,7 +83,7 @@ class LoanApplicationView(View):
                 franchise=user
             ).select_related(
                 'franchise', 'loan_name', 'status_name', 'bank_name'
-            ).prefetch_related('uploaded_files')
+            ).prefetch_related('uploaded_files').order_by('-created_at', '-form_id')
             
         elif user_type == 'executive':
             # Executive functionality removed - UserModel was deleted
@@ -157,6 +158,8 @@ class LoanApplicationView(View):
                     form.fields.pop(field)
         
         logger.info(f"Form is_valid: {form.is_valid()}")
+        logger.info(f"Form data: {form.data}")
+        logger.info(f"Form files: {form.files}")
         
         if form.is_valid():
             try:
@@ -198,6 +201,9 @@ class LoanApplicationView(View):
                 messages.error(request, f"Error saving application: {str(e)}")
         else:
             logger.error(f"Form validation errors: {form.errors.as_json()}")
+            logger.error(f"Form non-field errors: {form.non_field_errors()}")
+            for field, errors in form.errors.items():
+                logger.error(f"Field '{field}' errors: {errors}")
             messages.error(request, "Please correct the errors below.")
         
         # If form is invalid, re-render with errors
@@ -212,23 +218,37 @@ class LoanApplicationView(View):
 class LoanDetailView(View):
     """Optimized loan detail view with role-based access control"""
     
-    def get_user_context(self, user_id):
-        """Get admin user context"""
+    def get_user_context(self, user_id, user_type):
+        """Get user context based on user type"""
         try:
-            admin = AdminModel.objects.get(admin_id=user_id)
-            admin_name = f"{admin.admin_first_name} {admin.admin_last_name}" if admin.admin_last_name else f"{admin.admin_first_name}"
-            return admin, admin_name
-        except AdminModel.DoesNotExist:
+            if user_type == 'admin':
+                user = AdminModel.objects.get(admin_id=user_id)
+                username = f"{user.admin_first_name} {user.admin_last_name}" if user.admin_last_name else f"{user.admin_first_name}"
+                return user, username
+            elif user_type == 'staff':
+                user = StaffModel.objects.get(staff_id=user_id)
+                username = f"{user.first_name} {user.last_name}".strip()
+                return user, username
+            elif user_type == 'franchise':
+                user = Franchise.objects.get(franchise_id=user_id)
+                username = user.franchise_name
+                return user, username
+            else:
+                return None, None
+        except Exception as e:
+            logger.error(f"Error fetching user details: {e}")
             return None, None
     
     def get(self, request, form_id):
         """Handle GET request for loan detail page"""
         user_id = request.session.get('user_id')
-        if not user_id:
+        user_type = request.session.get('user_type')
+        
+        if not user_id or not user_type:
             return redirect('/login')
         
-        admin, admin_name = self.get_user_context(user_id)
-        if not admin:
+        user, username = self.get_user_context(user_id, user_type)
+        if not user:
             return redirect('/login')
         
         # Get loan application with optimization
@@ -239,19 +259,46 @@ class LoanDetailView(View):
             form_id=form_id
         )
         
-        # Check access permissions
-        if not admin.is_superadmin and not admin.is_staff:
-            if form_instance.franchise != admin:
+        # Check access permissions based on user type
+        if user_type == 'admin':
+            # Admin can access all loans or only their own depending on permissions
+            if not user.is_superadmin and not user.is_staff:
+                if form_instance.franchise != user:
+                    return redirect('/')
+        elif user_type == 'staff':
+            # Staff can access loans from their assigned franchises
+            assigned_franchises = Franchise.objects.filter(
+                staffassignmentmodel__staff_name=user
+            ).distinct()
+            if form_instance.franchise not in assigned_franchises:
+                return redirect('/')
+        elif user_type == 'franchise':
+            # Franchise can only access their own loans
+            if form_instance.franchise != user:
                 return redirect('/')
         
         # Get files with optimization
         files = UploadedFile.objects.filter(loan_application=form_instance)
         
-        form = LoanApplicationForm(instance=form_instance)
+        # Create form with user type restrictions
+        form = LoanApplicationForm(instance=form_instance, user_type=user_type)
+        
+        # Apply field restrictions based on user type
+        if user_type == 'franchise':
+            # Franchise users can't edit status-related fields
+            restricted_fields = ['status_name', 'executive_name', 'reference_no_1', 'reference_no_2']
+            for field in restricted_fields:
+                if field in form.fields:
+                    form.fields[field].widget.attrs['readonly'] = True
+                    form.fields[field].widget.attrs['disabled'] = True
+        elif user_type == 'staff':
+            # Staff can edit most fields but may have some restrictions
+            # For now, staff can edit all fields
+            pass
         
         context = {
-            'username': admin_name,
-            'admin': admin,
+            'username': username,
+            'user_type': user_type,
             'form': form,
             'files': files
         }
@@ -260,26 +307,41 @@ class LoanDetailView(View):
     def post(self, request, form_id):
         """Handle POST request for loan updates"""
         user_id = request.session.get('user_id')
-        if not user_id:
+        user_type = request.session.get('user_type')
+        
+        if not user_id or not user_type:
             return redirect('/login')
         
-        admin, admin_name = self.get_user_context(user_id)
-        if not admin:
+        user, username = self.get_user_context(user_id, user_type)
+        if not user:
             return redirect('/login')
         
         form_instance = get_object_or_404(LoanApplicationModel, form_id=form_id)
         
-        # Check access permissions
-        if not admin.is_superadmin and not admin.is_staff:
-            if form_instance.franchise != admin:
+        # Check access permissions based on user type
+        if user_type == 'admin':
+            # Admin can access all loans or only their own depending on permissions
+            if not user.is_superadmin and not user.is_staff:
+                if form_instance.franchise != user:
+                    return redirect('/')
+        elif user_type == 'staff':
+            # Staff can access loans from their assigned franchises
+            assigned_franchises = Franchise.objects.filter(
+                staffassignmentmodel__staff_name=user
+            ).distinct()
+            if form_instance.franchise not in assigned_franchises:
+                return redirect('/')
+        elif user_type == 'franchise':
+            # Franchise can only access their own loans
+            if form_instance.franchise != user:
                 return redirect('/')
         
         if request.POST.get('submit-form'):
             # Update loan application fields
-            self.update_loan_fields(request, form_instance)
+            self.update_loan_fields(request, form_instance, user_type)
             form_instance.save()
             messages.success(request, "Loan application updated successfully!")
-            return redirect('/')
+            return redirect('all-application')
         
         elif request.POST.get('new_files'):
             # Handle new file uploads
@@ -294,16 +356,21 @@ class LoanDetailView(View):
         
         return redirect('loan-page', form_id)
     
-    def update_loan_fields(self, request, form_instance):
-        """Update loan application fields from POST data"""
+    def update_loan_fields(self, request, form_instance, user_type):
+        """Update loan application fields from POST data with user type restrictions"""
+        # Base fields that all users can update
         fields_to_update = [
             'first_name', 'last_name', 'district', 'place', 'phone_no', 'address',
-            'loan_amount', 'executive_name', 'reference_no_1', 'reference_no_2',
-            'document_description', 'guaranter_name', 'guaranter_phoneno', 
+            'loan_amount', 'document_description', 'guaranter_name', 'guaranter_phoneno', 
             'guaranter_job', 'guaranter_cibil_score', 'guaranter_cibil_issue',
             'guaranter_it_payable', 'job', 'cibil_score', 'cibil_issue', 
             'it_payable', 'years'
         ]
+        
+        # Add staff/admin specific fields
+        if user_type in ['staff', 'admin']:
+            staff_fields = ['executive_name', 'reference_no_1', 'reference_no_2']
+            fields_to_update.extend(staff_fields)
         
         for field in fields_to_update:
             if field in request.POST:
@@ -324,14 +391,47 @@ class LoanDetailView(View):
             except BankModel.DoesNotExist:
                 pass
         
+        # Handle status updates - only staff and admin can update status
         status_id = request.POST.get('status_name')
-        if status_id:
+        if status_id and user_type in ['staff', 'admin']:
             try:
-                form_instance.status_name = StatusModel.objects.get(status_id=status_id)
+                status = StatusModel.objects.get(status_id=status_id)
+                form_instance.status_name = status
+                
+                # Set workstatus to indicate staff has processed this loan
+                if user_type == 'staff':
+                    # Map status to workstatus
+                    status_mapping = {
+                        'Pending': 'Pending',
+                        'Approved': 'Accept', 
+                        'Rejected': 'Reject'
+                    }
+                    # Get status name and map to workstatus
+                    status_name = status.status_name
+                    if status_name in status_mapping:
+                        form_instance.workstatus = status_mapping[status_name]
+                    else:
+                        form_instance.workstatus = 'Pending'  # Default to Pending
+                    
+                    # Set follow-up date based on status
+                    from datetime import datetime, timedelta
+                    current_date = datetime.now().date()
+                    
+                    followup_periods = {
+                        'Pending': 3,
+                        'Accept': 7,
+                        'Reject': 1,
+                    }
+                    
+                    workstatus = form_instance.workstatus
+                    days_to_add = followup_periods.get(workstatus, 3)
+                    form_instance.followup_date = current_date + timedelta(days=days_to_add)
+                    
             except StatusModel.DoesNotExist:
                 pass
 
 
+@method_decorator(franchise_profile_complete, name='dispatch')
 class LoanListView(View):
     """Optimized loan list view with filtering and pagination"""
     
@@ -367,13 +467,13 @@ class LoanListView(View):
         if can_access_all:
             queryset = LoanApplicationModel.objects.select_related(
                 'franchise', 'loan_name', 'status_name', 'bank_name'
-            ).prefetch_related('uploaded_files')
+            ).prefetch_related('uploaded_files').order_by('-created_at', '-form_id')
         else:
             queryset = LoanApplicationModel.objects.filter(
                 franchise=user
             ).select_related(
                 'franchise', 'loan_name', 'status_name', 'bank_name'
-            ).prefetch_related('uploaded_files')
+            ).prefetch_related('uploaded_files').order_by('-created_at', '-form_id')
         
         return queryset
     
@@ -538,22 +638,30 @@ class AddLoanView(LoanManagementView):
         user_type = request.session.get('user_type')
         
         if user_type not in ['admin', 'staff', 'franchise']:
-            return JsonResponse({"error": "Unauthorized access"}, status=403)
+            messages.error(request, "Unauthorized access")
+            return redirect('/login/')
         
         user, username = self.get_user_context(user_id, user_type)
         if not user:
-            return JsonResponse({"error": "User not found"}, status=403)
+            messages.error(request, "User not found")
+            return redirect('/login/')
         
         form = LoanForm(request.POST)
         if form.is_valid():
             loan = form.save()
-            return JsonResponse({
-                "success": True,
-                "loan_id": loan.loan_id,
-                "loan_name": loan.loan_name
-            })
+            messages.success(request, f"Loan '{loan.loan_name}' added successfully!")
+            return redirect('addloan')  # Redirect back to the add loan page
+        else:
+            messages.error(request, "Please correct the errors below.")
         
-        return JsonResponse({"error": form.errors}, status=400)
+        # If form is invalid, re-render with errors
+        all_loans = LoanModel.objects.all()
+        context = {
+            'username': username,
+            'form': form,
+            'all_loans': all_loans
+        }
+        return render(request, 'add-loan.html', context)
 
 
 class AddStatusView(LoanManagementView):
@@ -664,7 +772,10 @@ class AddBankView(LoanManagementView):
 def loanform(request):
     """Legacy loan form view - delegates to optimized class-based view"""
     view = LoanApplicationView()
-    return view.get(request)
+    if request.method == 'GET':
+        return view.get(request)
+    else:
+        return view.post(request)
 
 def loan_page(request, form_id):
     """Legacy loan page view - delegates to optimized class-based view"""

@@ -234,6 +234,12 @@ class FranchiseForm(forms.ModelForm):
     def clean_ac_no(self):
         """ Validate Account Number (should be 9 to 18 digits). """
         ac_no = self.cleaned_data.get("ac_no")
+        
+        if not ac_no:
+            raise ValidationError("Account Number is required.")
+        
+        ac_no = str(ac_no).strip()
+        
         if not ac_no.isdigit() or not (9 <= len(ac_no) <= 18):
             raise ValidationError(
                 "Account Number must be between 9 to 18 digits and contain only numbers.")
@@ -308,11 +314,6 @@ class FranchiseProfileForm(forms.ModelForm):
     class Meta:
         model = Franchise
         fields = [
-            "franchise_name",
-            "franchise_owner", 
-            "franchise_place",
-            "email",
-            "mobile_no",
             "aadhar",
             "GST", 
             "pan",
@@ -321,13 +322,8 @@ class FranchiseProfileForm(forms.ModelForm):
             "profile_picture",
         ]
         widgets = {
-            "franchise_name": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Franchise Name"}),
-            "franchise_owner": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Franchise Owner"}),
-            "franchise_place": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Franchise Place"}),
-            "email": forms.EmailInput(attrs={"class": "form-control form-control-user", "placeholder": "Email Address"}),
-            "mobile_no": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Mobile Number"}),
             "aadhar": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Aadhar Number"}),
-            "GST": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "GST Number"}),
+            "GST": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "GST Number (Optional)"}),
             "pan": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "PAN Number"}),
             "ac_no": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "Account Number"}),
             "ifsc_code": forms.TextInput(attrs={"class": "form-control form-control-user", "placeholder": "IFSC Code"}),
@@ -337,6 +333,12 @@ class FranchiseProfileForm(forms.ModelForm):
     def clean_ac_no(self):
         """ Validate Account Number (should be 9 to 18 digits). """
         ac_no = self.cleaned_data.get("ac_no")
+        
+        if not ac_no:
+            raise ValidationError("Account Number is required.")
+        
+        ac_no = str(ac_no).strip()
+        
         if not ac_no.isdigit() or not (9 <= len(ac_no) <= 18):
             raise ValidationError(
                 "Account Number must be between 9 to 18 digits and contain only numbers.")
@@ -358,6 +360,101 @@ class FranchiseProfileForm(forms.ModelForm):
                 "Enter a valid IFSC code (e.g., HDFC0001234).")
 
         return ifsc_code
+
+
+class FranchiseEditByAdminForm(forms.ModelForm):
+    """Form for admin/staff to edit only the fields they originally created"""
+    
+    class Meta:
+        model = Franchise
+        fields = [
+            # Fields originally created by admin/staff
+            "staff",                    # Assigned staff member
+            "franchise_name",           # Basic franchise info
+            "franchise_owner",          # Basic franchise info  
+            "franchise_place",          # Basic franchise info
+            "email",                    # Contact info
+            "mobile_no",                # Contact info
+            "franchise_type",           # Business settings
+            "payment_status",           # Business settings
+            "referred_by",              # Referral chain
+            "is_active",                # Account status
+            "is_franchise",             # Account type
+            # Note: Excluded franchise-added fields like aadhar, GST, pan, ac_no, ifsc_code, profile_picture, screenshot
+        ]
+        widgets = {
+            "staff": forms.Select(attrs={"class": "form-control"}),
+            "franchise_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Franchise Name"}),
+            "franchise_owner": forms.TextInput(attrs={"class": "form-control", "placeholder": "Franchise Owner"}),
+            "franchise_place": forms.TextInput(attrs={"class": "form-control", "placeholder": "Franchise Place"}),
+            "email": forms.EmailInput(attrs={"class": "form-control", "placeholder": "Email Address"}),
+            "mobile_no": forms.TextInput(attrs={"class": "form-control", "placeholder": "Mobile Number"}),
+            "franchise_type": forms.Select(attrs={"class": "form-control"}),
+            "payment_status": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_franchise": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "referred_by": forms.Select(attrs={"class": "form-control", "placeholder": "Select Referrer (Optional)"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Set up referred_by field to show franchise names
+        self.fields['referred_by'].queryset = Franchise.objects.filter(is_active=True).order_by('franchise_name')
+        self.fields['referred_by'].empty_label = "Select a referrer (optional)"
+        
+        # Set up staff field to show staff members
+        from users.models import StaffModel
+        self.fields['staff'].queryset = StaffModel.objects.filter(is_active=True).order_by('first_name')
+        self.fields['staff'].empty_label = "Select staff (optional)"
+
+
+
+class FranchisePasswordForm(forms.Form):
+    """Form for franchise to change their own password"""
+    current_password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control", "placeholder": "Current Password"}
+        ),
+        required=True,
+        label="Current Password"
+    )
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control", "placeholder": "New Password"}
+        ),
+        required=True,
+        min_length=8,
+        label="New Password"
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control", "placeholder": "Confirm New Password"}
+        ),
+        required=True,
+        label="Confirm New Password"
+    )
+
+    def __init__(self, franchise=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.franchise = franchise
+
+    def clean(self):
+        cleaned_data = super().clean()
+        current_password = cleaned_data.get('current_password')
+        new_password = cleaned_data.get('new_password')
+        confirm_password = cleaned_data.get('confirm_password')
+
+        # Check if current password is correct
+        if self.franchise and current_password:
+            if not self.franchise.check_password(current_password):
+                raise ValidationError("Current password is incorrect.")
+
+        # Check if new passwords match
+        if new_password and confirm_password and new_password != confirm_password:
+            raise ValidationError("New passwords do not match.")
+
+        return cleaned_data
 
 
 class FranchiseActivationForm(forms.Form):
@@ -565,17 +662,27 @@ class WalletUpdateForm(forms.Form):
         help_text="Choose a franchise"
     )
 
+    allowance = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Allowance", "min": "0", "step": "0.01"}),
+        help_text="Monthly allowance amount"
+    )
+
     commission = forms.DecimalField(
         max_digits=10,
         decimal_places=2,
         required=False,
-        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Commission", "min": "0", "step": "0.01"})
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Commission", "min": "0", "step": "0.01"}),
+        help_text="Commission amount"
     )
     incentive = forms.DecimalField(
         max_digits=10,
         decimal_places=2,
         required=False,
-        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Incentive", "min": "0", "step": "0.01"})
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Incentive", "min": "0", "step": "0.01"}),
+        help_text="Incentive amount"
     )
 
     def __init__(self, *args, **kwargs):
@@ -600,11 +707,19 @@ class WalletUpdateForm(forms.Form):
         from .models import Wallet
         franchise = Franchise.objects.get(pk=franchise_id)
         wallet, _ = Wallet.objects.get_or_create(franchise=franchise)
-        # Allowance is fixed at 10,000 (non-editable)
+        
+        # Update allowance if provided
+        if self.cleaned_data.get('allowance') is not None:
+            wallet.allowance = self.cleaned_data['allowance']
+        
+        # Update commission if provided
         if self.cleaned_data.get('commission') is not None:
             wallet.commission = self.cleaned_data['commission']
+        
+        # Update incentive if provided
         if self.cleaned_data.get('incentive') is not None:
             wallet.incentive = self.cleaned_data['incentive']
+        
         wallet.save()
         return wallet
 
@@ -615,12 +730,13 @@ class WalletUpdateForm(forms.Form):
 class StaffAssignmentForm(forms.ModelForm):
     """Form to assign one staff to multiple franchises, or edit an assignment"""
 
-    # Override staff_name as ChoiceField to ensure consistent rendering
-    staff_name = forms.ChoiceField(
-        choices=[],
+    # Override staff_name as ModelChoiceField to ensure proper model handling
+    staff_name = forms.ModelChoiceField(
+        queryset=StaffModel.objects.none(),
         widget=forms.Select(attrs={"class": "form-select form-control"}),
         required=True,
-        label="Staff"
+        label="Staff",
+        empty_label="Select Staff"
     )
 
     class Meta:
@@ -642,19 +758,25 @@ class StaffAssignmentForm(forms.ModelForm):
         self.user_context = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-        # Populate staff choices explicitly to ensure rendering
+        # Set the queryset for staff_name field
         staff_qs = StaffModel.objects.all().order_by("first_name", "last_name")
-        self.fields["staff_name"].choices = [('', 'Select Staff')] + [
-            (str(s.pk), f"{s.first_name} {s.last_name or ''}".strip()) for s in staff_qs
-        ]
+        self.fields["staff_name"].queryset = staff_qs
+        
+        # Set the queryset for franchise_name field
         self.fields["franchise_name"].queryset = Franchise.objects.all().order_by("franchise_name")
+        
+        # Set initial values for editing
+        if self.instance and self.instance.pk:
+            if self.instance.staff_name:
+                self.fields["staff_name"].initial = self.instance.staff_name
+            else:
+                self.fields["staff_name"].initial = None
 
     def save(self, commit=True):
-        # Convert selected staff id back to instance before saving
-        staff_id = self.cleaned_data.get('staff_name')
-        if staff_id:
-            self.instance.staff_name = StaffModel.objects.get(pk=staff_id)
+        # With ModelChoiceField, the staff_name is already a StaffModel instance
+        # So we can just call the parent save method
         instance = super().save(commit=commit)
+        
         # Ensure ManyToMany is saved when commit=True; if commit=False, caller must handle save_m2m
         if commit and hasattr(self, "save_m2m"):
             self.save_m2m()

@@ -45,6 +45,8 @@
 
       .form-select {
         font-size: 0.8rem !important;
+        height: calc(1.5em + .75rem + 14px);
+
       }
 
       .col-form-label {
@@ -278,7 +280,7 @@
                                 </div>
                                 <!-- User Name -->
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small fw-bold">{{ username }}</span>
-                                <i class="fas fa-chevron-down text-gray-400 small"></i>
+
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" 
                               aria-labelledby="userDropdown">
@@ -324,9 +326,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Add hover effects to email and mobile fields
-        const emailFields = document.querySelectorAll('td:nth-child(5)');
-        const mobileFields = document.querySelectorAll('td:nth-child(6)');
-        
+        const hoverFields = document.querySelectorAll('.hover-expand');
         function addHoverEffect(fields) {
             fields.forEach(field => {
                 // Mouse enter event
@@ -362,10 +362,13 @@
                 });
                 
                 // Click event as backup
+
                 field.addEventListener('click', function(e) {
                     e.preventDefault();
                     const fullText = this.getAttribute('title');
-                    if (fullText && fullText !== this.textContent.trim()) {
+                  
+                    if (fullText && fullText == this.textContent.trim()) {
+                      
                         // Show full text in a temporary tooltip
                         const tooltip = document.createElement('div');
                         tooltip.style.cssText = `
@@ -399,8 +402,8 @@
             });
         }
         
-        addHoverEffect(emailFields);
-        addHoverEffect(mobileFields);
+        addHoverEffect(hoverFields);
+       
         
         // Fix any remaining overflow issues
         function fixTableOverflow() {

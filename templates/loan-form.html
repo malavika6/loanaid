@@ -1,16 +1,26 @@
-{% extends 'includes/base.html' %} {% load static %} {% block content %}
+{% extends 'includes/base.html' %} 
+{% load static %} 
+{% block content %}
 
 <div class="container-fluid">
+  <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-
+    <h1 class="h3 mb-0 text-gray-800">Loan Application Form</h1>
+    <div class="btn-group" role="group">
+      <a href="{% url 'all-application' %}" class="btn btn-primary btn-sm shadow-sm">
+        <i class="fas fa-list"></i> View Applications
+      </a>
+    </div>
   </div>
+  
   <div class="row">
     <div class="col-xl-12 col-lg-7">
       <div class="card shadow mb-4">
-        <div
-          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
-        >
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
           <h6 class="m-0 font-weight-bold text-primary">Applicant Details</h6>
+          <div class="text-muted">
+            <small>Fill in all required information</small>
+          </div>
         </div>
         <div class="card-body">
           {% if form.errors %}
@@ -85,7 +95,7 @@
               <div class="col-sm-10">{{ form.it_payable }}</div>
             </div>
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Years</label>
+              <label class="col-sm-2 col-form-label">Loan Duration</label>
               <div class="col-sm-10">{{ form.years }}</div>
             </div>
 
@@ -190,7 +200,7 @@
               <div class="col-sm-12">
                 <input
                   type="submit"
-                  class="btn btn-primary btn-user btn-block d-block mx-auto"
+                  class="btn btn-primary btn-user btn-block d-block mx-auto shadow-sm"
                   value="SUBMIT"
                 />
               </div>

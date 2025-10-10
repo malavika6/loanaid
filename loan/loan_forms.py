@@ -41,11 +41,11 @@ class LoanApplicationForm(forms.ModelForm):
         required=False,
         widget=forms.NumberInput(attrs={
             "class": "form-control form-control-user",
-            "placeholder": "Years of Experience",
-            "min": "0",
-            "max": "50"
+            "placeholder": "Loan Duration in Years",
+            "min": "1",
+            "max": "30"
         }),
-        help_text="Years of work experience"
+        help_text="Number of years for loan repayment (1-30 years)"
     )
     
     guaranter_cibil_issue = forms.ChoiceField(
@@ -396,6 +396,12 @@ class LoanApplicationForm(forms.ModelForm):
         if loan_amount and loan_amount < 1000:
             raise ValidationError("Loan amount must be at least ₹1,000")
         
+        # Validate loan duration (years)
+        years = cleaned_data.get('years')
+        if years is not None and years != '':
+            if years < 1 or years > 30:
+                raise ValidationError("Loan duration must be between 1 and 30 years")
+        
         # Follow-up date is now auto-calculated, no validation needed
         
         return cleaned_data
@@ -428,9 +434,8 @@ class LoanApplicationForm(forms.ModelForm):
             if len(phone_no) < 10 or len(phone_no) > 15:
                 raise ValidationError("Phone number must be between 10 and 15 digits")
             
-            # Check if it's a valid Indian mobile number (optional)
-            if len(phone_no) == 10 and not phone_no.startswith(('6', '7', '8', '9')):
-                raise ValidationError("Please enter a valid Indian mobile number")
+            # Basic phone number validation - accept any 10-15 digit number
+            # Removed strict Indian mobile number validation for flexibility
         
         return phone_no
 

@@ -30,14 +30,7 @@
                             <!-- Staff Name Field -->
                             <div class="col-12 col-md-6">
                                 <label for="staff_name" class="form-label">Staff</label>
-                                <select name="staff_name" class="form-select">
-                                    <option value="">Select Staff</option>
-                                    {% for value,label in form.fields.staff_name.choices %}
-                                        {% if value %}
-                                            <option value="{{ value }}" {% if form.data.staff_name == value or form.initial.staff_name == value %}selected{% endif %}>{{ label }}</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
+                                {{ form.staff_name }}
                                 {% if form.staff_name.errors %}
                                     <div class="text-danger mt-1">
                                         {% for error in form.staff_name.errors %}

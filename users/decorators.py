@@ -260,6 +260,36 @@ def franchise_required(view_func):
     return wrapper
 
 
+def franchise_profile_complete(view_func):
+    """Decorator to check if franchise profile is complete"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        franchise_id = request.session.get('franchise_id')
+        user_type = request.session.get('user_type')
+        
+        if not franchise_id or user_type != 'franchise':
+            messages.error(request, "Access denied. Franchise privileges required.")
+            return redirect('/login')
+        
+        try:
+            franchise = Franchise.objects.get(franchise_id=franchise_id, is_active=True)
+            if not franchise:
+                messages.error(request, "Franchise account is inactive.")
+                return redirect('/login')
+            
+            # Check if profile is complete
+            if not franchise.is_profile_complete():
+                messages.info(request, "Please complete your profile first to access this page.")
+                return redirect('franchise_profile_completion')
+            
+        except Franchise.DoesNotExist:
+            messages.error(request, "Franchise account not found.")
+            return redirect('/login')
+        
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
 def franchise_payment_verified(view_func):
     """Decorator to check if franchise payment is verified"""
     @wraps(view_func)
@@ -279,7 +309,7 @@ def franchise_payment_verified(view_func):
             
             if not franchise.payment_status:
                 messages.error(request, "Payment verification required for this operation.")
-                return redirect('/franchise_dashboard')
+                return redirect('/')
             
             request.franchise_user = franchise
             return view_func(request, *args, **kwargs)

@@ -32,6 +32,7 @@ fetch('/loan-totals/')
   .then(response => response.json())
   .then(data => {
     var ctx = document.getElementById("myBarChart");
+    if (ctx) {
     var myBarChart = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -111,4 +112,5 @@ fetch('/loan-totals/')
         },
       }
     });
+    }
   });

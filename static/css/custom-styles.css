@@ -104,6 +104,9 @@ body {
   display: flex;
   flex-direction: column;
 }
+select.form-control {
+  padding-block: 0 !important;
+}
 
 /* Container Width & Centering Issues */
 .container-fluid {
@@ -137,8 +140,9 @@ body {
 }
 
 .card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(239, 68, 68, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .card-header {
@@ -274,6 +278,9 @@ body {
   color: var(--white);
   box-shadow: var(--shadow-md);
 }
+.btn-info.btn-sm {
+  border-radius: 12px !important;
+}
 
 /* Force consistent button styling across all pages */
 .btn-primary.btn-sm {
@@ -338,8 +345,9 @@ body {
 
 .btn-primary:hover {
   background: linear-gradient(135deg, var(--primary-blue-dark) 0%, var(--primary-blue) 100%);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(239, 68, 68, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
   color: var(--white);
 }
 
@@ -351,21 +359,24 @@ body {
 
 .btn-success:hover {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(239, 68, 68, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
   color: var(--white);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, var(--accent-red) 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: var(--white);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-danger:hover {
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(239, 68, 68, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
   color: var(--white);
 }
 
@@ -377,8 +388,9 @@ body {
 
 .btn-warning:hover {
   background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(239, 68, 68, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
   color: var(--white);
 }
 
@@ -402,6 +414,41 @@ body {
   box-shadow: var(--shadow-sm);
   background: var(--white);
   table-layout: fixed;
+}
+
+/* Fix table container for proper sticky headers */
+.table-responsive {
+  border-radius: 8px;
+  overflow: auto;
+  margin: 0;
+  background: var(--white);
+  max-height: 60vh;
+  width: 100%;
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+.table-responsive-xxl {
+  border-radius: 8px;
+  overflow: auto;
+  margin: 0;
+  background: var(--white);
+  max-height: 60vh;
+  width: 100%;
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+/* Ensure all table containers support sticky headers */
+.table-responsive,
+.table-responsive-xxl,
+.loans-page .table-responsive,
+.dashboard-page .table-responsive,
+.staff-page .table-responsive,
+.franchise-page .table-responsive {
+  overflow-y: auto !important;
+  max-height: 60vh !important;
+  position: relative !important;
 }
 
 .table thead th {
@@ -441,7 +488,7 @@ body {
 
 .table.table-bordered.table-hover.align-middle tbody td {
   border: none !important;
-  padding: 0.75rem 1rem !important;
+  /* padding: 0.75rem 1rem !important; */
   vertical-align: middle !important;
   font-size: 0.875rem !important;
   color: var(--gray-700) !important;
@@ -466,11 +513,7 @@ body {
   border-bottom: none;
 }
 
-.table tbody tr:hover {
-  background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
-  transform: scale(1.01);
-  transition: all 0.2s ease;
-}
+/* Table row hover effect removed - use individual cell hover-expand class for controlled effects */
 
 /* Fix action column alignment */
 .table .action-column {
@@ -519,7 +562,7 @@ body {
 }
 
 /* Specific column width management */
-.table th:nth-child(1),
+/* .table th:nth-child(1),
 .table td:nth-child(1) {
   width: 80px;
   min-width: 80px;
@@ -545,13 +588,13 @@ body {
   width: 100px;
   min-width: 100px;
   max-width: 120px;
-}
+} */
 
 .table th:nth-child(5),
 .table td:nth-child(5) {
-  width: 300px;
+  /* width: 300px;
   min-width: 300px;
-  max-width: 350px;
+  max-width: 350px; */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -559,9 +602,9 @@ body {
 
 .table th:nth-child(6),
 .table td:nth-child(6) {
-  width: 120px;
+  /* width: 120px;
   min-width: 120px;
-  max-width: 120px;
+  max-width: 120px; */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -571,27 +614,27 @@ body {
 
 .table th:nth-child(7),
 .table td:nth-child(7) {
-  width: 120px;
+  /* width: 120px;
   min-width: 120px;
-  max-width: 120px;
+  max-width: 120px; */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.table th:nth-child(8),
+/* .table th:nth-child(8),
 .table td:nth-child(8) {
   width: 150px;
   min-width: 150px;
   max-width: 200px;
-}
+} */
 
 /* Action column styling */
 .table th:last-child,
 .table td:last-child {
-  width: 180px;
+  /* width: 180px;
   min-width: 180px;
-  max-width: 180px;
+  max-width: 180px; */
   text-align: center;
   overflow: visible !important;
   white-space: nowrap !important;
@@ -607,18 +650,27 @@ body {
   white-space: nowrap;
 }
 
-/* Force hover effects to work */
-.table td.email-field:hover,
-.table td.mobile-field:hover,
-.table td:nth-child(5):hover,
-.table td:nth-child(6):hover {
-  max-width: none !important;
-  overflow: visible !important;
-  white-space: normal !important;
-  text-overflow: initial !important;
-  width: auto !important;
-  min-width: 300px !important;
-  max-width: 400px !important;
+/* Hover effects are now controlled by hover-expand class only */
+.hover-expand {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+/* Hover tooltip styles */
+.hover-tooltip {
+  position: fixed !important;
+  background: #333 !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  z-index: 10001 !important;
+  font-size: 13px !important;
+  max-width: 300px !important;
+  word-wrap: break-word !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transition: opacity 0.2s ease !important;
 }
 
 /* Specific column width overrides */
@@ -700,17 +752,12 @@ body {
   white-space: nowrap !important;
 }
 
-.table td:nth-child(5):hover,
-.table td:nth-child(6):hover,
-.email-field:hover,
-.mobile-field:hover {
-  border-left-color: var(--primary-blue);
-}
+/* Hover border effects removed - use hover-expand class for controlled hover */
 
 /* Removed eye emoji indicator for cleaner look */
 
 /* Force email column to be wider - High specificity */
-.table.table-bordered.table-hover.align-middle th:nth-child(5),
+/* .table.table-bordered.table-hover.align-middle th:nth-child(5),
 .table.table-bordered.table-hover.align-middle td:nth-child(5) {
   width: 300px !important;
   min-width: 300px !important;
@@ -744,16 +791,16 @@ body {
   width: 150px !important;
   min-width: 150px !important;
   max-width: 150px !important;
-}
+} */
 
-.table.table-bordered.table-hover.align-middle th:nth-child(4),
+/* .table.table-bordered.table-hover.align-middle th:nth-child(4),
 .table.table-bordered.table-hover.align-middle td:nth-child(4) {
   width: 300px !important;
   min-width: 300px !important;
   max-width: 350px !important;
-}
+} */
 
-.table.table-bordered.table-hover.align-middle th:nth-child(5),
+/* .table.table-bordered.table-hover.align-middle th:nth-child(5),
 .table.table-bordered.table-hover.align-middle td:nth-child(5) {
   width: 120px !important;
   min-width: 120px !important;
@@ -765,14 +812,14 @@ body {
   width: 220px !important;
   min-width: 220px !important;
   max-width: 220px !important;
-}
+} */
 
 /* Force phone column to stay within bounds */
 .table td:nth-child(6),
 .table td.mobile-field {
-  max-width: 120px !important;
+  /* max-width: 120px !important;
   width: 120px !important;
-  min-width: 120px !important;
+  min-width: 120px !important; */
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
@@ -781,57 +828,11 @@ body {
   box-sizing: border-box !important;
 }
 
-.table td:nth-child(5):hover,
-.table td:nth-child(6):hover,
-.email-field:hover,
-.mobile-field:hover {
-  background-color: var(--gray-50) !important;
-  z-index: 1000 !important;
-  position: relative !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-  border-radius: 6px !important;
-  padding: 0.75rem !important;
-  overflow: visible !important;
-  white-space: normal !important;
-  word-break: break-all !important;
-  max-width: 450px !important;
-  min-width: 350px !important;
-  width: auto !important;
-}
+/* Hover background effects removed - use hover-expand class for controlled hover */
 
-/* Tooltip for email and mobile fields */
-.table td:nth-child(5):hover::before,
-.table td:nth-child(6):hover::before {
-  content: attr(title);
-  position: absolute;
-  background: var(--gray-800);
-  color: var(--white);
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  top: -50px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1001;
-  white-space: nowrap;
-  box-shadow: var(--shadow-lg);
-  font-size: 0.875rem;
-  font-weight: 500;
-  min-width: 200px;
-  text-align: center;
-  opacity: 0.95;
-}
+/* Tooltip effects removed - use hover-expand class for controlled tooltips */
 
-.table td:nth-child(5):hover::after,
-.table td:nth-child(6):hover::after {
-  content: '';
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: var(--gray-800);
-  z-index: 1001;
-}
+/* Tooltip arrow effects removed - use hover-expand class for controlled tooltips */
 
 /* Special handling for applications table with many columns */
 .table th:nth-child(9),
@@ -1044,7 +1045,8 @@ form .btn[href]:hover {
 }
 
 /* Force edit buttons to work */
-a[href*="edit_franchise"] {
+a[href*="edit_franchise"],
+a[href*="update_assignment"] {
   pointer-events: auto !important;
   cursor: pointer !important;
   position: relative !important;
@@ -1071,7 +1073,8 @@ body.modal-open {
 
 /* Force edit buttons to be completely unblockable */
 .edit-btn,
-a[href*="edit_franchise"] {
+a[href*="edit_franchise"],
+a[href*="update_assignment"] {
   pointer-events: auto !important;
   cursor: pointer !important;
   position: relative !important;
@@ -1081,7 +1084,8 @@ a[href*="edit_franchise"] {
 }
 
 .edit-btn:hover,
-a[href*="edit_franchise"]:hover {
+a[href*="edit_franchise"]:hover,
+a[href*="update_assignment"]:hover {
   pointer-events: auto !important;
   cursor: pointer !important;
   text-decoration: none !important;
@@ -1107,6 +1111,7 @@ body * {
 /* Force edit buttons to work no matter what */
 a[href*="edit_franchise"],
 .btn[href*="edit_franchise"],
+.btn[href*="update_assignment"],
 .edit-btn {
   pointer-events: auto !important;
   cursor: pointer !important;
@@ -1760,4 +1765,944 @@ h6 {
 /* Ensure all pagination elements are visible */
 .pagination * {
   color: inherit !important;
+}
+
+/* Enhanced Loans Page Specific Styling */
+.loans-page .table-responsive {
+  border-radius: 12px;
+  overflow: auto;
+  box-shadow: var(--shadow-sm);
+  background: var(--white);
+  margin-bottom: 0;
+  max-height: 60vh;
+  position: relative;
+}
+
+.loans-page .table {
+  margin-bottom: 0;
+  border: none;
+}
+
+.loans-page .table thead th {
+  background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+  border: none;
+  color: var(--gray-700);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.8rem;
+  padding: 1rem 0.75rem;
+  text-align: left;
+  vertical-align: middle;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.loans-page .table tbody td {
+  border: none;
+  padding: 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--gray-100);
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--gray-700);
+}
+
+.loans-page .table tbody tr:hover {
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+  transform: none;
+  transition: all 0.2s ease;
+}
+
+/* Fix empty state styling */
+.loans-page .no-records-cell {
+  background: var(--white);
+  border: none;
+}
+
+.loans-page .no-records-message {
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.loans-page .no-records-message i {
+  color: var(--gray-400);
+  margin-bottom: 1rem;
+}
+
+.loans-page .no-records-message h5 {
+  color: var(--gray-600);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.loans-page .no-records-message p {
+  color: var(--gray-500);
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
+/* Enhanced pagination container */
+.loans-page .pagination-container {
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.loans-page .pagination-info {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loans-page .pagination {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.loans-page .page-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  color: var(--gray-700);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  min-width: 80px;
+  justify-content: center;
+}
+
+.loans-page .page-link:hover {
+  background: var(--primary-blue);
+  color: var(--white);
+  border-color: var(--primary-blue);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+}
+
+.loans-page .page-link.disabled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+  border-color: var(--gray-200);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.loans-page .page-current {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  color: var(--white);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+}
+
+/* Remove any floating elements or dropdowns that might appear */
+.loans-page .table-responsive::after,
+.loans-page .table::after {
+  content: none;
+  display: none;
+}
+
+/* Ensure no floating elements in table area */
+.loans-page .table-responsive {
+  position: relative;
+  z-index: 1;
+}
+
+.loans-page .table-responsive * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Fix any potential dropdown or floating element issues */
+.loans-page .dropdown,
+.loans-page .dropdown-menu,
+.loans-page .floating-element {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Enhanced table layout for loans page */
+.loans-page .table th:nth-child(1),
+.loans-page .table td:nth-child(1) {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  text-align: center;
+}
+
+.loans-page .table th:nth-child(2),
+.loans-page .table td:nth-child(2) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 150px;
+}
+
+.loans-page .table th:nth-child(3),
+.loans-page .table td:nth-child(3) {
+  width: 100px;
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.loans-page .table th:nth-child(4),
+.loans-page .table td:nth-child(4) {
+  width: 100px;
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.loans-page .table th:nth-child(5),
+.loans-page .table td:nth-child(5) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 150px;
+}
+
+.loans-page .table th:nth-child(6),
+.loans-page .table td:nth-child(6) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 150px;
+}
+
+.loans-page .table th:nth-child(7),
+.loans-page .table td:nth-child(7) {
+  width: 100px;
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.loans-page .table th:nth-child(8),
+.loans-page .table td:nth-child(8) {
+  width: 100px;
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.loans-page .table th:nth-child(9),
+.loans-page .table td:nth-child(9) {
+  width: 80px;
+  min-width: 80px;
+  max-width: 100px;
+}
+
+.loans-page .table th:nth-child(10),
+.loans-page .table td:nth-child(10) {
+  width: 80px;
+  min-width: 80px;
+  max-width: 100px;
+}
+
+.loans-page .table th:nth-child(11),
+.loans-page .table td:nth-child(11) {
+  width: 100px;
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.loans-page .table th:nth-child(12),
+.loans-page .table td:nth-child(12) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 150px;
+  text-align: center;
+}
+
+/* Action button styling in loans table */
+.loans-page .table td:last-child .btn {
+  margin: 0;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+/* Responsive design for loans page */
+@media (max-width: 1200px) {
+  .loans-page .table {
+    font-size: 0.8rem;
+  }
+  
+  .loans-page .table th,
+  .loans-page .table td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .loans-page .pagination-container {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .loans-page .pagination {
+    justify-content: center;
+  }
+  
+  .loans-page .table-responsive {
+    font-size: 0.75rem;
+  }
+}
+
+/* Universal Design Fixes for All Pages */
+
+/* Fix all table styling across the application */
+.table {
+  width: 100%;
+  margin-bottom: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: var(--white);
+  table-layout: fixed;
+}
+
+.table thead th {
+  background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+  border: none;
+  color: var(--gray-700);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.8rem;
+  padding: 1rem 0.75rem;
+  text-align: left;
+  vertical-align: middle;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.table tbody td {
+  border: none;
+  padding: 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--gray-100);
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--gray-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table tbody tr:hover {
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+  transform: none;
+  transition: all 0.2s ease;
+}
+
+/* Fix all card headers to be consistent */
+.card-header {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%) !important;
+  color: var(--white) !important;
+  border: none !important;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 1rem 1.5rem !important;
+  font-weight: 700 !important;
+}
+
+.card-header h6 {
+  color: var(--white) !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  font-size: 1rem !important;
+}
+
+/* Fix all pagination styling */
+.pagination-container {
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.pagination-info {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.page-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  color: var(--gray-700);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  min-width: 80px;
+  justify-content: center;
+}
+
+.page-link:hover {
+  background: var(--primary-blue);
+  color: var(--white);
+  border-color: var(--primary-blue);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+}
+
+.page-link.disabled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+  border-color: var(--gray-200);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.page-current {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  color: var(--white);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+}
+
+/* Fix all form styling */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group.row {
+  margin-bottom: 1rem;
+}
+
+.col-form-label {
+  color: var(--gray-700);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+  margin-bottom: 0.5rem;
+}
+
+.form-control {
+  border-radius: 8px;
+  border: 2px solid var(--gray-200);
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  background: var(--white);
+}
+
+.form-control:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+  outline: none;
+}
+
+/* Enhanced button styling */
+.btn {
+  border-radius: 10px;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  letter-spacing: 0.025em;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  min-height: 36px;
+  border-radius: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: var(--white);
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(59, 130, 246, 0.6);
+  color: var(--white);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.4);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);
+  color: var(--white);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(239, 68, 68, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--white);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: var(--white);
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(239, 68, 68, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--white);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, var(--accent-orange) 0%, #d97706 100%);
+  color: var(--white);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(239, 68, 68, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--white);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--gray-500) 0%, var(--gray-600) 100%);
+  color: var(--white);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, var(--gray-600) 0%, var(--gray-700) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(239, 68, 68, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--white);
+}
+
+/* Button active states */
+.btn-primary:active,
+.btn-success:active,
+.btn-danger:active,
+.btn-warning:active,
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+.btn-danger:active {
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.4);
+}
+
+.btn-primary:active {
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.4);
+}
+
+/* Enhanced button group styling */
+.btn-group .btn {
+  margin: 0;
+}
+/* 
+.btn-group .btn:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.btn-group .btn:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+} */
+
+/* .btn-group .btn:not(:first-child):not(:last-child) {
+  border-radius: 0;
+  margin-left: -1px;
+} */
+
+/* Enhanced outline button styling */
+.btn-outline-secondary {
+  background: transparent;
+  border: 2px solid #6b7280;
+  color: #6b7280;
+  box-shadow: 0 2px 4px rgba(107, 114, 128, 0.1);
+}
+
+.btn-outline-secondary:hover {
+  background: #6b7280;
+  border-color: #6b7280;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(107, 114, 128, 0.3);
+}
+
+/* Button focus states */
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.btn-danger:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+/* Fix all alert styling */
+.alert {
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border-left: 4px solid #ef4444;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border-left: 4px solid #10b981;
+}
+
+.alert-warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border-left: 4px solid #f59e0b;
+}
+
+.alert-info {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border-left: 4px solid #3b82f6;
+}
+
+/* Fix all badge styling */
+.badge {
+  border-radius: 6px;
+  font-weight: 600;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-primary {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  color: var(--white);
+}
+
+.badge-success {
+  background: linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);
+  color: var(--white);
+}
+
+.badge-warning {
+  background: linear-gradient(135deg, var(--accent-orange) 0%, #d97706 100%);
+  color: var(--white);
+}
+
+.badge-danger {
+  background: linear-gradient(135deg, var(--accent-red) 0%, #dc2626 100%);
+  color: var(--white);
+}
+
+.badge-info {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  color: var(--white);
+}
+
+.badge-secondary {
+  background: linear-gradient(135deg, var(--gray-500) 0%, var(--gray-600) 100%);
+  color: var(--white);
+}
+
+/* Fix empty state styling across all pages */
+.no-records-cell {
+  background: var(--white);
+  border: none;
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.no-records-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.no-records-message i {
+  color: var(--gray-400);
+  margin-bottom: 1rem;
+  font-size: 3rem;
+}
+
+.no-records-message h5 {
+  color: var(--gray-600);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.no-records-message p {
+  color: var(--gray-500);
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
+/* Fix responsive design for all pages */
+@media (max-width: 1200px) {
+  .table {
+    font-size: 0.8rem;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .pagination-container {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .pagination {
+    justify-content: center;
+  }
+  
+  .table-responsive {
+    font-size: 0.75rem;
+  }
+  
+  .card-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .card-header h6 {
+    font-size: 0.85rem;
+  }
+  
+  .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-group.row .col-sm-2,
+  .form-group.row .col-sm-10 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .form-group.row .col-sm-2 {
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .card-header {
+    padding: 1rem;
+  }
+  
+  .form-control {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .container-fluid {
+    padding: 0 0.5rem;
+  }
+}
+
+/* Ensure sticky headers work properly across all browsers */
+.table thead th {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%) !important;
+  border-bottom: 2px solid var(--gray-300);
+}
+
+/* Force sticky positioning for all table headers */
+.table thead,
+.table thead th,
+.loans-page .table thead,
+.loans-page .table thead th,
+.dashboard-page .table thead,
+.dashboard-page .table thead th,
+.staff-page .table thead,
+.staff-page .table thead th,
+.franchise-page .table thead,
+.franchise-page .table thead th {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-bottom: 2px solid #dee2e6 !important;
+}
+
+/* Fix for Safari and older browsers */
+@supports not (backdrop-filter: blur(10px)) {
+  .table thead th {
+    background: var(--gray-100) !important;
+  }
+}
+
+/* Ensure table headers are always visible when scrolling */
+.table-responsive {
+  scroll-behavior: smooth;
+}
+
+.table-responsive::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* Critical fix for sticky headers - ensure proper table structure */
+.table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.table thead {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+}
+
+.table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  border-bottom: 2px solid #dee2e6 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Override any conflicting Bootstrap or other CSS */
+.table thead th[style*="position"] {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
 }

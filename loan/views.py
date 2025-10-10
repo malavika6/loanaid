@@ -56,11 +56,40 @@ def update_status(request, form_id):
             try:
                 status_obj = StatusModel.objects.get(status_id=status_id)
                 loan_form.status_name = status_obj
-                loan_form.save()  # This will trigger auto-update of follow-up date
+                
+                # Set workstatus to indicate staff has processed this loan
+                # Map status to workstatus
+                status_mapping = {
+                    'Pending': 'Pending',
+                    'Approved': 'Accept', 
+                    'Rejected': 'Reject'
+                }
+                # Get status name and map to workstatus
+                status_name = status_obj.status_name
+                if status_name in status_mapping:
+                    loan_form.workstatus = status_mapping[status_name]
+                else:
+                    loan_form.workstatus = 'Pending'  # Default to Pending
+                
+                # Set follow-up date based on status
+                from datetime import datetime, timedelta
+                current_date = datetime.now().date()
+                
+                followup_periods = {
+                    'Pending': 3,
+                    'Accept': 7,
+                    'Reject': 1,
+                }
+                
+                workstatus = loan_form.workstatus
+                days_to_add = followup_periods.get(workstatus, 3)
+                loan_form.followup_date = current_date + timedelta(days=days_to_add)
+                
+                loan_form.save()
                 messages.success(request, f"Status updated to {status_obj.status_name}")
             except StatusModel.DoesNotExist:
                 messages.error(request, "Invalid status selected")
-    return redirect('/')
+    return redirect('all-application')
 
 def delete_status(request, status_id):
     """Delete loan status"""
@@ -143,8 +172,8 @@ def delete_loanpage(request, form_id):
 
     if request.method == 'POST':
         loan.delete()
-        return redirect('/')
-    return redirect('/')
+        return redirect('all-application')
+    return redirect('all-application')
 
 def delete_files(request, id):
     """Delete uploaded files"""

@@ -93,11 +93,11 @@ def login(request):
                         request.session['user_id'] = str(franchise.pk)
                         request.session['user_type'] = 'franchise'
                         request.session['franchise_id'] = str(franchise.pk)
-                        request.session['username'] = franchise.franchise_name
+                        request.session['username'] = franchise.franchise_owner
                         request.session.pop('requires_payment', None)
                         request.session.set_expiry(3600)
                         logger.info(f"Franchise login successful (ID: {franchise.pk})")
-                        return redirect('/franchise_dashboard')
+                        return redirect('/')
                     else:
                         # If payment is not active, set flags for payment redirect
                         request.session['franchise_id'] = str(franchise.pk)
@@ -137,7 +137,7 @@ def login(request):
             if user_type == 'admin':
                 return redirect('/')
             elif user_type == 'franchise':
-                return redirect('/franchise_dashboard')
+                return redirect('/')
             elif user_type == 'staff':
                 return redirect('/dashboard')
             elif user_type == 'executive':
@@ -153,7 +153,7 @@ def login(request):
 
 def staff_dashboard(request):
     """
-    Staff dashboard view - simplified version
+    Staff dashboard view - improved with profile card and new loans count
     """
     user_id = request.session.get('user_id')
     user_type = request.session.get('user_type')
@@ -175,14 +175,47 @@ def staff_dashboard(request):
         # Get loans from assigned franchises
         franchise_loans = LoanApplicationModel.objects.filter(franchise__in=assigned_franchises)
         
+        # Calculate wallet totals for assigned franchises
+        from users.models import Wallet
+        total_wallet_amount = 0
+        assigned_franchise_data = []
+        
+        for franchise in assigned_franchises:
+            # Ensure wallet exists
+            wallet, _ = Wallet.objects.get_or_create(franchise=franchise)
+            wallet_total = wallet.get_total_balance()
+            total_wallet_amount += wallet_total
+            
+            assigned_franchise_data.append({
+                'franchise': franchise,
+                'wallet': wallet,
+                'wallet_total': wallet_total,
+            })
+        
+        # Calculate new loans count (loans that need staff attention)
+        from datetime import datetime, timedelta
+        from django.db import models
+        
+        # New loans are loans that have NOT been processed by staff yet
+        # A loan is considered "processed" if it has a workstatus set by staff
+        # New loans = loans with no workstatus (regardless of followup_date)
+        new_loans = franchise_loans.filter(
+            models.Q(workstatus__isnull=True) | 
+            models.Q(workstatus__exact='')
+        )
+        
         context = {
             'username': f"{staff.first_name} {staff.last_name or ''}".strip(),
+            'staff': staff,
+            'user_type': 'staff',
             'sidebar_menu': get_sidebar_menu('staff'),
-            'all_loans': franchise_loans,
+            'all_loans': franchise_loans[:10],  # Show only recent 10 loans
             'staff_loans': staff_loans,
             'franchise_loans': franchise_loans.count(),
+            'new_loans_count': new_loans.count(),
             'assigned_franchise_count': assigned_franchises.count(),
-            'assigned_franchises': assigned_franchises,
+            'assigned_franchises': assigned_franchise_data,  # Include wallet data
+            'total_wallet_amount': total_wallet_amount,  # Add wallet total
         }
         return render(request, 'dashboard.html', context)
         
@@ -317,6 +350,13 @@ def home(request):
         approved_loans = loans_from_franchises.filter(status_name__status_name='Approved').count()
         rejected_loans = loans_from_franchises.filter(status_name__status_name='Rejected').count()
         
+        # Calculate new loans count (loans that need staff attention)
+        from django.db import models
+        new_loans = loans_from_franchises.filter(
+            models.Q(workstatus__isnull=True) | 
+            models.Q(workstatus__exact='')
+        )
+        
         # Recent loans
         recent_loans = loans_from_franchises.order_by('-form_id')[:10]
         
@@ -331,6 +371,8 @@ def home(request):
             'sidebar_menu': sidebar_menu,
             'all_loans': recent_loans,
             'today_followups': today_followups,
+            'franchise_loans': total_loans,  # Match staff_dashboard variable name
+            'new_loans_count': new_loans.count(),  # Add new loans count
             'total_loans': total_loans,
             'pending_loans': pending_loans,
             'approved_loans': approved_loans,
@@ -376,7 +418,7 @@ def home(request):
             
             context = {
                 'franchise': franchise,
-                'username': franchise.franchise_name,
+                'username': franchise.franchise_owner,
                 'user_type': 'franchise',
                 'sidebar_menu': get_sidebar_menu('franchise'),
                 'total_loans': total_loans,
@@ -451,12 +493,12 @@ def payment_confirmation(request):
 
             messages.success(
                 request, "Payment receipt uploaded! We will verify it soon.")
-            return redirect('/franchise_dashboard')
+            return redirect('/')
 
         except Franchise.DoesNotExist:
             messages.error(request, "Franchise not found.")
 
-    return redirect('/franchise_dashboard')
+    return redirect('/')
 
 
 def logout_view(request):
@@ -899,8 +941,24 @@ def update_loan_status(request, loan_id):
             if new_status in ['Accept', 'Reject', 'Pending']:
                 # Update the workstatus field
                 loan.workstatus = new_status
+                
+                # Set follow-up date based on the workstatus
+                from datetime import datetime, timedelta
+                current_date = datetime.now().date()
+                
+                # Define follow-up periods based on workstatus
+                followup_periods = {
+                    'Pending': 3,      # 3 days for pending
+                    'Accept': 7,       # 7 days for accepted
+                    'Reject': 1,       # 1 day for rejected
+                }
+                
+                # Set follow-up date
+                days_to_add = followup_periods.get(new_status, 3)
+                loan.followup_date = current_date + timedelta(days=days_to_add)
+                
                 loan.save()
-                messages.success(request, f"Loan status updated to {new_status}")
+                messages.success(request, f"Loan status updated to {new_status}. Follow-up date set to {loan.followup_date}")
             else:
                 messages.error(request, "Invalid status selected.")
         
@@ -919,7 +977,7 @@ def delete_staff(request, staff_id):
     user_type = request.session.get('user_type')
     
     if not user_id or user_type != 'admin':
-        messages.error(request, "Unauthorized access.")
+        messages.error(request, "Unauthorized access. Only admins can delete staff members.")
         return redirect('/login')
     
     try:
@@ -927,22 +985,21 @@ def delete_staff(request, staff_id):
         staff_member = get_object_or_404(StaffModel, pk=staff_id)
         
         if request.method == 'POST':
+            staff_name = staff_member.get_full_name()
             staff_member.delete()
-            messages.success(request, f"Staff member {staff_member.get_full_name()} deleted successfully.")
+            messages.success(request, f"Staff member {staff_name} deleted successfully.")
             return redirect('list_staff')
         else:
-            return render(request, 'confirm_delete_staff.html', {
-                'staff_member': staff_member,
-                'admin_name': f"{admin.admin_first_name} {admin.admin_last_name or ''}".strip(),
-                'sidebar_menu': get_sidebar_menu('admin')
-            })
+            # If accessed via GET, redirect back to staff list
+            messages.warning(request, "Invalid delete request. Please use the delete button.")
+            return redirect('list_staff')
             
     except AdminModel.DoesNotExist:
         messages.error(request, "Admin not found.")
         return redirect('/login')
     except Exception as e:
         logger.error(f"Error deleting staff: {e}")
-        messages.error(request, "An error occurred while deleting the staff member.")
+        messages.error(request, f"An error occurred while deleting the staff member: {str(e)}")
         return redirect('list_staff')
 
 
@@ -1006,10 +1063,16 @@ def franchise_activation(request, token):
         
         # Get the franchise
         try:
-            franchise = Franchise.objects.get(email=email, is_active=False)
+            franchise = Franchise.objects.get(email=email)
         except Franchise.DoesNotExist:
             return render(request, 'franchise_activation.html', {
-                'error': 'Franchise account not found or already activated.'
+                'error': 'Franchise account not found.'
+            })
+        
+        # Check if already activated
+        if franchise.is_active:
+            return render(request, 'franchise_activation.html', {
+                'error': 'Your account is already activated. Please log in with your credentials.'
             })
         
         if request.method == 'POST':
@@ -1057,7 +1120,7 @@ def franchise_profile_completion(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Profile completed successfully!")
-            return redirect('franchise_dashboard')
+            return redirect('home')
     else:
         form = FranchiseProfileForm(instance=franchise)
     
@@ -1222,6 +1285,7 @@ def wallet_update(request):
             franchises = Franchise.objects.none()
     
     selected_franchise = request.GET.get('franchise')
+    current_allowance = ''
     current_commission = ''
     current_incentive = ''
     
@@ -1229,6 +1293,7 @@ def wallet_update(request):
         try:
             franchise = Franchise.objects.get(pk=selected_franchise)
             wallet, created = Wallet.objects.get_or_create(franchise=franchise)
+            current_allowance = wallet.allowance
             current_commission = wallet.commission
             current_incentive = wallet.incentive
         except Franchise.DoesNotExist:
@@ -1236,6 +1301,7 @@ def wallet_update(request):
     
     if request.method == 'POST':
         franchise_id = request.POST.get('franchise')
+        allowance = request.POST.get('allowance', 0)
         commission = request.POST.get('commission', 0)
         incentive = request.POST.get('incentive', 0)
         
@@ -1245,6 +1311,8 @@ def wallet_update(request):
                 wallet, created = Wallet.objects.get_or_create(franchise=franchise)
                 
                 # Set absolute amounts (not add to existing)
+                if allowance:
+                    wallet.allowance = Decimal(allowance)
                 wallet.commission = Decimal(commission or 0)
                 wallet.incentive = Decimal(incentive or 0)
                 wallet.save()
@@ -1259,6 +1327,7 @@ def wallet_update(request):
     context = {
         'franchises': franchises,
         'selected_franchise': selected_franchise,
+        'current_allowance': current_allowance,
         'current_commission': current_commission,
         'current_incentive': current_incentive,
     }

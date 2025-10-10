@@ -57,7 +57,7 @@ class LoanApplicationModel(models.Model):
     cibil_score = models.CharField(max_length=100, null=True, blank=True)
     cibil_issue = models.CharField(max_length=20, choices=[('Yes', 'Yes'), ('No', 'No'), ("Don't Know", "Don't Know")], default='No')
     it_payable = models.CharField(max_length=10, choices=[('Yes', 'Yes'), ('No', 'No')], default='No')
-    years = models.IntegerField(null=True, blank=True)
+    years = models.IntegerField(null=True, blank=True, help_text="Loan duration in years (1-30)")
     loan_name = models.ForeignKey(LoanModel, on_delete=models.SET_NULL, null=True, blank=True)
     loan_amount = models.DecimalField(max_digits=10, default=0, decimal_places=2, null=True, blank=True)
     followup_date = models.DateField(null=True, blank=True)
@@ -69,6 +69,7 @@ class LoanApplicationModel(models.Model):
     assigned_to = models.ForeignKey(StaffModel, on_delete=models.SET_NULL, null=True, blank=True)
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name='loan_applications', null=True, blank=True)
     document_description = models.TextField(null=True, blank=True)
+    workstatus = models.CharField(max_length=20, choices=STATUS_CHOICES, null=True, blank=True, help_text="Staff work status (Accept/Reject/Pending)")
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 

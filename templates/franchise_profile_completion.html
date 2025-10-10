@@ -180,14 +180,6 @@
                             PAN Number
                         </li>
                         <li class="mb-2">
-                            {% if franchise.GST %}
-                                <i class="fas fa-check text-success"></i>
-                            {% else %}
-                                <i class="fas fa-times text-danger"></i>
-                            {% endif %}
-                            GST Number
-                        </li>
-                        <li class="mb-2">
                             {% if franchise.ac_no %}
                                 <i class="fas fa-check text-success"></i>
                             {% else %}
@@ -202,6 +194,18 @@
                                 <i class="fas fa-times text-danger"></i>
                             {% endif %}
                             IFSC Code
+                        </li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Optional Fields:</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            {% if franchise.GST %}
+                                <i class="fas fa-check text-success"></i>
+                            {% else %}
+                                <i class="fas fa-minus text-muted"></i>
+                            {% endif %}
+                            GST Number
                         </li>
                     </ul>
                 </div>

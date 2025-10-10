@@ -95,7 +95,7 @@
                   <td>₹{{ row.wallet.incentive|default:'0.00' }}</td>
                   <td><strong>₹{{ row.total|default:'0.00' }}</strong></td>
                   <td>
-                    <a href="{% url 'wallet_update' %}?franchise={{ row.franchise.pk }}" class="btn btn-sm btn-warning">
+                    <a href="{% url 'wallet_update' %}?franchise={{ row.franchise.pk }}" class="btn btn-sm btn-primary">
                       <i class="fas fa-edit"></i> Manage
                     </a>
                   </td>

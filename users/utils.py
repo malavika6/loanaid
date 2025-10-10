@@ -22,10 +22,24 @@ handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)
 logger.addHandler(handler)
 
 
-def get_sidebar_menu(user_type):
+def get_sidebar_menu(user_type, request=None):
     """
     Generate sidebar menu items based on user type.
+    For franchises, check if profile is complete before showing menu.
     """
+    # For franchises, check profile completion status
+    if user_type == 'franchise' and request:
+        franchise_id = request.session.get('franchise_id')
+        if franchise_id:
+            try:
+                from .models import Franchise
+                franchise = Franchise.objects.get(franchise_id=franchise_id)
+                if not franchise.is_profile_complete():
+                    # Profile not complete - return empty menu
+                    return []
+            except Franchise.DoesNotExist:
+                return []
+    
     # Check if the menu is cached
     cache_key = f"v5_sidebar_menu_{user_type}"
     menu = cache.get(cache_key)
@@ -46,7 +60,7 @@ def get_sidebar_menu(user_type):
                 {'name': 'Logout', 'url': reverse('logout'), 'icon': 'fas fa-sign-out-alt'},
             ],
             'franchise': [
-                {'name': 'Dashboard', 'url': reverse('franchise_dashboard'), 'icon': 'fas fa-tachometer-alt'},
+                {'name': 'Dashboard', 'url': reverse('home'), 'icon': 'fas fa-tachometer-alt'},
                 {'name': 'Franchise List', 'url': reverse('franchise_list'), 'icon': 'fas fa-building'},
                 {'name': 'Wallet', 'url': reverse('franchise_wallet'), 'icon': 'fas fa-wallet'},
                 {'name': 'Loans', 'url': reverse('all-application'), 'icon': 'fas fa-file-alt'},
@@ -55,7 +69,6 @@ def get_sidebar_menu(user_type):
             'staff': [
                 {'name': 'Dashboard', 'url': reverse('home'), 'icon': 'fas fa-tachometer-alt'},
                 {'name': 'Applications', 'url': reverse('all-application'), 'icon': 'fas fa-file-alt'},
-                {'name': 'Manage Loans', 'url': reverse('staff_loan_management'), 'icon': 'fas fa-tasks'},
                 {'name': 'Wallet', 'url': reverse('wallet_manage'), 'icon': 'fas fa-wallet'},
                 {'name': 'Banks', 'url': reverse('addbank'), 'icon': 'fas fa-university'},
                 {'name': 'Franchises', 'url': reverse('list_franchise'), 'icon': 'fas fa-building'},
@@ -106,7 +119,7 @@ def get_user_context(request):
     elif user_type == 'franchise':
         try:
             franchise = Franchise.objects.get(franchise_id=user_id)
-            username = franchise.franchise_name
+            username = franchise.franchise_owner
         except Franchise.DoesNotExist:
             logger.error(f"Franchise with ID {user_id} does not exist.")
             return None, None
@@ -129,7 +142,7 @@ def get_user_context(request):
         username = session_username
         # Debug logs removed
     
-    sidebar_menu = get_sidebar_menu(user_type)
+    sidebar_menu = get_sidebar_menu(user_type, request)
     # Debug logs removed
     return sidebar_menu, username
 

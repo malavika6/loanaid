@@ -72,7 +72,7 @@
                       </td>
                       <td>{{ assignment.assigned_by.admin_first_name }} {{ assignment.assigned_by.admin_last_name }}</td>
                       <td>
-                        <a href="{% url 'update_assignment' assignment.assignment_id %}" class="btn btn-warning btn-sm">
+                        <a href="{% url 'update_assignment' assignment.assignment_id %}" class="btn btn-primary btn-sm edit-btn">
                           <i class="fas fa-edit"></i> Edit
                         </a>
                       </td>
@@ -95,5 +95,37 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fix assignment edit button clicks
+    const assignmentEditButtons = document.querySelectorAll('a[href*="update_assignment"]');
+    assignmentEditButtons.forEach(button => {
+        // Remove any existing event listeners
+        button.removeEventListener('click', handleAssignmentEditClick);
+        button.addEventListener('click', handleAssignmentEditClick);
+    });
+    
+    function handleAssignmentEditClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Clean up any modal backdrops
+        document.querySelectorAll('.modal-backdrop').forEach(function(b) { 
+            b.remove(); 
+        });
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        
+        // Get the href and navigate manually
+        const href = this.getAttribute('href');
+        if (href) {
+            console.log('Assignment edit button clicked, navigating to:', href);
+            window.location.href = href;
+        }
+    }
+});
+</script>
 
 {% endblock %}

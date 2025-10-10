@@ -6,9 +6,6 @@
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Wallet Management</h1>
-    <div class="text-muted">
-      <small>Franchise: <strong>{{ franchise.franchise_name }}</strong></small>
-    </div>
   </div>
 
   <!-- Date Filter -->
@@ -147,7 +144,6 @@
                   <th class="text-right">Commission</th>
                   <th class="text-right">Incentive</th>
                   <th class="text-right">Total</th>
-                  <th class="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -170,15 +166,10 @@
                   <td class="text-right">
                     <strong class="text-warning">₹{{ data.total|floatformat:2 }}</strong>
                   </td>
-                  <td class="text-center">
-                    <button class="btn btn-sm btn-outline-primary" onclick="viewDetails('{{ data.month }}')">
-                      <i class="fas fa-eye"></i> View
-                    </button>
-                  </td>
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="6" class="text-center text-muted">No data available for the selected period.</td>
+                  <td colspan="5" class="text-center text-muted">No data available for the selected period.</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -189,7 +180,6 @@
                   <td class="text-right">₹{{ monthly_data.commission|floatformat:2 }}</td>
                   <td class="text-right">₹{{ monthly_data.incentive|floatformat:2 }}</td>
                   <td class="text-right text-warning">₹{{ monthly_data.total|floatformat:2 }}</td>
-                  <td></td>
                 </tr>
               </tfoot>
             </table>

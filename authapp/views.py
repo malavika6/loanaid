@@ -6,6 +6,7 @@ from django.utils import timezone
 from users.models import Franchise, StaffModel
 from users.models import *
 from users.forms import *
+from users.decorators import franchise_profile_complete
 from loan.models import LoanApplicationModel
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
@@ -82,6 +83,17 @@ def add_franchise(request):
                 # Create wallet for the new franchise
                 from users.models import Wallet
                 Wallet.objects.create(franchise=franchise)
+                
+                # Auto-assign franchise to staff if staff added it
+                if user_type == 'staff':
+                    from loan.models import StaffAssignmentModel
+                    # Get or create staff assignment
+                    assignment, created = StaffAssignmentModel.objects.get_or_create(
+                        staff_name=staff
+                    )
+                    # Add the franchise to the assignment
+                    assignment.franchise_name.add(franchise)
+                    assignment.save()
 
                 # Generate activation token
                 activation_token = generate_activation_token(franchise.email, 'franchise')
@@ -136,16 +148,16 @@ Loan Aid Team"""
                     messages.warning(
                         request, "Franchise added but failed to send activation email. Please contact the franchise directly.")
                 
-                # Redirect based on user type
-                if user_type == 'franchise':
-                    return redirect("franchise_list")
-                else:
-                    return redirect("list_franchise")
+                # Redirect to franchise list for all user types
+                return redirect("list_franchise")
             except IntegrityError as e:
                 if 'email' in str(e):
                     form.add_error('email', 'Franchise with this Email already exists.')
                 if 'referral_code' in str(e):
                     form.add_error('referral_code', 'Franchise with this Referral code already exists.')
+                # Return the form with errors after IntegrityError
+                messages.error(request, "Please correct the errors in the form.")
+                return render(request, 'add_franchise.html', {'form': form, 'user_type': user_type, 'referring_franchise': referring_franchise})
         else:
             # If the form is invalid, return the form again with errors
             messages.error(request, "Please correct the errors in the form.")
@@ -171,8 +183,27 @@ def list_franchise(request):
         return redirect("/login/")
 
     # Fetch franchises based on user type
-    if user_type in ["admin", "staff"]:
-        franchises = Franchise.objects.all()  # Both admin and staff can see all franchises
+    if user_type == "admin":
+        franchises = Franchise.objects.all()  # Admin can see all franchises
+    elif user_type == "staff":
+        # Staff can only see franchises assigned to them
+        from loan.models import StaffAssignmentModel
+        staff = StaffModel.objects.get(pk=user_id)
+        
+        # Get all assignments for this staff member
+        assignments = StaffAssignmentModel.objects.filter(staff_name=staff)
+        
+        if assignments.exists():
+            # Get all franchises from all assignments
+            franchise_ids = []
+            for assignment in assignments:
+                franchise_ids.extend(assignment.franchise_name.values_list('franchise_id', flat=True))
+            
+            # Remove duplicates and get franchises
+            franchises = Franchise.objects.filter(franchise_id__in=set(franchise_ids))
+        else:
+            # If no assignment exists, show no franchises
+            franchises = Franchise.objects.none()
 
     # Apply filters
     search_query = request.GET.get('search', '')
@@ -212,8 +243,21 @@ def list_franchise(request):
     if date_to:
         franchises = franchises.filter(created_at__date__lte=date_to)
 
+    # Prepare franchise data with wallet balance
+    franchise_data = []
+    for franchise in franchises:
+        # Get wallet balance
+        wallet_balance = 0
+        if hasattr(franchise, 'wallet') and franchise.wallet:
+            wallet_balance = franchise.wallet.get_total_balance()
+        
+        franchise_data.append({
+            'franchise': franchise,
+            'wallet_balance': wallet_balance,
+        })
+
     return render(request, "list_franchise.html", {
-        "franchises": franchises,
+        "franchises": franchise_data,
         "search_query": search_query,
         "franchise_type_filter": franchise_type_filter,
         "status_filter": status_filter,
@@ -250,6 +294,7 @@ def delete_franchise(request, franchise_id):
     return redirect('list_franchise')
 
 
+@franchise_profile_complete
 def franchise_dashboard(request):
     franchise_id = request.session.get("franchise_id")
     if not franchise_id:
@@ -275,38 +320,74 @@ def franchise_dashboard(request):
 
 
 def edit_franchise(request, franchise_id):
+    """Edit franchise details - different forms based on user type"""
+    user_id = request.session.get('user_id')
+    user_type = request.session.get('user_type')
+    
+    # Check authorization
+    if not user_id or user_type not in ['admin', 'staff']:
+        messages.error(request, "Unauthorized access. Only admins and staff can edit franchise details.")
+        return redirect('/login/')
+    
     franchise = get_object_or_404(Franchise, franchise_id=franchise_id)
-    print(franchise,"test tstets")
 
     if request.method == 'POST':
-        form = FranchiseForm(request.POST, request.FILES, instance=franchise)
+        # Use the admin form (no password fields)
+        form = FranchiseEditByAdminForm(request.POST, request.FILES, instance=franchise)
         if form.is_valid():
-            franchise = form.save(commit=False)
-
-            # Ensure password is not rehashed if unchanged
-            plain_password = request.POST.get('password')
-            if plain_password and plain_password != franchise.password:
-                # Use the set_password method to encrypt the password
-                franchise.set_password(plain_password)
-                franchise.confirm_password = plain_password
-
-            franchise.save()
+            franchise = form.save()
             messages.success(request, "Franchise updated successfully.")
             return redirect("list_franchise")
-
         else:
             messages.error(request, "Please correct the errors in the form.")
-
     else:
-        # Pre-fill password field and confirm_password in the form instead
-        form = FranchiseForm(instance=franchise)
-        # Remove get_password usage; do not pre-fill password fields for security
-        # If you want to pre-fill with the hashed password (not recommended), use:
-        # form.fields['password'].initial = franchise.password
-        # form.fields['confirm_password'].initial = franchise.password
-        # But best practice is to leave them blank
-    return render(request, 'add_franchise.html', {'form': form, 'franchise': franchise, 'is_edit': True})
+        # Use the admin form (no password fields)
+        form = FranchiseEditByAdminForm(instance=franchise)
+    
+    return render(request, 'add_franchise.html', {
+        'form': form, 
+        'franchise': franchise, 
+        'is_edit': True,
+        'user_type': user_type,
+        'can_edit_password': False  # Admin/staff cannot edit passwords
+    })
 
+
+
+@franchise_profile_complete
+def franchise_change_password(request):
+    """Allow franchise users to change their own password"""
+    franchise_id = request.session.get('franchise_id')
+    user_type = request.session.get('user_type')
+    
+    # Check authorization - only franchise users can access this
+    if not franchise_id or user_type != 'franchise':
+        messages.error(request, "Unauthorized access. Only franchise users can change their password.")
+        return redirect('/login/')
+    
+    franchise = get_object_or_404(Franchise, franchise_id=franchise_id)
+    
+    if not franchise.is_active:
+        messages.error(request, "Your account is not activated.")
+        return redirect('/login/')
+
+    if request.method == 'POST':
+        form = FranchisePasswordForm(request.POST, franchise=franchise)
+        if form.is_valid():
+            # Set new password
+            franchise.set_password(form.cleaned_data['new_password'])
+            franchise.save()
+            messages.success(request, "Password changed successfully!")
+            return redirect('home')
+        else:
+            messages.error(request, "Please correct the errors in the form.")
+    else:
+        form = FranchisePasswordForm(franchise=franchise)
+    
+    return render(request, 'franchise_change_password.html', {
+        'form': form,
+        'franchise': franchise
+    })
 
 
 def franchise_logout(request):
@@ -410,86 +491,34 @@ def all_staff_assignments(request):
 
 
 def update_assignment(request, assignment_id):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return redirect("/login")
+    
+    admin = get_object_or_404(AdminModel, admin_id=user_id)
     assignment = get_object_or_404(StaffAssignmentModel, assignment_id=assignment_id)
+    
     if request.method == "POST":
-        form = StaffAssignmentForm(request.POST, instance=assignment)
+        form = StaffAssignmentForm(request.POST, instance=assignment, user=admin)
         if form.is_valid():
             form.save()
             messages.success(request, "Staff assignment updated successfully.")
             return redirect("staff_assignments")
     else:
-        form = StaffAssignmentForm(instance=assignment)
-    return render(request, "assign_assignment.html", {"form": form, "assignment": assignment})
-
-
-def franchise_activation(request, token):
-    """Handle franchise account activation"""
-    try:
-        # Verify the activation token
-        email = verify_activation_token(token, 'franchise')
-        if not email:
-            messages.error(request, "Invalid or expired activation link.")
-            return redirect('login')
-        
-        # Get the franchise
-        franchise = get_object_or_404(Franchise, email=email)
-        
-        if franchise.is_active:
-            messages.info(request, "Your account is already activated. Please log in.")
-            return redirect('login')
-        
-        if request.method == 'POST':
-            form = FranchiseActivationForm(request.POST)
-            if form.is_valid():
-                # Set password and activate account
-                franchise.password = make_password(form.cleaned_data['password'])
-                franchise.is_active = True
-                franchise.save()
-                
-                messages.success(request, "Account activated successfully! Please log in with your email and password.")
-                return redirect('login')
-        else:
-            form = FranchiseActivationForm()
-        
-        return render(request, 'franchise_activation.html', {
-            'form': form,
-            'franchise': franchise,
-            'token': token
-        })
-        
-    except Exception as e:
-        messages.error(request, "An error occurred during activation. Please contact support.")
-        return redirect('login')
-
-
-def franchise_profile_completion(request):
-    """Handle franchise profile completion after login"""
-    franchise_id = request.session.get('franchise_id')
-    if not franchise_id:
-        messages.error(request, "Please log in first.")
-        return redirect('login')
+        form = StaffAssignmentForm(instance=assignment, user=admin)
     
-    franchise = get_object_or_404(Franchise, franchise_id=franchise_id)
-    
-    if not franchise.is_active:
-        messages.error(request, "Your account is not activated.")
-        return redirect('login')
-    
-    if request.method == 'POST':
-        form = FranchiseProfileForm(request.POST, request.FILES, instance=franchise)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Profile completed successfully!")
-            return redirect('franchise_dashboard')
-    else:
-        form = FranchiseProfileForm(instance=franchise)
-    
-    return render(request, 'franchise_profile_completion.html', {
-        'form': form,
-        'franchise': franchise
+    return render(request, "assign_assignment.html", {
+        "form": form, 
+        "assignment": assignment,
+        "username": f"{admin.admin_first_name} {admin.admin_last_name or ''}",
     })
 
 
+
+
+
+
+@franchise_profile_complete
 def franchise_list(request):
     """
     Franchise list view for franchise users - shows only franchises referred by current franchise
@@ -568,6 +597,7 @@ def franchise_list(request):
     return render(request, 'franchise_list.html', context)
 
 
+@franchise_profile_complete
 def franchise_wallet(request):
     """
     Wallet view for franchise users - shows monthly wallet data with filtering

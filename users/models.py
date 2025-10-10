@@ -174,10 +174,10 @@ class Franchise(models.Model):
             self.aadhar, self.pan, 
             self.ac_no, self.ifsc_code
         ]
-        optional_fields = [self.GST]  # GST is optional
-        total_fields = len(required_fields) + len(optional_fields)
-        completed = sum(1 for field in required_fields if field) + sum(1 for field in optional_fields if field)
-        return (completed / total_fields) * 100
+        # Calculate percentage based on required fields only
+        total_required = len(required_fields)
+        completed_required = sum(1 for field in required_fields if field)
+        return (completed_required / total_required) * 100
 
 
 class Wallet(models.Model):
