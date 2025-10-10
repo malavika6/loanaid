@@ -154,8 +154,11 @@ class Franchise(models.Model):
             except ValueError:
                 # Fallback if conversion fails
                 self.referral_code = f"FR{self.franchise_id.hex[:3].upper()}"
-        
-        super().save(*args, **kwargs)
+            # Save again with the generated referral code
+            super().save(*args, **kwargs)
+        else:
+            # If referral code already exists, just save once
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return self.franchise_name

@@ -78,11 +78,15 @@ def add_franchise(request):
                 franchise.referred_by = referring_franchise
 
             try:
+                print("Attempting to save franchise...")
                 franchise.save()
+                print(f"Franchise saved successfully: {franchise.franchise_id}")
 
-                # Create wallet for the new franchise
+                # Wallet is automatically created by post_save signal
+                # Verify wallet was created
                 from users.models import Wallet
-                Wallet.objects.create(franchise=franchise)
+                wallet = Wallet.objects.get(franchise=franchise)
+                print(f"Wallet verified for franchise: {wallet}")
                 
                 # Auto-assign franchise to staff if staff added it
                 if user_type == 'staff':
@@ -94,17 +98,22 @@ def add_franchise(request):
                     # Add the franchise to the assignment
                     assignment.franchise_name.add(franchise)
                     assignment.save()
+                    print(f"Franchise assigned to staff: {staff}")
 
                 # Generate activation token
+                print("Generating activation token...")
                 activation_token = generate_activation_token(franchise.email, 'franchise')
+                print(f"Token generated: {activation_token[:20]}...")
                 
                 # Send activation email
                 activation_url = request.build_absolute_uri(
                     reverse('franchise_activation', kwargs={'token': activation_token})
                 )
+                print(f"Activation URL: {activation_url}")
                 
                 # Send email with activation link
                 try:
+                    print("Attempting to send email...")
                     # Render HTML email template
                     html_message = render_to_string('emails/franchise_activation_email.html', {
                         'franchise': franchise,
@@ -112,51 +121,47 @@ def add_franchise(request):
                         'referring_franchise': referring_franchise,
                     })
                     
-                    # Create plain text version
-                    referring_info = ""
-                    if referring_franchise:
-                        referring_info = f"\nReferred By: {referring_franchise.franchise_name} ({referring_franchise.referral_code})"
-                    
-                    plain_message = f"""Hello {franchise.franchise_owner},
-
-Your franchise account has been created successfully!
-
-Email: {franchise.email}
-Referral Code: {franchise.referral_code}
-Franchise Type: {franchise.get_franchise_type_display()}{referring_info}
-
-Please click the following link to activate your account and set your password:
-{activation_url}
-
-This link will expire in 24 hours.
-
-Best regards,
-Loan Aid Team"""
+                    # Create plain text version from HTML (same as staff email)
+                    from django.utils.html import strip_tags
+                    plain_message = strip_tags(html_message)
                     
                     send_mail(
-                        "🎉 Welcome to Loan Aid - Activate Your Franchise Account",
-                        plain_message,
-                        settings.DEFAULT_FROM_EMAIL,
-                        [franchise.email],
+                        subject="🎉 Welcome to Loan Aid - Activate Your Franchise Account",
+                        message=plain_message,
+                        from_email=settings.EMAIL_HOST_USER,  # Use same as staff email
+                        recipient_list=[franchise.email],
                         html_message=html_message,
                         fail_silently=False,
                     )
+                    print("Email sent successfully!")
                     messages.success(
                         request, "Franchise added successfully. Activation email sent.")
                 except Exception as e:
                     print(f"Failed to send activation email: {e}")
+                    import traceback
+                    traceback.print_exc()
                     messages.warning(
                         request, "Franchise added but failed to send activation email. Please contact the franchise directly.")
                 
                 # Redirect to franchise list for all user types
+                print("Attempting redirect to list_franchise...")
                 return redirect("list_franchise")
             except IntegrityError as e:
+                print(f"IntegrityError occurred: {e}")
+                import traceback
+                traceback.print_exc()
                 if 'email' in str(e):
                     form.add_error('email', 'Franchise with this Email already exists.')
                 if 'referral_code' in str(e):
                     form.add_error('referral_code', 'Franchise with this Referral code already exists.')
                 # Return the form with errors after IntegrityError
                 messages.error(request, "Please correct the errors in the form.")
+                return render(request, 'add_franchise.html', {'form': form, 'user_type': user_type, 'referring_franchise': referring_franchise})
+            except Exception as e:
+                print(f"UNEXPECTED ERROR: {type(e).__name__}: {e}")
+                import traceback
+                traceback.print_exc()
+                messages.error(request, f"An error occurred while creating the franchise: {str(e)}")
                 return render(request, 'add_franchise.html', {'form': form, 'user_type': user_type, 'referring_franchise': referring_franchise})
         else:
             # If the form is invalid, return the form again with errors
