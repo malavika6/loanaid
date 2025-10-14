@@ -1,8 +1,11 @@
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
-from django.db import models
+from django.db import models, IntegrityError
 from decimal import Decimal
 import uuid
+import random
+import string
+
 
 
 class AdminModel(models.Model):
@@ -116,7 +119,7 @@ class Franchise(models.Model):
         validators=[RegexValidator(r"^\d{10}$", message="Enter a valid 10-digit mobile number.")]
     )
     password = models.CharField(max_length=128, null=True)
-    referral_code = models.CharField(max_length=8, unique=True, default=generate_franchise_referral_code, verbose_name="Franchise Referral Code")
+    referral_code = models.CharField(max_length=8, unique=True, blank=True, verbose_name="Franchise Referral Code")
     referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referred_franchises', verbose_name="Referred By")
     aadhar = models.CharField(max_length=50, blank=True, null=True)
     GST = models.CharField(max_length=50, blank=True, null=True)
@@ -138,46 +141,32 @@ class Franchise(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def generate_unique_referral_code(self):
+        """Generate a unique random referral code"""
+        while True:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            if not Franchise.objects.filter(referral_code=code).exists():
+                return code
+
     def save(self, *args, **kwargs):
         if self.password and not self.password.startswith("pbkdf2_"):
             self.password = make_password(self.password)
-        
-        # Generate referral code based on franchise ID if not already set
+
+        # Ensure referral code uniqueness
         if not self.referral_code:
-            # First save to get the franchise_id
-            super().save(*args, **kwargs)
-            # Now generate referral code based on the franchise_id
-            franchise_number = str(self.franchise_id)[-3:]  # Get last 3 characters
-            try:
-                number = int(franchise_number)
-                self.referral_code = f"FR{number:03d}"
-            except ValueError:
-                # Fallback if conversion fails
-                self.referral_code = f"FR{self.franchise_id.hex[:3].upper()}"
-            # Save again with the generated referral code
-            super().save(*args, **kwargs)
-        else:
-            # If referral code already exists, just save once
-            super().save(*args, **kwargs)
+            self.referral_code = self.generate_unique_referral_code()
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.franchise_name
     
     def is_profile_complete(self):
-        """Check if franchise profile is complete"""
-        required_fields = [
-            self.aadhar, self.pan, 
-            self.ac_no, self.ifsc_code
-        ]
+        required_fields = [self.aadhar, self.pan, self.ac_no, self.ifsc_code]
         return all(field for field in required_fields)
     
     def get_profile_completion_percentage(self):
-        """Get profile completion percentage"""
-        required_fields = [
-            self.aadhar, self.pan, 
-            self.ac_no, self.ifsc_code
-        ]
-        # Calculate percentage based on required fields only
+        required_fields = [self.aadhar, self.pan, self.ac_no, self.ifsc_code]
         total_required = len(required_fields)
         completed_required = sum(1 for field in required_fields if field)
         return (completed_required / total_required) * 100

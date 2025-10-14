@@ -306,6 +306,26 @@ class FranchiseCreationForm(forms.ModelForm):
         self.fields['referred_by'].queryset = Franchise.objects.filter(is_active=True).order_by('franchise_name')
         self.fields['referred_by'].empty_label = "Select a referrer (optional)"
         self.fields['staff'].empty_label = "Select staff (optional)"
+        
+        # Mark required fields
+        self.fields['franchise_name'].required = True
+        self.fields['franchise_owner'].required = True
+        self.fields['email'].required = True
+        self.fields['mobile_no'].required = True
+        self.fields['franchise_type'].required = True
+
+    def clean_mobile_no(self):
+        mobile_no = self.cleaned_data.get('mobile_no')
+        if mobile_no:
+            if not mobile_no.isdigit() or len(mobile_no) != 10:
+                raise forms.ValidationError("Mobile number must be exactly 10 digits.")
+        return mobile_no
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email and Franchise.objects.filter(email=email).exists():
+            raise forms.ValidationError("A franchise with this email already exists.")
+        return email
 
 
 class FranchiseProfileForm(forms.ModelForm):

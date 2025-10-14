@@ -47,9 +47,10 @@ def add_franchise(request):
         else:
             form = FranchiseCreationForm(request.POST, request.FILES)
             
+    # Removed debug print statements
         if form.is_valid():
             # Form is valid, process and save
-            print("Form is valid, saving data...")
+            # Removed debug print statements
             franchise = form.save(commit=False)
             
             # Set default values for activation flow
@@ -78,15 +79,15 @@ def add_franchise(request):
                 franchise.referred_by = referring_franchise
 
             try:
-                print("Attempting to save franchise...")
+                # Removed debug print statements
                 franchise.save()
-                print(f"Franchise saved successfully: {franchise.franchise_id}")
+                # Removed debug print statements
 
                 # Wallet is automatically created by post_save signal
                 # Verify wallet was created
                 from users.models import Wallet
                 wallet = Wallet.objects.get(franchise=franchise)
-                print(f"Wallet verified for franchise: {wallet}")
+                # Removed debug print statements
                 
                 # Auto-assign franchise to staff if staff added it
                 if user_type == 'staff':
@@ -98,22 +99,22 @@ def add_franchise(request):
                     # Add the franchise to the assignment
                     assignment.franchise_name.add(franchise)
                     assignment.save()
-                    print(f"Franchise assigned to staff: {staff}")
+                    # Removed debug print statements
 
                 # Generate activation token
-                print("Generating activation token...")
+                # Removed debug print statements
                 activation_token = generate_activation_token(franchise.email, 'franchise')
-                print(f"Token generated: {activation_token[:20]}...")
+                # Removed debug print statements
                 
                 # Send activation email
                 activation_url = request.build_absolute_uri(
                     reverse('franchise_activation', kwargs={'token': activation_token})
                 )
-                print(f"Activation URL: {activation_url}")
+                # Removed debug print statements
                 
                 # Send email with activation link
                 try:
-                    print("Attempting to send email...")
+                    # Removed debug print statements
                     # Render HTML email template
                     html_message = render_to_string('emails/franchise_activation_email.html', {
                         'franchise': franchise,
@@ -133,7 +134,7 @@ def add_franchise(request):
                         html_message=html_message,
                         fail_silently=False,
                     )
-                    print("Email sent successfully!")
+                    # Removed debug print statements
                     messages.success(
                         request, "Franchise added successfully. Activation email sent.")
                 except Exception as e:
@@ -144,16 +145,15 @@ def add_franchise(request):
                         request, "Franchise added but failed to send activation email. Please contact the franchise directly.")
                 
                 # Redirect to franchise list for all user types
-                print("Attempting redirect to list_franchise...")
+                # Removed debug print statements
                 return redirect("list_franchise")
             except IntegrityError as e:
-                print(f"IntegrityError occurred: {e}")
+                # Removed debug print statements
                 import traceback
                 traceback.print_exc()
                 if 'email' in str(e):
                     form.add_error('email', 'Franchise with this Email already exists.')
-                if 'referral_code' in str(e):
-                    form.add_error('referral_code', 'Franchise with this Referral code already exists.')
+                # Referral code is auto-generated, no need to handle that error
                 # Return the form with errors after IntegrityError
                 messages.error(request, "Please correct the errors in the form.")
                 return render(request, 'add_franchise.html', {'form': form, 'user_type': user_type, 'referring_franchise': referring_franchise})
@@ -166,7 +166,7 @@ def add_franchise(request):
         else:
             # If the form is invalid, return the form again with errors
             messages.error(request, "Please correct the errors in the form.")
-            print("Form errors:", form.errors)
+            # Removed debug print statements
             return render(request, 'add_franchise.html', {'form': form, 'user_type': user_type, 'referring_franchise': referring_franchise})
 
     # Handle GET request (initial form rendering)
