@@ -25,7 +25,6 @@ SECRET_KEY = 'django-insecure-au$#i1-8qzyxra0jcpw-v#7!67^7plc9m#b)r-pdj1%zz7=yp9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-
 # Load environment variables from .env file (with error handling)
 try:
     load_dotenv()
