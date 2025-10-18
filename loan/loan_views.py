@@ -455,7 +455,7 @@ class LoanListView(View):
             elif user_type == 'staff':
                 user = StaffModel.objects.get(staff_id=user_id)
                 username = f"{user.first_name} {user.last_name if user.last_name else ''}"
-                can_access_all = True
+                can_access_all = False  # Staff should only see assigned franchise loans
                 
             elif user_type == 'franchise':
                 user = Franchise.objects.get(franchise_id=user_id)
@@ -477,7 +477,18 @@ class LoanListView(View):
             queryset = LoanApplicationModel.objects.select_related(
                 'franchise', 'loan_name', 'status_name', 'bank_name'
             ).prefetch_related('uploaded_files').order_by('-created_at', '-form_id')
+        elif user_type == 'staff':
+            # Staff can only see loans from their assigned franchises
+            assigned_franchises = Franchise.objects.filter(
+                staffassignmentmodel__staff_name=user
+            ).distinct()
+            queryset = LoanApplicationModel.objects.filter(
+                franchise__in=assigned_franchises
+            ).select_related(
+                'franchise', 'loan_name', 'status_name', 'bank_name'
+            ).prefetch_related('uploaded_files').order_by('-created_at', '-form_id')
         else:
+            # Franchise users see only their own loans
             queryset = LoanApplicationModel.objects.filter(
                 franchise=user
             ).select_related(
