@@ -119,7 +119,7 @@ class LoanApplicationView(View):
         if user_type == 'franchise':
             hide_fields = ['status_name', 'executive_name', 'reference_no_1', 'reference_no_2']
         
-        form = LoanApplicationForm(user_type=user_type)
+        form = LoanApplicationForm(user_type=user_type, user=user)
         if user_type == 'franchise':
             for field in hide_fields:
                 if field in form.fields:
@@ -148,7 +148,7 @@ class LoanApplicationView(View):
         logger.info(f"Files uploaded: {len(files)}")
         logger.info(f"POST data keys: {list(request.POST.keys())}")
         
-        form = LoanApplicationForm(request.POST, request.FILES, user_type=user_type)
+        form = LoanApplicationForm(request.POST, request.FILES, user_type=user_type, user=user)
         
         # Hide fields for franchise users
         if user_type == 'franchise':
@@ -171,11 +171,17 @@ class LoanApplicationView(View):
                     loan_form.franchise = user
                     logger.info(f"Assigned franchise (admin): {user}")
                 elif user_type == 'staff':
-                    assignment = StaffAssignmentModel.objects.filter(staff_name=user).first()
-                    if assignment:
-                        franchise = assignment.franchise_name.first()
-                        loan_form.franchise = franchise
-                        logger.info(f"Assigned franchise (staff): {franchise}")
+                    # Staff can create loans for any of their assigned franchises
+                    # The franchise should be selected in the form, not auto-assigned
+                    if loan_form.franchise:
+                        logger.info(f"Staff assigned loan to franchise: {loan_form.franchise}")
+                    else:
+                        # If no franchise selected, get the first assigned franchise as default
+                        assignment = StaffAssignmentModel.objects.filter(staff_name=user).first()
+                        if assignment:
+                            franchise = assignment.franchise_name.first()
+                            loan_form.franchise = franchise
+                            logger.info(f"Auto-assigned franchise (staff): {franchise}")
                 elif user_type == 'franchise':
                     loan_form.franchise = user
                     logger.info(f"Assigned franchise (franchise): {user}")
@@ -283,7 +289,7 @@ class LoanDetailView(View):
         files = UploadedFile.objects.filter(loan_application=form_instance)
         
         # Create form with user type restrictions
-        form = LoanApplicationForm(instance=form_instance, user_type=user_type)
+        form = LoanApplicationForm(instance=form_instance, user_type=user_type, user=user)
         
         # Apply field restrictions based on user type
         if user_type == 'franchise':

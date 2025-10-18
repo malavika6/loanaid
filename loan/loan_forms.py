@@ -345,6 +345,7 @@ class LoanApplicationForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         user_type = kwargs.pop('user_type', None)
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
         # Set user type for conditional field handling
@@ -355,11 +356,19 @@ class LoanApplicationForm(forms.ModelForm):
         self.fields['phone_no'].help_text = "Enter a valid 10-15 digit phone number"
         self.fields['loan_amount'].help_text = "Enter the loan amount in rupees"
         
-        # Make certain fields required based on user type
+        # Configure franchise field based on user type
         if user_type == 'franchise':
             # Franchise users have limited access
             self.fields['franchise'].widget.attrs['readonly'] = True
             self.fields['franchise'].widget.attrs['disabled'] = True
+        elif user_type == 'staff' and user:
+            # Staff users can only select from their assigned franchises
+            from loan.models import StaffAssignmentModel
+            assigned_franchises = Franchise.objects.filter(
+                staffassignmentmodel__staff_name=user
+            ).distinct()
+            self.fields['franchise'].queryset = assigned_franchises
+            self.fields['franchise'].required = True
     
     def clean(self):
         """Enhanced form validation"""

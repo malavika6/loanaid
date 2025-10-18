@@ -344,6 +344,10 @@ def home(request):
             franchise__in=assigned_franchise_qs
         ).select_related('franchise', 'status_name', 'loan_name')
         
+        print(f"DEBUG: Staff {staff} assigned franchises: {list(assigned_franchise_qs)}")
+        print(f"DEBUG: Staff has {loans_from_franchises.count()} loans from assigned franchises")
+        print(f"DEBUG: Staff loans: {list(loans_from_franchises)}")
+        
         # Loan statistics
         total_loans = loans_from_franchises.count()
         pending_loans = loans_from_franchises.filter(status_name__status_name='Pending').count()
@@ -395,6 +399,8 @@ def home(request):
             # Get franchise's own loan statistics
             franchise_loans = LoanApplicationModel.objects.filter(franchise=franchise)
             total_loans = franchise_loans.count()
+            print(f"DEBUG: Franchise {franchise} has {total_loans} loans")
+            print(f"DEBUG: Franchise loans: {list(franchise_loans)}")
             pending_loans = franchise_loans.filter(status_name__status_name='Pending').count()
             approved_loans = franchise_loans.filter(status_name__status_name='Approved').count()
             rejected_loans = franchise_loans.filter(status_name__status_name='Rejected').count()
