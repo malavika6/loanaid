@@ -106,6 +106,12 @@ class LoanApplicationModel(models.Model):
     
     def save(self, *args, **kwargs):
         """Override save to auto-update follow-up date when status changes"""
+        # Fix empty string values for numeric fields
+        if self.years == '' or self.years is None:
+            self.years = None
+        if self.loan_amount == '' or self.loan_amount is None:
+            self.loan_amount = 0
+        
         # Check if this is a status update
         if self.pk:
             try:

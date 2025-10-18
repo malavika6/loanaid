@@ -391,6 +391,32 @@ class LoanApplicationForm(forms.ModelForm):
             except (ValueError, TypeError):
                 raise ValidationError("Invalid CIBIL score format")
         
+        # Validate years field - convert empty string to None
+        years = cleaned_data.get('years')
+        if years == '' or years is None:
+            cleaned_data['years'] = None
+        elif years is not None:
+            try:
+                years_int = int(years)
+                if years_int < 1 or years_int > 30:
+                    raise ValidationError("Loan duration must be between 1 and 30 years")
+                cleaned_data['years'] = years_int
+            except (ValueError, TypeError):
+                raise ValidationError("Invalid loan duration format")
+        
+        # Validate loan_amount field - convert empty string to 0
+        loan_amount = cleaned_data.get('loan_amount')
+        if loan_amount == '' or loan_amount is None:
+            cleaned_data['loan_amount'] = 0
+        elif loan_amount is not None:
+            try:
+                amount = float(loan_amount)
+                if amount < 0:
+                    raise ValidationError("Loan amount cannot be negative")
+                cleaned_data['loan_amount'] = amount
+            except (ValueError, TypeError):
+                raise ValidationError("Invalid loan amount format")
+        
         guaranter_cibil_score = cleaned_data.get('guaranter_cibil_score')
         if guaranter_cibil_score:
             try:
