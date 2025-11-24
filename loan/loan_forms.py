@@ -272,6 +272,17 @@ class LoanApplicationForm(forms.ModelForm):
             "rows": 3
         })
     )
+
+    # Remarks: reason/notes for status changes (staff can add/edit, franchise view-only)
+    remarks = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            "class": "form-control form-control-user",
+            "placeholder": "Reason for status / notes",
+            "rows": 3
+        }),
+        help_text="Reason for status changes or notes from staff"
+    )
     
     # Foreign key fields with enhanced widgets
     franchise = forms.ModelChoiceField(
@@ -340,6 +351,7 @@ class LoanApplicationForm(forms.ModelForm):
             "reference_no_1",
             "reference_no_2",
             "document_description",
+            "remarks",
             "assigned_to",
         ]
     
@@ -361,6 +373,10 @@ class LoanApplicationForm(forms.ModelForm):
             # Franchise users have limited access
             self.fields['franchise'].widget.attrs['readonly'] = True
             self.fields['franchise'].widget.attrs['disabled'] = True
+            # Make remarks read-only / disabled for franchise users (view only)
+            if 'remarks' in self.fields:
+                self.fields['remarks'].widget.attrs['readonly'] = True
+                self.fields['remarks'].widget.attrs['disabled'] = True
         elif user_type == 'staff' and user:
             # Staff users can only select from their assigned franchises
             from loan.models import StaffAssignmentModel

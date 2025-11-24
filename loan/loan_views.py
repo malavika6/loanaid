@@ -188,7 +188,13 @@ class LoanApplicationView(View):
                 elif user_type == 'executive':
                     loan_form.executive = user
                     logger.info(f"Assigned executive: {user}")
-                
+
+                # Server-side enforcement: franchise users must NOT set remarks.
+                # Even if the form included a remarks field (maliciously crafted POST),
+                # ignore it for franchise users.
+                if user_type == 'franchise':
+                    loan_form.remarks = None
+
                 loan_form.save()
                 logger.info(f"Loan application saved successfully with ID: {loan_form.form_id}")
                 
@@ -378,7 +384,7 @@ class LoanDetailView(View):
         
         # Add staff/admin specific fields
         if user_type in ['staff', 'admin']:
-            staff_fields = ['executive_name', 'reference_no_1', 'reference_no_2']
+            staff_fields = ['executive_name', 'reference_no_1', 'reference_no_2', 'remarks']
             fields_to_update.extend(staff_fields)
         
         for field in fields_to_update:

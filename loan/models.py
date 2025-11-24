@@ -69,6 +69,8 @@ class LoanApplicationModel(models.Model):
     assigned_to = models.ForeignKey(StaffModel, on_delete=models.SET_NULL, null=True, blank=True)
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name='loan_applications', null=True, blank=True)
     document_description = models.TextField(null=True, blank=True)
+    # Reason or notes related to the status change (staff can add/edit, franchise view-only)
+    remarks = models.TextField(null=True, blank=True, help_text="Reason for status changes or notes from staff")
     workstatus = models.CharField(max_length=20, choices=STATUS_CHOICES, null=True, blank=True, help_text="Staff work status (Accept/Reject/Pending)")
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
