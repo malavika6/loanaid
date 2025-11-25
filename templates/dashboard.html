@@ -323,7 +323,7 @@
                     <th scope="col">Phone</th>
                     <th scope="col">Loan</th>
                     <th scope="col">Amount</th>
-                    <th scope="col">Follow Up</th>
+                    <th scope="col">Created At</th>
                     <th scope="col">Status</th>
                     <th scope="col">Bank</th>
                     {% if user_type == 'staff' %}
@@ -344,7 +344,7 @@
                       <td class="hover-expand" title="{{ form.phone_no }}">{{ form.phone_no }}</td>
                       <td>{{ form.loan_name.loan_name|default:"N/A" }}</td>
                       <td>₹{{ form.loan_amount|default:"0" }}</td>
-                      <td>{{ form.followup_date|default:"Not set" }}</td>
+                      <td>{{ form.created_at|default:"Not set" }}</td>
                       <td>{{ form.status_name.status_name|default:"N/A" }}</td>
                       <td>{{ form.bank_name.bank_name|default:"N/A" }}</td>
                       {% if user_type == 'staff' %}

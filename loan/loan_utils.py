@@ -196,21 +196,21 @@ def get_loan_filters(request, queryset):
         if reference_no_1_filter:
             queryset = queryset.filter(reference_no_1__icontains=reference_no_1_filter)
         
-        # Filter by followup date range
+        # Legacy followup_from/followup_to filters now apply to created_at
         followup_from = request.GET.get('followup_from', '')
         followup_to = request.GET.get('followup_to', '')
-        
+
         if followup_from:
             try:
                 followup_from_date = datetime.strptime(followup_from, '%Y-%m-%d').date()
-                queryset = queryset.filter(followup_date__gte=followup_from_date)
+                queryset = queryset.filter(created_at__date__gte=followup_from_date)
             except ValueError:
                 pass
-        
+
         if followup_to:
             try:
                 followup_to_date = datetime.strptime(followup_to, '%Y-%m-%d').date()
-                queryset = queryset.filter(followup_date__lte=followup_to_date)
+                queryset = queryset.filter(created_at__date__lte=followup_to_date)
             except ValueError:
                 pass
         
@@ -314,16 +314,8 @@ def get_loan_performance_metrics(user_type, user_id=None, franchise=None):
             count=Count('form_id')
         )
         
-        # Processing time analysis (if followup_date is available)
-        processing_time = base_queryset.exclude(
-            followup_date__isnull=True
-        ).extra(
-            select={'processing_days': "EXTRACT(day FROM (followup_date - created_at))"}
-        ).aggregate(
-            avg_processing_days=Avg('processing_days'),
-            min_processing_days=Min('processing_days'),
-            max_processing_days=Max('processing_days')
-        )
+        # Processing time analysis removed (followup_date no longer used)
+        processing_time = {}
         
         return {
             'total_applications': total_applications,

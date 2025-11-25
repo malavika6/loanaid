@@ -71,20 +71,7 @@ def update_status(request, form_id):
                 else:
                     loan_form.workstatus = 'Pending'  # Default to Pending
                 
-                # Set follow-up date based on status
-                from datetime import datetime, timedelta
-                current_date = datetime.now().date()
-                
-                followup_periods = {
-                    'Pending': 3,
-                    'Accept': 7,
-                    'Reject': 1,
-                }
-                
-                workstatus = loan_form.workstatus
-                days_to_add = followup_periods.get(workstatus, 3)
-                loan_form.followup_date = current_date + timedelta(days=days_to_add)
-                
+                # followup_date handling removed. Save status change only.
                 loan_form.save()
                 messages.success(request, f"Status updated to {status_obj.status_name}")
             except StatusModel.DoesNotExist:

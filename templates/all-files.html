@@ -33,7 +33,7 @@
                   <th scope="col">Address</th>
                   <th scope="col">Loan Name</th>
                   <th scope="col">Amount</th>
-                  <th scope="col">FollowUp Date</th>
+                  <th scope="col">Created At</th>
                   <th scope="col">Status</th>
                   <th scope="col">Bank</th>
                   {% if user_type != 'franchise' %}
@@ -94,10 +94,10 @@
                     </th>
                     <th class="column-filter-cell">
                       <div class="date-filter-group">
-                        <input type="date" class="column-filter-input date-input-small" name="followup_from" 
-                               value="{{ followup_from }}" placeholder="From">
-                        <input type="date" class="column-filter-input date-input-small" name="followup_to" 
-                               value="{{ followup_to }}" placeholder="To">
+                           <input type="date" class="column-filter-input date-input-small" name="followup_from" 
+                             value="{{ followup_from }}" placeholder="From">
+                           <input type="date" class="column-filter-input date-input-small" name="followup_to" 
+                             value="{{ followup_to }}" placeholder="To">
                       </div>
                     </th>
                     <th class="column-filter-cell">
@@ -160,7 +160,7 @@
                   <td title="{{ form.address }}">{{ form.address|truncatechars:30 }}</td>
                   <td>{{ form.loan_name }}</td>
                   <td>{{ form.loan_amount }}</td>
-                  <td>{{ form.followup_date }}</td>
+                  <td>{{ form.created_at }}</td>
                   <td>{{ form.status_name }}</td>
                   <td>{{ form.bank_name }}</td>
                   {% if user_type != 'franchise' %}

@@ -249,9 +249,9 @@ def home(request):
         # Get admin user
         admin = AdminModel.objects.get(admin_id=request.session.get('user_id'))
         
-        # Get today's follow-up loans
+        # Get today's created loans (followup_date removed from usage)
         today = datetime.now().date()
-        today_followups = LoanApplicationModel.objects.filter(followup_date=today)
+        today_followups = LoanApplicationModel.objects.filter(created_at__date=today)
         
         # Get all statistics
         all_franchises = Franchise.objects.all()
@@ -364,9 +364,9 @@ def home(request):
         # Recent loans
         recent_loans = loans_from_franchises.order_by('-form_id')[:10]
         
-        # Today's follow-ups
+        # Today's created loans (followup_date removed from usage)
         today = datetime.now().date()
-        today_followups = loans_from_franchises.filter(followup_date=today)
+        today_followups = loans_from_franchises.filter(created_at__date=today)
 
         context = {
             'username': username,
@@ -409,9 +409,9 @@ def home(request):
             # Get recent loan applications (only their own)
             recent_loans = franchise_loans.order_by('-form_id')[:5]
             
-            # Get today's follow-ups
+            # Get today's created loans (followup_date removed from usage)
             today = datetime.now().date()
-            today_followups = franchise_loans.filter(followup_date=today)
+            today_followups = franchise_loans.filter(created_at__date=today)
             
             # Get wallet information
             from users.models import Wallet
@@ -945,26 +945,10 @@ def update_loan_status(request, loan_id):
         if request.method == 'POST':
             new_status = request.POST.get('status')
             if new_status in ['Accept', 'Reject', 'Pending']:
-                # Update the workstatus field
-                loan.workstatus = new_status
-                
-                # Set follow-up date based on the workstatus
-                from datetime import datetime, timedelta
-                current_date = datetime.now().date()
-                
-                # Define follow-up periods based on workstatus
-                followup_periods = {
-                    'Pending': 3,      # 3 days for pending
-                    'Accept': 7,       # 7 days for accepted
-                    'Reject': 1,       # 1 day for rejected
-                }
-                
-                # Set follow-up date
-                days_to_add = followup_periods.get(new_status, 3)
-                loan.followup_date = current_date + timedelta(days=days_to_add)
-                
-                loan.save()
-                messages.success(request, f"Loan status updated to {new_status}. Follow-up date set to {loan.followup_date}")
+                    # Update the workstatus field (do not set followup_date anymore)
+                    loan.workstatus = new_status
+                    loan.save()
+                    messages.success(request, f"Loan status updated to {new_status}.")
             else:
                 messages.error(request, "Invalid status selected.")
         

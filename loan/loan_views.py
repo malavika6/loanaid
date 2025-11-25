@@ -428,19 +428,7 @@ class LoanDetailView(View):
                     else:
                         form_instance.workstatus = 'Pending'  # Default to Pending
                     
-                    # Set follow-up date based on status
-                    from datetime import datetime, timedelta
-                    current_date = datetime.now().date()
-                    
-                    followup_periods = {
-                        'Pending': 3,
-                        'Accept': 7,
-                        'Reject': 1,
-                    }
-                    
-                    workstatus = form_instance.workstatus
-                    days_to_add = followup_periods.get(workstatus, 3)
-                    form_instance.followup_date = current_date + timedelta(days=days_to_add)
+                    # followup_date logic removed — field retained in DB but no longer auto-updated
                     
             except StatusModel.DoesNotExist:
                 pass

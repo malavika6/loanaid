@@ -84,52 +84,20 @@ class LoanApplicationModel(models.Model):
         loan = self.loan_name.loan_name if self.loan_name else "No Loan"
         return f"{self.first_name} {self.last_name or ''} - {loan}".strip()
     
-    def calculate_followup_date(self):
-        """Calculate follow-up date based on status"""
-        if not self.status_name:
-            return None
-            
-        status_name = self.status_name.status_name.lower()
-        current_date = timezone.now().date()
-        
-        # Define follow-up periods based on status
-        followup_periods = {
-            'pending': 3,           # 3 days for pending
-            'under review': 5,      # 5 days for under review
-            'approved': 7,          # 7 days for approved
-            'rejected': 1,          # 1 day for rejected
-            'not selected': 1,      # 1 day for not selected
-        }
-        
-        # Get the period for this status
-        days_to_add = followup_periods.get(status_name, 3)  # Default 3 days
-        
-        return current_date + timedelta(days=days_to_add)
-    
     def save(self, *args, **kwargs):
-        """Override save to auto-update follow-up date when status changes"""
+        """Override save but do not modify followup_date automatically.
+
+        We keep the `followup_date` database column intact but remove automatic
+        calculations/assignments so existing data remains untouched and the
+        application no longer relies on follow-up logic.
+        """
         # Fix empty string values for numeric fields
         if self.years == '' or self.years is None:
             self.years = None
         if self.loan_amount == '' or self.loan_amount is None:
             self.loan_amount = 0
-        
-        # Check if this is a status update
-        if self.pk:
-            try:
-                old_instance = LoanApplicationModel.objects.get(pk=self.pk)
-                # If status changed, update follow-up date
-                if old_instance.status_name != self.status_name:
-                    self.followup_date = self.calculate_followup_date()
-            except LoanApplicationModel.DoesNotExist:
-                # New instance, set initial follow-up date
-                if self.status_name:
-                    self.followup_date = self.calculate_followup_date()
-        else:
-            # New instance, set initial follow-up date
-            if self.status_name:
-                self.followup_date = self.calculate_followup_date()
-        
+
+        # Do not auto-set followup_date anymore. Leave existing DB values as-is.
         super().save(*args, **kwargs)
     
 class UploadedFile(models.Model):
